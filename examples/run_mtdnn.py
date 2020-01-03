@@ -22,7 +22,7 @@ from uninlp import WEIGHTS_NAME, BertConfig, MTDNNModel, BertTokenizer
 logger = logging.getLogger(__name__)
 
 ALL_MODELS = sum(
-    (tuple(conf.pretrained_config_archive_map.keys()) for conf in (BertConfig)),
+    (tuple(conf.pretrained_config_archive_map.keys()) for conf in (BertConfig, )),
     ())
 
 MODEL_CLASSES = {
