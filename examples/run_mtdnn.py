@@ -348,7 +348,7 @@ def main():
     logger.info("Training/evaluation parameters %s", args)
 
     if args.do_train:
-        joint_train_dataset = UniDataSet.load_joint_train_dataset()
+        joint_train_dataset = UniDataSet.load_joint_train_dataset(debug=args.debug)
 
         model = train(args, model, joint_train_dataset, mode="joint")
     
