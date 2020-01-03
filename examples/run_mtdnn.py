@@ -175,7 +175,7 @@ def train(args, model, datasets, mode, task_id=-1):
     return model
 
 
-def evaluate(args, model, UniDataSet, label_list, task):
+def evaluate(args, model, UniDataSet, task):
     
     dataset = UniDataSet.load_single_dataset(task, "dev")
     task_id = UniDataSet.task_map[task]
@@ -386,7 +386,7 @@ def main():
             # dataset = UniDataSet.load_single_dataset(task, "dev")
             # task_id = UniDataSet.task_map[task]
             # label_list = UniDataSet.labels_list[task_id]
-            results = evaluate(args, model, UniDataSet, label_list, task)
+            results = evaluate(args, model, UniDataSet, task)
             if task == "POS":
                 total_results["POS"] = results["a"]
             elif task == "NER":
