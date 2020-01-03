@@ -19,13 +19,8 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import logging
 
 from .modeling_bert import BertModel, BertForMaskedLM, BertForSequenceClassification, BertForQuestionAnswering
-from .modeling_openai import OpenAIGPTModel, OpenAIGPTLMHeadModel
-from .modeling_gpt2 import GPT2Model, GPT2LMHeadModel
+
 from .modeling_ctrl import CTRLModel, CTRLLMHeadModel
-from .modeling_transfo_xl import TransfoXLModel, TransfoXLLMHeadModel
-from .modeling_xlnet import XLNetModel, XLNetLMHeadModel, XLNetForSequenceClassification, XLNetForQuestionAnswering
-from .modeling_xlm import XLMModel, XLMWithLMHeadModel, XLMForSequenceClassification, XLMForQuestionAnswering
-from .modeling_roberta import RobertaModel, RobertaForMaskedLM, RobertaForSequenceClassification
 from .modeling_distilbert import DistilBertModel, DistilBertForQuestionAnswering, DistilBertForMaskedLM, DistilBertForSequenceClassification
 
 from .modeling_utils import PreTrainedModel, SequenceSummary
@@ -138,22 +133,8 @@ class AutoModel(object):
         """
         if 'distilbert' in pretrained_model_name_or_path:
             return DistilBertModel.from_pretrained(pretrained_model_name_or_path, *model_args, **kwargs)
-        elif 'roberta' in pretrained_model_name_or_path:
-            return RobertaModel.from_pretrained(pretrained_model_name_or_path, *model_args, **kwargs)
         elif 'bert' in pretrained_model_name_or_path:
             return BertModel.from_pretrained(pretrained_model_name_or_path, *model_args, **kwargs)
-        elif 'openai-gpt' in pretrained_model_name_or_path:
-            return OpenAIGPTModel.from_pretrained(pretrained_model_name_or_path, *model_args, **kwargs)
-        elif 'gpt2' in pretrained_model_name_or_path:
-            return GPT2Model.from_pretrained(pretrained_model_name_or_path, *model_args, **kwargs)
-        elif 'transfo-xl' in pretrained_model_name_or_path:
-            return TransfoXLModel.from_pretrained(pretrained_model_name_or_path, *model_args, **kwargs)
-        elif 'xlnet' in pretrained_model_name_or_path:
-            return XLNetModel.from_pretrained(pretrained_model_name_or_path, *model_args, **kwargs)
-        elif 'xlm' in pretrained_model_name_or_path:
-            return XLMModel.from_pretrained(pretrained_model_name_or_path, *model_args, **kwargs)
-        elif 'ctrl' in pretrained_model_name_or_path:
-            return CTRLModel.from_pretrained(pretrained_model_name_or_path, *model_args, **kwargs)
         raise ValueError("Unrecognized model identifier in {}. Should contains one of "
                          "'bert', 'openai-gpt', 'gpt2', 'transfo-xl', 'xlnet', "
                          "'xlm', 'roberta, 'ctrl'".format(pretrained_model_name_or_path))
@@ -264,22 +245,9 @@ class AutoModelWithLMHead(object):
         """
         if 'distilbert' in pretrained_model_name_or_path:
             return DistilBertForMaskedLM.from_pretrained(pretrained_model_name_or_path, *model_args, **kwargs)
-        elif 'roberta' in pretrained_model_name_or_path:
-            return RobertaForMaskedLM.from_pretrained(pretrained_model_name_or_path, *model_args, **kwargs)
+       
         elif 'bert' in pretrained_model_name_or_path:
             return BertForMaskedLM.from_pretrained(pretrained_model_name_or_path, *model_args, **kwargs)
-        elif 'openai-gpt' in pretrained_model_name_or_path:
-            return OpenAIGPTLMHeadModel.from_pretrained(pretrained_model_name_or_path, *model_args, **kwargs)
-        elif 'gpt2' in pretrained_model_name_or_path:
-            return GPT2LMHeadModel.from_pretrained(pretrained_model_name_or_path, *model_args, **kwargs)
-        elif 'transfo-xl' in pretrained_model_name_or_path:
-            return TransfoXLLMHeadModel.from_pretrained(pretrained_model_name_or_path, *model_args, **kwargs)
-        elif 'xlnet' in pretrained_model_name_or_path:
-            return XLNetLMHeadModel.from_pretrained(pretrained_model_name_or_path, *model_args, **kwargs)
-        elif 'xlm' in pretrained_model_name_or_path:
-            return XLMWithLMHeadModel.from_pretrained(pretrained_model_name_or_path, *model_args, **kwargs)
-        elif 'ctrl' in pretrained_model_name_or_path:
-            return CTRLLMHeadModel.from_pretrained(pretrained_model_name_or_path, *model_args, **kwargs)
         raise ValueError("Unrecognized model identifier in {}. Should contains one of "
                          "'bert', 'openai-gpt', 'gpt2', 'transfo-xl', 'xlnet', "
                          "'xlm', 'roberta','ctrl'".format(pretrained_model_name_or_path))
@@ -383,14 +351,8 @@ class AutoModelForSequenceClassification(object):
         """
         if 'distilbert' in pretrained_model_name_or_path:
             return DistilBertForSequenceClassification.from_pretrained(pretrained_model_name_or_path, *model_args, **kwargs)
-        elif 'roberta' in pretrained_model_name_or_path:
-            return RobertaForSequenceClassification.from_pretrained(pretrained_model_name_or_path, *model_args, **kwargs)
         elif 'bert' in pretrained_model_name_or_path:
             return BertForSequenceClassification.from_pretrained(pretrained_model_name_or_path, *model_args, **kwargs)
-        elif 'xlnet' in pretrained_model_name_or_path:
-            return XLNetForSequenceClassification.from_pretrained(pretrained_model_name_or_path, *model_args, **kwargs)
-        elif 'xlm' in pretrained_model_name_or_path:
-            return XLMForSequenceClassification.from_pretrained(pretrained_model_name_or_path, *model_args, **kwargs)
 
         raise ValueError("Unrecognized model identifier in {}. Should contains one of "
                          "'bert', 'xlnet', 'xlm', 'roberta'".format(pretrained_model_name_or_path))
@@ -494,10 +456,6 @@ class AutoModelForQuestionAnswering(object):
             return DistilBertForQuestionAnswering.from_pretrained(pretrained_model_name_or_path, *model_args, **kwargs)
         elif 'bert' in pretrained_model_name_or_path:
             return BertForQuestionAnswering.from_pretrained(pretrained_model_name_or_path, *model_args, **kwargs)
-        elif 'xlnet' in pretrained_model_name_or_path:
-            return XLNetForQuestionAnswering.from_pretrained(pretrained_model_name_or_path, *model_args, **kwargs)
-        elif 'xlm' in pretrained_model_name_or_path:
-            return XLMForQuestionAnswering.from_pretrained(pretrained_model_name_or_path, *model_args, **kwargs)
 
         raise ValueError("Unrecognized model identifier in {}. Should contains one of "
                          "'bert', 'xlnet', 'xlm'".format(pretrained_model_name_or_path))

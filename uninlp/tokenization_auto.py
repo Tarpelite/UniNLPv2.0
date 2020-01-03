@@ -19,15 +19,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import logging
 
 from .tokenization_bert import BertTokenizer
-from .tokenization_openai import OpenAIGPTTokenizer
-from .tokenization_gpt2 import GPT2Tokenizer
-from .tokenization_ctrl import CTRLTokenizer
-from .tokenization_transfo_xl import TransfoXLTokenizer
-from .tokenization_xlnet import XLNetTokenizer
-from .tokenization_xlm import XLMTokenizer
-from .tokenization_roberta import RobertaTokenizer
 from .tokenization_distilbert import DistilBertTokenizer
-from .tokenization_camembert import CamembertTokenizer
 
 logger = logging.getLogger(__name__)
 
@@ -106,24 +98,8 @@ class AutoTokenizer(object):
         """
         if 'distilbert' in pretrained_model_name_or_path:
             return DistilBertTokenizer.from_pretrained(pretrained_model_name_or_path, *inputs, **kwargs)
-        elif 'camembert' in pretrained_model_name_or_path:
-            return CamembertTokenizer.from_pretrained(pretrained_model_name_or_path, *inputs, **kwargs)
-        elif 'roberta' in pretrained_model_name_or_path:
-            return RobertaTokenizer.from_pretrained(pretrained_model_name_or_path, *inputs, **kwargs)
         elif 'bert' in pretrained_model_name_or_path:
             return BertTokenizer.from_pretrained(pretrained_model_name_or_path, *inputs, **kwargs)
-        elif 'openai-gpt' in pretrained_model_name_or_path:
-            return OpenAIGPTTokenizer.from_pretrained(pretrained_model_name_or_path, *inputs, **kwargs)
-        elif 'gpt2' in pretrained_model_name_or_path:
-            return GPT2Tokenizer.from_pretrained(pretrained_model_name_or_path, *inputs, **kwargs)
-        elif 'transfo-xl' in pretrained_model_name_or_path:
-            return TransfoXLTokenizer.from_pretrained(pretrained_model_name_or_path, *inputs, **kwargs)
-        elif 'xlnet' in pretrained_model_name_or_path:
-            return XLNetTokenizer.from_pretrained(pretrained_model_name_or_path, *inputs, **kwargs)
-        elif 'xlm' in pretrained_model_name_or_path:
-            return XLMTokenizer.from_pretrained(pretrained_model_name_or_path, *inputs, **kwargs)
-        elif 'ctrl' in pretrained_model_name_or_path:
-            return CTRLTokenizer.from_pretrained(pretrained_model_name_or_path, *inputs, **kwargs)
         raise ValueError("Unrecognized model identifier in {}. Should contains one of "
                          "'bert', 'openai-gpt', 'gpt2', 'transfo-xl', 'xlnet', "
                          "'xlm', 'roberta', 'camembert', 'ctrl'".format(pretrained_model_name_or_path))
