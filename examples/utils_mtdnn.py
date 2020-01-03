@@ -104,10 +104,12 @@ class MegaDataSet(object):
                     special_tokens_count = 3
                     if len(tokens) > self.max_seq_length - special_tokens_count - len(verb_tokens):
                         tokens = tokens[:(self.max_seq_length - special_tokens_count - len(verb_tokens))]
+                        label_ids = label_ids[:(self.max_seq_length - special_tokens_count - len(verb_tokens))]
                 else:
                     special_tokens_count = 2
                     if len(tokens) > self.max_seq_length - special_tokens_count:
                         tokens = tokens[:(self.max_seq_length - special_tokens_count)]
+                        label_ids = label_ids[:(self.max_seq_length - special_tokens_count)]
                 
                 tokens += ['[SEP]']
                 label_ids += [-100]
