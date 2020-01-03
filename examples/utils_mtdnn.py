@@ -76,7 +76,7 @@ class MegaDataSet(object):
         features = []
         cnt_counts = []
 
-        if "{}-{}".format(task, "train") in self.features_map:
+        if "{}-{}".format(task, mode) in self.features_map:
             features = self.features_map["{}-{}".format(task, mode)]
         else:
             for (ex_index, example) in enumerate(tqdm(examples)):
