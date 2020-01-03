@@ -298,6 +298,7 @@ def main():
     parser.add_argument("--do_lower_case", action="store_true")
     parser.add_argument("--fp16", action="store_true")
     parser.add_argument("--fp16_opt_level", type=str, default="O1")
+    parser.add_argument("--debug", action="store_true")
     args = parser.parse_args()
 
     if args.no_cuda:

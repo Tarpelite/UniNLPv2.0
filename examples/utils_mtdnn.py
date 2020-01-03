@@ -154,10 +154,13 @@ class MegaDataSet(object):
         dataset = TensorDataset(all_input_ids, all_input_mask, all_segment_ids, all_label_ids)
         return features, dataset
     
-    def load_joint_train_dataset(self):
+    def load_joint_train_dataset(self, debug=False):
         features_batches_list = []
         for task in self.task_list:
-            features, _ = self.load_single_dataset(task, "train")
+            if debug:
+                features, _ = self.load_single_dataset(task, "debug")
+            else:
+                features, _ = self.load_single_dataset(task, "train")
             cnt = 0
             features_batches = []
             while cnt + self.mini_batch_size < len(features):
