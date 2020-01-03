@@ -1311,7 +1311,7 @@ class MTDNNModel(BertPreTrainedModel):
                             token_type_ids=token_type_ids,
                             position_ids=position_ids,
                             head_mask=head_mask,
-                            input_embeds=inputs_embeds)
+                            inputs_embeds=inputs_embeds)
 
         sequence_output = outputs[0]
 
