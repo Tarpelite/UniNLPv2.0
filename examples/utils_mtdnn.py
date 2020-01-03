@@ -34,7 +34,7 @@ class MegaDataSet(object):
         self.task_map = {task:idx for idx, task in enumerate(task_list)}
         self.datasets_dir = datasets_dir
         self.features_map =  {}
-        self.max_seq_len = max_seq_len
+        self.max_seq_length = max_seq_length
         self.tokenizer = tokenizer
         self.mini_batch_size = mini_batch_size
     
