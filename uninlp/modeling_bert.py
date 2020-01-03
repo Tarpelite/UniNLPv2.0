@@ -1364,6 +1364,6 @@ class MTDNNModel(BertPreTrainedModel):
 
         if self.do_task_embedding:
             outputs = (alpha_vis, ) + outputs
-        elif do_alpha:
+        elif self.do_alpha:
             outputs = (alpha, ) + outputs
         return outputs
