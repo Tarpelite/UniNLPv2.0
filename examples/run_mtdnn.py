@@ -179,7 +179,7 @@ def evaluate(args, model, UniDataSet, label_list, task):
     
     dataset = UniDataSet.load_single_dataset(task, "dev")
     task_id = UniDataSet.task_map[task]
-    label_list = UniDataSet[task_id]
+    label_list = UniDataSet.labels_list[task_id]
 
     if torch.cuda.device_count() > 0: 
         eval_batch_size = torch.cuda.device_count() * args.mini_batch_size
@@ -383,9 +383,9 @@ def main():
         model.to(args.device)
         total_results = {}
         for task in UniDataSet.task_list:
-            dataset = UniDataSet.load_single_dataset(task, "dev")
-            task_id = UniDataSet.task_map[task]
-            label_list = UniDataSet.labels_list[task_id]
+            # dataset = UniDataSet.load_single_dataset(task, "dev")
+            # task_id = UniDataSet.task_map[task]
+            # label_list = UniDataSet.labels_list[task_id]
             results = evaluate(args, model, UniDataSet, label_list, task)
             if task == "POS":
                 total_results["POS"] = results["a"]
