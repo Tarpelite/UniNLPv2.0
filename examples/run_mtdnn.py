@@ -177,7 +177,7 @@ def train(args, model, datasets, mode, task_id=-1):
 
 def evaluate(args, model, UniDataSet, task):
     
-    dataset = UniDataSet.load_single_dataset(task, "dev")
+    _, dataset = UniDataSet.load_single_dataset(task, "dev")
     task_id = UniDataSet.task_map[task]
     label_list = UniDataSet.labels_list[task_id]
 
