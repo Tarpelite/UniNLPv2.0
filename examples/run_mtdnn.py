@@ -55,7 +55,7 @@ def train(args, model, datasets, mode, task_id=-1):
     optimizer_grouped_parameters = [
         {'params': [p for n, p in model.named_parameters() if not any(nd in n for nd in (no_decay + alpha_sets))], 'weight_decay': args.weight_decay},
         {'params': [p for n, p in model.named_parameters() if any(nd in n for nd in no_decay)], 'weight_decay': 0.0},
-        {'params': [p for n, p in model.named_parameters() if any(nd in n for nd in alpha_sets)], 'lr':args.alpha_learning_rate}
+        {'params': [p for n, p in model.named_parameters() if any(nd in n for nd in alpha_sets)], 'lr':1e-1}
     ]
 
     optimizer = AdamW(optimizer_grouped_parameters, lr=args.learning_rate, eps=args.adam_epsilon)
