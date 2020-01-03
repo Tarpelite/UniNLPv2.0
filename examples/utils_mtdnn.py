@@ -85,14 +85,23 @@ class MegaDataSet(object):
                     logger.info("Writing example %d of %d", ex_index, len(examples))
                 tokens = []
                 label_ids = []
-                for word, label in zip(example.words, example.labels):
+                
+                words = example[0]
+                labels = example[1]
+                if task_name == "SRL":
+                    verb = words[0]
+                    words = words[1:]
+
+
+                assert len(words) == len(labels)
+                for word, label in zip(words, labels):
                     word_tokens = self.tokenizer.tokenize(word)
                     tokens.extend(word_tokens)
                     label_ids.extend([label_map[label]] + [-100]*(len(word_tokens) - 1))
 
                 cnt_counts.append(len(tokens))
                 if task_name == "SRL":
-                    verb_tokens = self.tokenzer.tokenize(example.verb)
+                    verb_tokens = self.tokenzer.tokenize(verb)
                     special_tokens_count = 3
                     if len(tokens) > self.max_seq_length - special_tokens_count - len(verb_tokens):
                         tokens = tokens[:(self.max_seq_length - special_tokens_count - len(verb_tokens))]
