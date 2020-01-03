@@ -385,7 +385,7 @@ def main():
         for task in UniDataSet.task_list:
             dataset = UniDataSet.load_single_dataset(task, "dev")
             task_id = UniDataSet.task_map[task]
-            label_list = UniDataSet[task_id]
+            label_list = UniDataSet.labels_list[task_id]
             results = evaluate(args, model, UniDataSet, label_list, task)
             if task == "POS":
                 total_results["POS"] = results["a"]
