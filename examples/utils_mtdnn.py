@@ -118,9 +118,9 @@ class MegaDataSet(object):
                 segment_ids = [0] + segment_ids
 
                 if task_name == "SRL":
-                    tokens += ['[SEP]'] + verb_tokens + ['[SEP]']
-                    label_ids += [-100] + [-100]*(len(verb_tokens) + 1) 
-                    segment_ids += [0]  + [1]*(len(verb_tokens) + 1)
+                    tokens +=   verb_tokens + ['[SEP]']
+                    label_ids +=   [-100]*(len(verb_tokens) + 1) 
+                    segment_ids +=    [1]*(len(verb_tokens) + 1)
                 
                 input_ids = self.tokenizer.convert_tokens_to_ids(tokens)
                 input_mask = [1]*len(input_ids)
