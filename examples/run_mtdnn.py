@@ -331,7 +331,7 @@ def main():
     
     
     # Setup dataLoader Machine
-    UniDataSet = MegaDataSet(dataset_dir = args.datasets_dir,
+    UniDataSet = MegaDataSet(datasets_dir = args.dataset_dir,
                              max_seq_length = args.max_seq_length,
                              tokenizer = tokenizer,
                              mini_batch_size = args.mini_batch_size * max(1, args.n_gpu))
