@@ -1338,7 +1338,7 @@ class MTDNNModel(BertPreTrainedModel):
             alpha = alpha.view(alpha.size() + (1,)).expand(alpha.size() + (hidden_states.size(3), )) #[batch_size, num_hidden_layers, seq_len, hidden_size]
             sequence_output = torch.sum(alpha*hidden_states, dim=1) #[batch_size, seq_len, hidden_size]
 
-        elif do_alpha:
+        elif self.do_alpha:
             alpha = self.alpha_list[task_id]
             alpha = self.softmax(alpha)
             hidden_states = hidden_states[1:]
