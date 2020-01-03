@@ -312,7 +312,7 @@ def main():
                         datefmt="%m/%d/%Y %H:%M:%S",
                         level=logging.INFO )
     logger.warning("Process rank: %s, device: %s, n_gpu: %s, distributed training: %s, 16-bits training: %s",
-                   args.local_rank, device, args.n_gpu, bool(args.local_rank != -1), args.fp16)
+                   args.local_rank, device, args.n_gpu, False , args.fp16)
 
     # Set seed
     set_seed(args)
