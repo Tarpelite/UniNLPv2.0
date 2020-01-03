@@ -211,7 +211,8 @@ def evaluate(args, model, UniDataSet, task):
             if args.do_alpha:
                 alpha = outputs[0]
                 outputs = outputs[1:]
-            _ , logits = outputs[:2]
+
+            logits = outputs[0]
 
         nb_eval_steps += 1
         if preds is None:
