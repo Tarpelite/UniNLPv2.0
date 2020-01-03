@@ -136,7 +136,7 @@ def train(args, model, dataset, mode, task_id=-1):
                 loss.backward()
             tr_loss += loss.item()
 
-            if (step + 1) % 100 = 0:
+            if (step + 1) % 100 == 0:
                 print("loss", loss.item())
             
             if (step + 1) % args.gradient_accumulation_steps == 0:
