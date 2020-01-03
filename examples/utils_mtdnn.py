@@ -174,10 +174,10 @@ class MegaDataSet(object):
             features_batches = []
             while cnt + self.mini_batch_size < len(features):
                 batch_t = []
-                for i in range(cnt, cnt + mini_batch_size):
+                for i in range(cnt, cnt + self.mini_batch_size):
                     batch_t.append(features[i])
                 features_batches.append(batch_t)
-                cnt += mini_batch_size
+                cnt += self.mini_batch_size
             batch_t = []
             for i in range(cnt, len(features)):
                 batch_t.append(features[i])
