@@ -119,12 +119,7 @@ def train(args, model, datasets, mode, task_id=-1):
                       "token_type_ids":segment_ids,
                       "labels":label_ids,
                       "task_id":task_id}
-            
-            print("inputs_ids", input_ids.shape)
-            print("attention_mask", input_mask.shape)
-            print("segment_ids", segment_ids.shape)
-            print("label_ids", label_ids.shape)
-            
+
             outputs = model(**inputs)
             loss = outputs[0]
             if args.do_task_embedding:
@@ -375,9 +370,9 @@ def main():
         
         tokenizer = tokenizer_class.from_pretrained(args.output_dir, 
                                                     do_lower_case=args.do_lower_case)
-        checkpoints = [args.output_dir]
+        checkpoint = os.path.join(args.output_dir, "pytorch_model.bin")
 
-        model = model_class.from_pretrained(checkpoints,
+        model = model_class.from_pretrained(checkpoint,
                                             from_tf=bool(".ckpt" in args.model_name_or_path),
                                             config = config,
                                             labels_list=UniDataSet.labels_list,
