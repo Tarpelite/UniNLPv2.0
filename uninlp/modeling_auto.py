@@ -20,7 +20,6 @@ import logging
 
 from .modeling_bert import BertModel, BertForMaskedLM, BertForSequenceClassification, BertForQuestionAnswering
 
-from .modeling_ctrl import CTRLModel, CTRLLMHeadModel
 from .modeling_distilbert import DistilBertModel, DistilBertForQuestionAnswering, DistilBertForMaskedLM, DistilBertForSequenceClassification
 
 from .modeling_utils import PreTrainedModel, SequenceSummary
