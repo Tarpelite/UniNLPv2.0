@@ -42,7 +42,7 @@ def set_seed(args):
 
 def train(args, model, datasets, mode, task_id=-1):
 
-    args.train_batch_size = args.mini_batch_size * max(1, args.n_gpus)
+    args.train_batch_size = args.mini_batch_size * max(1, args.n_gpu)
 
     no_decay = ["bias", "LayerNorm.weight"]
     alpha_sets = ["alpha_list"]
