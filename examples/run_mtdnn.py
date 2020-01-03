@@ -382,7 +382,7 @@ def main():
 
         model.to(args.device)
         total_results = {}
-        for task in UniDataSet.tasks_list:
+        for task in UniDataSet.task_list:
             dataset = UniDataSet.load_single_dataset(task, "dev")
             task_id = UniDataSet.task_map[task]
             label_list = UniDataSet[task_id]
