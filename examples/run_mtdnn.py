@@ -101,10 +101,10 @@ def train(args, model, datasets, mode, task_id=-1):
             if mode == "joint":
                 task_id = iter_item
                 features = next(all_iters[task_id])
-                input_ids = torch.tensor([f.input_ids for f in features], dtype=torch.long).to(args.device)
-                input_mask = torch.tensor([f.input_mask for f in features], dtype=torch.long).to(args.device)
-                segment_ids = torch.tensor([f.segment_ids for f in features], dtype=torch.long).to(args.device)
-                label_ids = torch.tensor([f.label_ids for f in features], dtype=torch.long).to(args.device)
+                input_ids = torch.tensor([f[0] for f in features], dtype=torch.long).to(args.device)
+                input_mask = torch.tensor([f[1] for f in features], dtype=torch.long).to(args.device)
+                segment_ids = torch.tensor([f[2] for f in features], dtype=torch.long).to(args.device)
+                label_ids = torch.tensor([f[3] for f in features], dtype=torch.long).to(args.device)
             
             elif mode == "single":
                 batch = iter_item
