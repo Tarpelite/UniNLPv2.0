@@ -11,9 +11,13 @@ import torch
 
 import torch.nn as nn
 from torch.optim import Adam
+
+from torch.utils.data import DataLoader, RandomSampler, SequentialSampler, TensorDataset
+
 import copy 
 import requests
 from seqeval.metrics import accuracy_score, precision_score, recall_score, f1_score
+from tqdm import *
 
 from utils_mtdnn import MegaDataSet
 from uninlp import AdamW, get_linear_schedule_with_warmup
@@ -36,7 +40,7 @@ def set_seed(args):
     if args.n_gpu > 0:
         torch.cuda.manual_seed_all(args.seed)
 
-def train(args, model, dataset, mode, task_id=-1):
+def train(args, model, datasets, mode, task_id=-1):
 
     args.train_batch_size = args.mini_batch_size * max(1, args.n_gpus)
 
@@ -44,9 +48,9 @@ def train(args, model, dataset, mode, task_id=-1):
     alpha_sets = ["alpha_list"]
 
     if mode == "joint":
-        t_total = sum(len(x) for x in dataset) //args.gradient_accumulation_steps
+        t_total = sum(len(x) for x in datasets) //args.gradient_accumulation_steps
     else:
-        t_total = len(dataset) // args.gradient_accumulation_steps
+        t_total = len(datasets) // args.gradient_accumulation_steps
 
     optimizer_grouped_parameters = [
         {'params': [p for n, p in model.named_parameters() if not any(nd in n for nd in (no_decay + alpha_sets))], 'weight_decay': args.weight_decay},
@@ -83,8 +87,9 @@ def train(args, model, dataset, mode, task_id=-1):
         if mode == "joint":
             datasets = [sorted(t, key=lambda k:random.random()) for t in datasets]
             all_iters = [iter(item) for item in datasets]
-            for x in range(len(train_data_list)):
-                all_indices += [x]*len(train_data_list[x])
+            all_indices = []
+            for x in range(len(datasets)):
+                all_indices += [x]*len(datasets[x])
             random.shuffle(all_indices)
             epoch_iterator = tqdm(all_indices, desc="Iteration", disable=False)
 
@@ -173,18 +178,18 @@ def train(args, model, dataset, mode, task_id=-1):
 def evaluate(args, model, UniDataSet, label_list, task):
     
     dataset = UniDataSet.load_single_dataset(task, "dev")
-    task_id = UniDataset.task_map[task]
+    task_id = UniDataSet.task_map[task]
     label_list = UniDataSet[task_id]
 
     if torch.cuda.device_count() > 0: 
         eval_batch_size = torch.cuda.device_count() * args.mini_batch_size
     else:
         eval_batch_size = args.per_gpu_eval_batch_size
-    eval_sampler = SequentialSampler(eval_dataset)
-    eval_dataloader = DataLoader(eval_dataset, sampler=eval_sampler, batch_size=eval_batch_size)
+    eval_sampler = SequentialSampler(dataset)
+    eval_dataloader = DataLoader(dataset, sampler=eval_sampler, batch_size=eval_batch_size)
 
     logger.info(" *** Runing {} evaluation ***".format(task)) 
-    logger.info("  Num examples = %d", len(eval_dataset))
+    logger.info("  Num examples = %d", len(dataset))
     logger.info("  Batch size = %d", eval_batch_size)
     nb_eval_steps = 0
     preds = None
@@ -218,14 +223,14 @@ def evaluate(args, model, UniDataSet, label_list, task):
     
     preds = np.argmax(preds, axis=2)
 
-    label_map = {i: label for i, label in enumerate(labels)}
+    label_map = {i: label for i, label in enumerate(label_list)}
 
     out_label_list = [[] for _ in range(out_label_ids.shape[0])]
     preds_list = [[] for _ in range(out_label_ids.shape[0])]
 
     for i in range(out_label_ids.shape[0]):
         for j in range(out_label_ids.shape[1]):
-            if out_label_ids[i, j] != pad_token_label_id:
+            if out_label_ids[i, j] != -100:
                 out_label_list[i].append(label_map[out_label_ids[i][j]])
                 preds_list[i].append(label_map[preds[i][j]])
     
@@ -365,7 +370,7 @@ def main():
                                                     do_lower_case=args.do_lower_case)
         checkpoints = [args.output_dir]
 
-        model = model_class.from_pretrained(checkpoint,
+        model = model_class.from_pretrained(checkpoints,
                                             from_tf=bool(".ckpt" in args.model_name_or_path),
                                             config = config,
                                             labels_list=UniDataSet.labels_list,
@@ -377,7 +382,7 @@ def main():
         total_results = {}
         for task in UniDataSet.tasks_list:
             dataset = UniDataSet.load_single_dataset(task, "dev")
-            task_id = UniDataset.task_map[task]
+            task_id = UniDataSet.task_map[task]
             label_list = UniDataSet[task_id]
             results = evaluate(args, model, UniDataSet, label_list, task)
             if task == "POS":
