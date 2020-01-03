@@ -171,20 +171,17 @@ class MegaDataSet(object):
                 features, _ = self.load_single_dataset(task, "debug")
             else:
                 features, _ = self.load_single_dataset(task, "train")
+
             cnt = 0
             features_batches = []
             while cnt + self.mini_batch_size < len(features):
-                batch_t = []
-                for i in range(cnt, cnt + self.mini_batch_size):
-                    batch_t.append(features[i])
+                batch_t = features[cnt:cnt+self.mini_batch_size]
                 features_batches.append(batch_t)
                 cnt += self.mini_batch_size
-            batch_t = []
-            for i in range(cnt, len(features)):
-                batch_t.append(features[i])
-            features_batches.append(batch_t)
-            task_id = self.task_map[task]
-            features_batches_list.append([features_batches])
+
+            features_batches.append(features[cnt:])
+
+            features_batches_list.append(features_batches)
         return features_batches_list
 
 
