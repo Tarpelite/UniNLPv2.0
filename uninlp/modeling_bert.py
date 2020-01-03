@@ -1297,7 +1297,7 @@ class MTDNNModel(BertPreTrainedModel):
             self.w1 = nn.Linear(config.hidden_size, 1)
             self.w2 = nn.Linear(config.hidden_size, 1)
 
-        self.labels_list = labels_list
+        self.labels_list = [len(x) for x in labels_list]
         self.do_task_embedding = do_task_embedding
         self.do_alpha = do_alpha
 
