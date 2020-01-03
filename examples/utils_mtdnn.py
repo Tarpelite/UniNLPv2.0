@@ -66,7 +66,7 @@ class MegaDataSet(object):
     def load_single_dataset(self, task_name, mode):
         task = task_name.upper()
         task_id = self.task_map[task_name]
-        file_path = os.path.join(self.datasets_dir, task_name, "{}.txt",format(mode))
+        file_path = os.path.join(self.datasets_dir, task_name, "{}.txt".format(mode))
         print("Loading trainset from task %s".format(task))
         
         examples = self.load_examples_from_file(file_path, task_name)
