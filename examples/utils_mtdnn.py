@@ -100,7 +100,7 @@ class MegaDataSet(object):
 
                 cnt_counts.append(len(tokens))
                 if task_name == "SRL":
-                    verb_tokens = self.tokenzer.tokenize(verb)
+                    verb_tokens = self.tokenizer.tokenize(verb)
                     special_tokens_count = 3
                     if len(tokens) > self.max_seq_length - special_tokens_count - len(verb_tokens):
                         tokens = tokens[:(self.max_seq_length - special_tokens_count - len(verb_tokens))]
