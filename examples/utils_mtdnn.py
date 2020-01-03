@@ -49,11 +49,10 @@ class MegaDataSet(object):
                 left = inputs[0].strip().split()
                 right = inputs[1].strip().split()
                 if task == "SRL":
-                    words = left[1:]
+                    words = left
                     labels = right
-                    verb = words[int(left[0])]
-                    assert len(words) == len(labels)
-                    examples.append([words, labels, verb])
+                    assert len(words) == len(labels) + 1
+                    examples.append([words, labels])
                     
                 else:
                     words = left
