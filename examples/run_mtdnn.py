@@ -318,7 +318,7 @@ def main():
     set_seed(args)
 
     # Setup tokenizer
-    args.model_type = args.model_type_lower()
+    args.model_type = args.model_type.lower()
     config_class, model_class, tokenizer_class = MODEL_CLASSES[args.model_type]
     config = config_class.from_pretrained(args.config_name if args.config_name else args.model_name_or_path,
                                           num_labels=2, 
