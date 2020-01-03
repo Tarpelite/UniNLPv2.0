@@ -47,7 +47,7 @@ if is_torch_available():
                                 AutoModelWithLMHead)
 
     from .modeling_bert import (BertPreTrainedModel, BertModel, BertForPreTraining,
-                                BertForMaskedLM, BertForNextSentencePrediction, BertForSRL,
+                                BertForMaskedLM, BertForNextSentencePrediction, 
                                 BertForSequenceClassification, BertForMultipleChoice, MTDNNModel,
                                 BertForTokenClassification, BertForQuestionAnswering,
                                 load_tf_weights_in_bert, BERT_PRETRAINED_MODEL_ARCHIVE_MAP)
@@ -56,9 +56,6 @@ if is_torch_available():
                                 DistilBertForSequenceClassification, DistilBertForQuestionAnswering,
                                 DistilBertForTokenClassification,
                                 DISTILBERT_PRETRAINED_MODEL_ARCHIVE_MAP)
-    from .modeling_camembert import (CamembertForMaskedLM, CamembertModel,
-                                CamembertForSequenceClassification, CamembertForMultipleChoice,
-                                CAMEMBERT_PRETRAINED_MODEL_ARCHIVE_MAP)
     from .modeling_encoder_decoder import PreTrainedEncoderDecoder, Model2Model
     # Optimization
     from .optimization import (AdamW, get_constant_schedule, get_constant_schedule_with_warmup, get_cosine_schedule_with_warmup,
