@@ -116,7 +116,7 @@ class MegaDataSet(object):
 
                 tokens = ['[CLS]'] + tokens
                 label_ids = [-100] + label_ids
-                segment_ids = ['[CLS]'] + segment_ids
+                segment_ids = [0] + segment_ids
 
                 if task_name == "SRL":
                     tokens += ['[SEP]'] + verb_tokens + ['[SEP]']
