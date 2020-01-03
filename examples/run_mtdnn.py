@@ -301,9 +301,10 @@ def main():
     parser.add_argument("--debug", action="store_true")
     args = parser.parse_args()
 
-    if args.no_cuda:
-        device = torch.device("cuda" if torch.cuda.is_available() and not args.no_cuda else "cpu")
-        args.n_gpu = torch.cuda.device_count()
+
+    device = torch.device("cuda" if torch.cuda.is_available() and not args.no_cuda else "cpu")
+    args.n_gpu = torch.cuda.device_count()
+
     args.device = device
 
     # Setup logging
