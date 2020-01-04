@@ -398,17 +398,17 @@ def main():
             # label_list = UniDataSet.labels_list[task_id]
             results = evaluate(args, model, UniDataSet, task)
             if task == "POS":
-                total_results["POS"] = results["a"]
+                total_results["POS_ACC"] = results["a"]
             elif task == "NER":
-                total_results["NER"] = results["f"]
+                total_results["NER_F1"] = results["f"]
             elif task == "CHUNKING":
-                total_results["CHUNKING"] = results["f"]
+                total_results["CHUNKING_F1"] = results["f"]
             elif task == "SRL":
-                total_results["SRL"] = results["f"]
+                total_results["SRL_F1"] = results["f"]
             elif task == "ONTO_POS":
-                total_results["ONTO_POS"] = results["a"]
+                total_results["ONTO_POS_F1"] = results["a"]
             elif task == "ONTO_NER":
-                total_results["ONTO_NER"] = results["f"]
+                total_results["ONTO_NER_F1"] = results["f"]
         print(total_results)
 
 if __name__ == "__main__":
