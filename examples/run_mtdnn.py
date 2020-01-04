@@ -242,6 +242,8 @@ def evaluate(args, model, UniDataSet, task):
     results["r"] = recall_score(out_label_list, preds_list)
     results["f"] = f1_score(out_label_list, preds_list)
     logger.info("*** {} Evaluate results ***".format(task))
+    for key in sorted(results.keys()):
+        logger.info("  %s = %s ", key, str(results[key]))
     print(results)
 
     return results
