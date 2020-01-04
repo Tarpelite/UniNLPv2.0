@@ -1306,10 +1306,9 @@ class MTDNNModel(BertPreTrainedModel):
             self.adapter_layers = nn.ModuleList([AdapterLayers(config, num_adapter_layers) for _ in labels_list])
             # init the same as BertModel last layers
             init_layers = bert.encoder.layer[-num_adapter_layers:]
-            for adapter_layer in init_layers:
-                for init_sub_layer, target_sub_layer in zip(init_layers, adapter_layer):
-                    target_sub_layer = copy_model(init_sub_layer)
-            
+            for adapter_layer in self.adapter_layers:
+                for i in range(len(adapter_layer.layers)):
+                    pass
 
         if do_alpha:
             init_value = torch.zeros(config.num_hidden_layers, 1)
