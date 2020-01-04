@@ -1332,7 +1332,7 @@ class MTDNNModel(BertPreTrainedModel):
     def forward(self, input_ids=None, attention_mask=None, token_type_ids=None,
                 position_ids=None, head_mask=None, inputs_embeds=None, labels=None,
                 task_id=0):
-        if do_adapter:
+        if self.do_adapter:
             adapter_layers = self.adapter_layers[task_id]
             for i in range(len(adapter_layers)):
                 self.bert.encoder.layer[-i] = adapter_layers[i]
