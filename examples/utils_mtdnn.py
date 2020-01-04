@@ -132,7 +132,7 @@ class MegaDataSet(object):
                 input_ids += [0]*padding_length
                 input_mask += [0]*padding_length
                 segment_ids += [0]*padding_length
-                label_ids += [0]*padding_length
+                label_ids += [-100]*padding_length
 
                 assert len(input_ids) == self.max_seq_length
                 assert len(input_mask) == self.max_seq_length
