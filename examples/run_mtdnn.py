@@ -306,6 +306,8 @@ def main():
                         help="random seed for initialization")
     
     parser.add_argument("--do_alpha", action="store_true")
+    parser.add_argument("--do_adapter", action="store_true")
+    parser.add_argument("--num_adapter_layers", type=int, default=2)
     parser.add_argument("--do_task_embedding", action="store_true")
     parser.add_argument("--do_lower_case", action="store_true")
     parser.add_argument("--fp16", action="store_true")
@@ -353,7 +355,9 @@ def main():
                                         config = config,
                                         labels_list=UniDataSet.labels_list,
                                         do_task_embedding=args.do_task_embedding,
-                                        do_alpha=args.do_alpha
+                                        do_alpha=args.do_alpha,
+                                        do_adapter = args.do_adapter,
+                                        num_adapter_layers = args.num_adapter_layers
                                         )
     
     model.to(args.device)
@@ -408,7 +412,7 @@ def main():
             elif task == "SRL":
                 total_results["SRL_F1"] = results["f"]
             elif task == "ONTO_POS":
-                total_results["ONTO_POS_F1"] = results["a"]
+                total_results["ONTO_POS_ACC"] = results["a"]
             elif task == "ONTO_NER":
                 total_results["ONTO_NER_F1"] = results["f"]
         print(total_results)
