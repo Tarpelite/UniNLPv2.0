@@ -216,9 +216,9 @@ class MegaDataSet(object):
                     input_ids, input_mask, segment_ids, label_ids
                 ])
 
-            instances = [[task_name, label_map, example] for example in examples]
-            with Pool(cpu_count()) as p:
-                features = list(tqdm(p.imap(self.solve, instances), total=len(instances)))
+            # instances = [[task_name, label_map, example] for example in examples]
+            # with Pool(cpu_count()) as p:
+            #     features = list(tqdm(p.imap(self.solve, instances), total=len(instances)))
             
 
             self.features_map["{}-{}".format(task, "train")] = features
