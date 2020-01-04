@@ -216,7 +216,7 @@ def evaluate(args, model, UniDataSet, task):
 
         nb_eval_steps += 1
         if preds is None:
-            print("preds", preds.shape)
+            print("preds", logits.shape)
             preds = logits.detach().cpu().numpy()
             out_label_ids = batch[3].detach().cpu().numpy()
         else:
