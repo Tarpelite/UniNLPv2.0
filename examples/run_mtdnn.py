@@ -186,7 +186,7 @@ def evaluate(args, model, UniDataSet, task):
     if torch.cuda.device_count() > 0: 
         eval_batch_size = torch.cuda.device_count() * args.mini_batch_size
     else:
-        eval_batch_size = args.per_gpu_eval_batch_size
+        eval_batch_size = args.mini_batch_size
     eval_sampler = SequentialSampler(dataset)
     eval_dataloader = DataLoader(dataset, sampler=eval_sampler, batch_size=eval_batch_size)
 

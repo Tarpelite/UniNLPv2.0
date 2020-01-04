@@ -140,6 +140,10 @@ class MegaDataSet(object):
 
         features = []
         cnt_counts = []
+        if task == "POS":
+            last_tokens = []
+            last_label_ids = []
+            half_length = int(self.max_seq_length / 2)
 
         if "{}-{}".format(task, mode) in self.features_map:
             features = self.features_map["{}-{}".format(task, mode)]
@@ -152,7 +156,7 @@ class MegaDataSet(object):
                 
                 words = example[0]
                 labels = example[1]
-                if task_name == "SRL":
+                if task == "SRL":
                     verb = words[0]
                     words = words[1:]
 
@@ -162,9 +166,18 @@ class MegaDataSet(object):
                     word_tokens = self.tokenizer.tokenize(word)
                     tokens.extend(word_tokens)
                     label_ids.extend([label_map[label]] + [-100]*(len(word_tokens) - 1))
+                if task == "POS":
+                    if ex_index == 0 :
+                        last_tokens = tokens[-half_length:]
+                        last_label_ids = label_ids[-half_length:]
+                    else:
+                        tokens = last_tokens + tokens
+                        label_ids = last_label_ids + label_ids
+                        last_tokens = tokens[-half_length:]
+                        last_label_ids = label_ids[-half_length:]
 
                 cnt_counts.append(len(tokens))
-                if task_name == "SRL":
+                if task == "SRL":
                     verb_tokens = self.tokenizer.tokenize(verb)
                     special_tokens_count = 3
                     if len(tokens) > self.max_seq_length - special_tokens_count - len(verb_tokens):
@@ -184,7 +197,7 @@ class MegaDataSet(object):
                 label_ids = [-100] + label_ids
                 segment_ids = [0] + segment_ids
 
-                if task_name == "SRL":
+                if task == "SRL":
                     tokens +=   verb_tokens + ['[SEP]']
                     label_ids +=   [-100]*(len(verb_tokens) + 1) 
                     segment_ids +=    [1]*(len(verb_tokens) + 1)
