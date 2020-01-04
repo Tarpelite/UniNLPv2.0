@@ -241,6 +241,8 @@ def evaluate(args, model, UniDataSet, task):
     results["p"] = precision_score(out_label_list, preds_list)
     results["r"] = recall_score(out_label_list, preds_list)
     results["f"] = f1_score(out_label_list, preds_list)
+    logger.info("*** {} Evaluate results ***".format(task))
+    print(results)
 
     return results
 
