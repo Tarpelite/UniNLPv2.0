@@ -100,7 +100,7 @@ def train(args, model, datasets, mode, task_id=-1):
         for step, iter_item in enumerate(epoch_iterator):
             if mode == "joint":
                 task_id = iter_item
-                features = next(all_iters[task_id])
+                features = next(all_iters[task_id])  
                 input_ids = torch.tensor([f[0] for f in features], dtype=torch.long).to(args.device)
                 input_mask = torch.tensor([f[1] for f in features], dtype=torch.long).to(args.device)
                 segment_ids = torch.tensor([f[2] for f in features], dtype=torch.long).to(args.device)
@@ -141,6 +141,8 @@ def train(args, model, datasets, mode, task_id=-1):
                 loss.backward()
             tr_loss += loss.item()
 
+            print("loss", loss)
+            
             if (step + 1) % 100 == 0:
                 print("loss", loss.item())
             

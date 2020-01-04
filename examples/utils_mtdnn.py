@@ -221,7 +221,7 @@ class MegaDataSet(object):
             #     features = list(tqdm(p.imap(self.solve, instances), total=len(instances)))
             
 
-            self.features_map["{}-{}".format(task, "train")] = features
+            self.features_map["{}-{}".format(task, mode)] = features
 
             logger.info("*** Statistics ***")
             logger.info("*** max_len:{}  min_len:{} avg_len:{}***".format(max(cnt_counts), min(cnt_counts), sum(cnt_counts) / len(cnt_counts)))

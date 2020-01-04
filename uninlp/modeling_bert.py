@@ -1300,6 +1300,7 @@ class MTDNNModel(BertPreTrainedModel):
         self.labels_list = [len(x) for x in labels_list]
         self.do_task_embedding = do_task_embedding
         self.do_alpha = do_alpha
+        self.softmax = nn.Softmax(dim=0)
 
         self.init_weights()
 
