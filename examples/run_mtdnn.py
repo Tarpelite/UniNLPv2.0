@@ -220,7 +220,7 @@ def evaluate(args, model, UniDataSet, task):
             preds = logits.detach().cpu().numpy()
             out_label_ids = batch[3].detach().cpu().numpy()
         else:
-            preds = np.append(preds, logits.detach().cpu().numpy, axis=0)
+            preds = np.append(preds, logits.detach().cpu().numpy(), axis=0)
             out_label_ids = np.append(out_label_ids, inputs["labels"].detach().cpu().numpy(), axis=0)
     
     preds = np.argmax(preds, axis=2)
