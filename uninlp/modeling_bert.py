@@ -399,7 +399,7 @@ class BertEncoder(nn.Module):
 class AdapterLayers(nn.Module):
     def __init__(self, config, num_layers):
         super(AdapterLayers, self).__init__()
-        self.layer = nn.ModuleList([BertLayer(config) for _ in range(2)])
+        self.layers = nn.ModuleList([BertLayer(config) for _ in range(2)])
         self.num_layers = num_layers
 
 
@@ -1305,11 +1305,10 @@ class MTDNNModel(BertPreTrainedModel):
         if do_adapter:
             self.adapter_layers = nn.ModuleList([AdapterLayers(config, num_adapter_layers) for _ in labels_list])
             # init the same as BertModel last layers
-            init_layers = bert.encoder.layer[-num_adapter_layers:]
-            for adapter_layer in self.adapter_layers:
-                for i in range(len(adapter_layer.layers)):
-                    pass
-
+            for i in range(len(self.adapter_layers)):
+                for j in range(len(self.adapter_layers[i].layers)):
+                    self.adapter_layers[i].layers[j] = copy_model(bert.encoder.layer[-j])
+        
         if do_alpha:
             init_value = torch.zeros(config.num_hidden_layers, 1)
             self.alpha_list = nn.ModuleList([nn.Parameter(init_value, requires_grad=True)])
@@ -1333,7 +1332,11 @@ class MTDNNModel(BertPreTrainedModel):
     def forward(self, input_ids=None, attention_mask=None, token_type_ids=None,
                 position_ids=None, head_mask=None, inputs_embeds=None, labels=None,
                 task_id=0):
-        
+        if do_adapter:
+            adapter_layers = self.adapter_layers[task_id]
+            for i in range(len(adapter_layers)):
+                self.bert.encoder.layer[-i] = adapter_layers[i]
+                
         outputs = self.bert(input_ids, 
                             attention_mask=attention_mask,
                             token_type_ids=token_type_ids,
