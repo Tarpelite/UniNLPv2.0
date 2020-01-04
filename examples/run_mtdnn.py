@@ -393,7 +393,9 @@ def main():
                                             config = config,
                                             labels_list=UniDataSet.labels_list,
                                             do_task_embedding=args.do_task_embedding,
-                                            do_alpha=args.do_alpha)
+                                            do_alpha=args.do_alpha,
+                                            do_adapter = args.do_adapter,
+                                            num_adapter_layers = args.num_adapter_layers)
         
 
         model.to(args.device)
