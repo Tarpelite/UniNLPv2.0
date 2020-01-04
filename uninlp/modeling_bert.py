@@ -1307,7 +1307,7 @@ class MTDNNModel(BertPreTrainedModel):
             # init the same as BertModel last layers
             for i in range(len(self.adapter_layers)):
                 for j in range(len(self.adapter_layers[i].layers)):
-                    self.adapter_layers[i].layers[j] = copy_model(bert.encoder.layer[-j])
+                    self.adapter_layers[i].layers[j] = copy_model(self.bert.encoder.layer[-j])
         
         if do_alpha:
             init_value = torch.zeros(config.num_hidden_layers, 1)
@@ -1336,7 +1336,7 @@ class MTDNNModel(BertPreTrainedModel):
             adapter_layers = self.adapter_layers[task_id]
             for i in range(len(adapter_layers)):
                 self.bert.encoder.layer[-i] = adapter_layers[i]
-                
+
         outputs = self.bert(input_ids, 
                             attention_mask=attention_mask,
                             token_type_ids=token_type_ids,
