@@ -216,7 +216,7 @@ def evaluate(args, model, UniDataSet, task):
 
         nb_eval_steps += 1
         if preds is None:
-            print("preds", logits.shape)
+            # print("preds", logits.shape)
             preds = logits.detach().cpu().numpy()
             out_label_ids = batch[3].detach().cpu().numpy()
         else:
@@ -244,7 +244,11 @@ def evaluate(args, model, UniDataSet, task):
     logger.info("*** {} Evaluate results ***".format(task))
     for key in sorted(results.keys()):
         logger.info("  %s = %s ", key, str(results[key]))
-    print(results)
+    
+    # print(results)
+    print("predict_sample")
+    print("predict_list", preds_list[0])
+    print("out_label_list", out_label_list[0])
 
     return results
 
