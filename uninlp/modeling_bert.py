@@ -26,6 +26,7 @@ import torch
 from torch import nn
 from torch.nn import CrossEntropyLoss, MSELoss
 import copy
+import pickle
 
 from .modeling_utils import PreTrainedModel, prune_linear_layer, AverageMeter
 from .configuration_bert import BertConfig
@@ -392,6 +393,14 @@ class BertEncoder(nn.Module):
         if self.output_attentions:
             outputs = outputs + (all_attentions,)
         return outputs  # last-layer hidden state, (all hidden states), (all attentions)
+
+
+
+class AdapterLayers(nn.Module):
+    def __init__(self, config, num_layers):
+        super(AdapterLayers, self).__init__()
+        self.layer = nn.ModuleList([BertLayer(config) for _ in range(2)])
+        self.num_layers = num_layers
 
 
 class BertPooler(nn.Module):
@@ -1275,15 +1284,32 @@ class BertForQuestionAnswering(BertPreTrainedModel):
 
         return outputs  # (loss), start_logits, end_logits, (hidden_states), (attentions)
 
+def copy_model(src):
+    pickle.dump(src, open("save.pl", "wb"))
+    target = pickle.load(open("save.pl", "rb"))
+    return target
+
 
 class MTDNNModel(BertPreTrainedModel):
-    def __init__(self, config, labels_list, do_task_embedding=False, do_alpha=False):
+    def __init__(self, config, labels_list, 
+                 do_task_embedding=False, do_alpha=False,
+                 do_adapter=False, num_adapter_layers=2):
         super(MTDNNModel, self).__init__(config)
 
         self.bert = BertModel(config)
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
 
+        self.num_fixed_layers = config.num_hidden_layers - num_adapter_layers
         self.classifier_list =  nn.ModuleList([nn.Linear(config.hidden_size, len(labels)) for labels in labels_list])
+
+        if do_adapter:
+            self.adapter_layers = nn.ModuleList([AdapterLayers(config, num_adapter_layers) for _ in labels_list])
+            # init the same as BertModel last layers
+            init_layers = bert.encoder.layer[-num_adapter_layers:]
+            for adapter_layer in init_layers:
+                for init_sub_layer, target_sub_layer in zip(init_layers, adapter_layer):
+                    target_sub_layer = copy_model(init_sub_layer)
+            
 
         if do_alpha:
             init_value = torch.zeros(config.num_hidden_layers, 1)
@@ -1300,6 +1326,7 @@ class MTDNNModel(BertPreTrainedModel):
         self.labels_list = [len(x) for x in labels_list]
         self.do_task_embedding = do_task_embedding
         self.do_alpha = do_alpha
+        self.do_adapter = do_adapter
         self.softmax = nn.Softmax(dim=0)
 
         self.init_weights()
@@ -1318,7 +1345,7 @@ class MTDNNModel(BertPreTrainedModel):
         sequence_output = outputs[0]
 
         hidden_states = outputs[-1]
-        sequence_output = hidden_states[-1]
+        # sequence_output = hidden_states[-1]
 
         classifier = self.classifier_list[task_id]
         num_labels = self.labels_list[task_id]
