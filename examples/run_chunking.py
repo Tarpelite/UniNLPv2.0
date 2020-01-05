@@ -35,21 +35,18 @@ from utils_chunking import convert_examples_to_features, get_labels, read_exampl
 import torch.nn as nn
 from torch.optim import Adam
 
-from transformers import AdamW, get_linear_schedule_with_warmup
-from transformers import WEIGHTS_NAME, BertConfig, BertForTokenClassification, BertTokenizer
-from transformers import RobertaConfig, RobertaForTokenClassification, RobertaTokenizer
-from transformers import DistilBertConfig, DistilBertForTokenClassification, DistilBertTokenizer
+from uninlp import AdamW, get_linear_schedule_with_warmup
+from uninlp import WEIGHTS_NAME, BertConfig, BertForTokenClassification, BertTokenizer
+
 
 logger = logging.getLogger(__name__)
 
 ALL_MODELS = sum(
-    (tuple(conf.pretrained_config_archive_map.keys()) for conf in (BertConfig, RobertaConfig, DistilBertConfig)),
+    (tuple(conf.pretrained_config_archive_map.keys()) for conf in (BertConfig, )),
     ())
 
 MODEL_CLASSES = {
-    "bert": (BertConfig, BertForTokenClassification, BertTokenizer),
-    "roberta": (RobertaConfig, RobertaForTokenClassification, RobertaTokenizer),
-    "distilbert": (DistilBertConfig, DistilBertForTokenClassification, DistilBertTokenizer)
+    "bert": (BertConfig, BertForTokenClassification, BertTokenizer)
 }
 
 
