@@ -96,7 +96,10 @@ def train(args, model, datasets, mode, task_id=-1):
             epoch_iterator = tqdm(all_indices, desc="Iteration", disable=False)
 
         elif mode == "single":
-            epoch_iterator = tqdm(datasets, desc="Iteration", disable=False)
+            train_sampler = RandomSampler(datasets)
+            train_dataloader = DataLoader(datasets, sampler=train_sampler, batch_size=args.mini_batch_size*args.n_gpu) 
+            
+            epoch_iterator = tqdm(train_dataloader, desc="Iteration", disable=False)
             
         model.train()
         for step, iter_item in enumerate(epoch_iterator):
