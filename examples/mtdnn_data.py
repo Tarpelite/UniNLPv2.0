@@ -10,18 +10,18 @@ from torch.utils.data import DataLoader, RandomSampler, SequentialSampler, Tenso
 
 from multiprocessing import cpu_count, Pool
 
-class UniNLPMTDNNDataset():
-    def __init__(self, data_folder, batch_size):
-        # load each single task data
-        all_data_sets = []
-        for i range all_task:
-            all_data_sets.append(load_single_dataset(batch_size))
-        
-        # !!!! drop tail, make sure the length is of each task equals n * batch_size
-        # Example:  [[0, 1, 2], [3, 4, 5], [6, 7, 8], [9]] -> [[0, 1, 2], [3, 4, 5], [6, 7, 8]]
-        all_dataset = ConcatDataset(all_data_sets)
-        self.all_dataset = BatchSampler(all_dataset, batch_size)
-        self.all_dataset = RandomSampler(self.all_dataset)
-
-    def __iter__(self):
-        next(self.all_dataset)
+def load_MTDNN_dataset(data_folder, batch_size):
+    # load each single task data
+    all_data_sets = []
+    for i range all_task:
+        all_data_sets.append(load_single_dataset(batch_size))
+    
+    # !!!! drop tail, make sure the length is of each task equals n * batch_size
+    # Example:  [[0, 1, 2], [3, 4, 5], [6, 7, 8], [9]] -> [[0, 1, 2], [3, 4, 5], [6, 7, 8]]
+    
+    # add task id in single_dataset TensorDataset(all_input_ids, all_input_mask, all_segment_ids, all_label_ids, task_ids)
+    all_dataset = ConcatDataset(all_data_sets)
+    all_dataset_sampler = BatchSampler(all_dataset, batch_size)
+    all_dataset_sampler = RandomSampler(all_dataset_sampler)
+    return all_dataset, all_dataset_sampler
+    
