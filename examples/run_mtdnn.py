@@ -115,7 +115,7 @@ def train(args, model, datasets, mode, task_id=-1):
                 batch = tuple(t.to(args.device) for t in batch)
                 input_ids = batch[0]
                 input_mask = batch[1]
-                token_type_ids = batch[2]
+                segment_ids = batch[2]
                 labels = batch[3]
 
             inputs = {"input_ids":input_ids, 
