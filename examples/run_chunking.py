@@ -36,7 +36,7 @@ import torch.nn as nn
 from torch.optim import Adam
 
 from uninlp import AdamW, get_linear_schedule_with_warmup
-from uninlp import WEIGHTS_NAME, BertConfig, BertForTokenClassification, BertTokenizer
+from uninlp import WEIGHTS_NAME, BertConfig, MTDNNModel, BertTokenizer
 from pudb import set_trace
 
 set_trace()
@@ -48,7 +48,7 @@ ALL_MODELS = sum(
     ())
 
 MODEL_CLASSES = {
-    "bert": (BertConfig, BertForTokenClassification, BertTokenizer)
+    "bert": (BertConfig, MTDNNModel, BertTokenizer)
 }
 
 
@@ -444,7 +444,9 @@ def main():
     model = model_class.from_pretrained(args.model_name_or_path,
                                         from_tf=bool(".ckpt" in args.model_name_or_path),
                                         config=config,
-                                        cache_dir=args.cache_dir if args.cache_dir else None)
+                                        cache_dir=args.cache_dir if args.cache_dir else None,
+                                        labels_list=[get_labels(args.labels)]
+                                        )
 
     if args.local_rank == 0:
         torch.distributed.barrier()  # Make sure only the first process in distributed training will download model & vocab
@@ -486,7 +488,7 @@ def main():
         logger.info("Evaluate the following checkpoints: %s", checkpoints)
         for checkpoint in checkpoints:
             global_step = checkpoint.split("-")[-1] if len(checkpoints) > 1 else ""
-            model = model_class.from_pretrained(checkpoint)
+            model = model_class.from_pretrained(checkpoint, labels_list=[get_labels(args.labels)])
             model.to(args.device)
             result, _ = evaluate(args, model, tokenizer, labels, pad_token_label_id, mode="dev", prefix=global_step)
             if global_step:
