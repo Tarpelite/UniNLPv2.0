@@ -378,6 +378,7 @@ def main():
                                             do_alpha=args.do_alpha,
                                             do_adapter = args.do_adapter,
                                             num_adapter_layers = args.num_adapter_layers)
+            model.to(args.device)
         joint_train_dataset = UniDataSet.load_joint_train_dataset(debug=args.debug)
 
         model = train(args, model, joint_train_dataset, mode="joint")
