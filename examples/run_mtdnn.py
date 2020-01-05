@@ -280,11 +280,13 @@ def main():
                         help="Whether to run eval on the dev set.")
     parser.add_argument("--mini_batch_size", default=8, type=int)
 
+    parser.add_argument("--recover_path", default="", type=str)
+
     parser.add_argument("--gradient_accumulation_steps", type=int, default=1,
                         help="Number of updates steps to accumulate before performing a backward/update pass.")
     parser.add_argument("--learning_rate", default=5e-5, type=float,
                         help="The initial learning rate for Adam.")
-    parser.add_argument("--weight_decay", default=0.0, type=float,
+    parser.add_argument("--weight_decay", default=0.01, type=float,
                         help="Weight decay if we apply some.")
     parser.add_argument("--adam_epsilon", default=1e-8, type=float,
                         help="Epsilon for Adam optimizer.")
@@ -365,6 +367,17 @@ def main():
     logger.info("Training/evaluation parameters %s", args)
 
     if args.do_train:
+        if os.path.exists(args.recover_path) and len(args.recover_path) > 0:
+            logger.info("Recover model from %s", args.output_dir)
+            checkpoint = os.path.join(args.output_dir, "pytorch_model.bin")
+            model = model_class.from_pretrained(checkpoint,
+                                            from_tf=bool(".ckpt" in args.model_name_or_path),
+                                            config = config,
+                                            labels_list=UniDataSet.labels_list,
+                                            do_task_embedding=args.do_task_embedding,
+                                            do_alpha=args.do_alpha,
+                                            do_adapter = args.do_adapter,
+                                            num_adapter_layers = args.num_adapter_layers)
         joint_train_dataset = UniDataSet.load_joint_train_dataset(debug=args.debug)
 
         model = train(args, model, joint_train_dataset, mode="joint")
