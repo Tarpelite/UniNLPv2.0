@@ -116,7 +116,7 @@ def train(args, model, datasets, mode, task_id=-1):
                 input_ids = batch[0]
                 input_mask = batch[1]
                 segment_ids = batch[2]
-                labels = batch[3]
+                label_ids = batch[3]
 
             inputs = {"input_ids":input_ids, 
                       "attention_mask":input_mask,
