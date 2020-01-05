@@ -381,9 +381,12 @@ def main():
                                             do_adapter = args.do_adapter,
                                             num_adapter_layers = args.num_adapter_layers)
             model.to(args.device)
-        joint_train_dataset = UniDataSet.load_joint_train_dataset(debug=args.debug)
-
-        model = train(args, model, joint_train_dataset, mode="joint")
+        if len(UniDataSet.task_list) == 1:
+            train_dataset = UniDataSet.load_single_dataset(UniDataSet.task_list[0], "train")
+            model = train(args, model, train_dataset, mode="single", task_id=0)
+        else:
+            joint_train_dataset = UniDataSet.load_joint_train_dataset(debug=args.debug)
+            model = train(args, model, joint_train_dataset, mode="joint")
     
         if not os.path.exists(args.output_dir):
             os.makedirs(args.output_dir)
