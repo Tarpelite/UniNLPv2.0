@@ -22,6 +22,8 @@ from tqdm import *
 from utils_mtdnn import MegaDataSet
 from uninlp import AdamW, get_linear_schedule_with_warmup
 from uninlp import WEIGHTS_NAME, BertConfig, MTDNNModel, BertTokenizer
+from pudb import set_trace
+set_trace()
 
 logger = logging.getLogger(__name__)
 
