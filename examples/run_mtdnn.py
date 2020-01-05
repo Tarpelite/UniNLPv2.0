@@ -98,7 +98,6 @@ def train(args, model, datasets, mode, task_id=-1):
         elif mode == "single":
             train_sampler = RandomSampler(datasets)
             train_dataloader = DataLoader(datasets, sampler=train_sampler, batch_size=args.mini_batch_size*args.n_gpu) 
-            
             epoch_iterator = tqdm(train_dataloader, desc="Iteration", disable=False)
             
         model.train()
@@ -385,7 +384,7 @@ def main():
                                             num_adapter_layers = args.num_adapter_layers)
             model.to(args.device)
         if len(UniDataSet.task_list) == 1:
-            train_dataset = UniDataSet.load_single_dataset(UniDataSet.task_list[0], "train")
+            _, train_dataset = UniDataSet.load_single_dataset(UniDataSet.task_list[0], "train")
             model = train(args, model, train_dataset, mode="single", task_id=0)
         else:
             joint_train_dataset = UniDataSet.load_joint_train_dataset(debug=args.debug)
