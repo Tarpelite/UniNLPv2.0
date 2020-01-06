@@ -6,11 +6,45 @@ from io import open
 import yaml
 from tqdm import *
 import torch
-from torch.utils.data import DataLoader, RandomSampler, SequentialSampler, TensorDataset, ConcatDataset, BatchSampler
+from torch.utils.data import DataLoader, RandomSampler, SequentialSampler, TensorDataset, ConcatDataset, BatchSampler, Sampler
 from multiprocessing import cpu_count, Pool
 import math
+from random import shuffle
 
 logger = logging.getLogger(__name__)
+
+class RandomBatchSampler(Sampler):
+    def __init__(self, sampler, batch_size, drop_last):
+        
+        self.sampler = sampler
+        self.batch_size = batch_size
+        self.drop_last = drop_last
+
+        # when init , first batchfy
+        self.batch_list = []
+        batch = []
+        for idx in self.sampler:
+            batch.append(idx)
+            if len(batch) == self.batch_size:
+                self.batch_list.append(batch)
+                batch = []
+        if len(batch) > 0 and not self.drop_last:
+            self.batch_list.append(batch)
+        
+        
+    
+
+    def __iter__(self):
+        # when iter, do random
+        shuffle(self.batch_list)
+        return iter(self.batch_list)
+    
+    def __len__(self):
+        if self.drop_last:
+            return len(self.sampler) // self.batch_size
+        else:
+            return (len(self.sampler) + self.batch_size -1) // self.batch_size
+
 
 class MegaDataSet(object):
     def __init__(self, 
@@ -248,11 +282,6 @@ class MegaDataSet(object):
         dataset = TensorDataset(all_input_ids, all_input_mask, all_segment_ids, all_label_ids, all_task_ids)
         return features, dataset
     
-    def ConcatDataset(self, all_data_sets):
-        res = []
-        for data in all_data_sets:
-            res.extend(data)
-        return res
 
     def load_MTDNN_dataset(self, batch_size, debug=False):
         all_data_sets = []
@@ -271,10 +300,9 @@ class MegaDataSet(object):
             all_data_sets[i] = all_data_sets[i][:x]
         
          
-        all_dataset = self.ConcatDataset(all_data_sets)
+        all_dataset = ConcatDataset(all_data_sets)
         all_dataset_sampler = SequentialSampler(all_dataset)
-        all_dataset_sampler = BatchSampler(all_dataset_sampler, batch_size, drop_last=True)
-        all_dataset_sampler = RandomSampler(all_dataset)
+        all_dataset_sampler = RandomBatchSampler(all_dataset_sampler, batch_size, drop_last=True)
         return all_dataset, all_dataset_sampler
         
 
