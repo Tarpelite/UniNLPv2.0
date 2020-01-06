@@ -84,7 +84,7 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
 
     step = 0
     for _ in train_iterator:
-        train_dataloader = DataLoader(datasets, batch_sampler=all_dataset_sampler) 
+        train_dataloader = DataLoader(datasets, batch_sampler=all_dataset_sampler, shuffle=True) 
         epoch_iterator = tqdm(train_dataloader, desc="Iteration", disable=False)
         model.train()
         for step, batch in enumerate(epoch_iterator):

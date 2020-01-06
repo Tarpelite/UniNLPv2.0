@@ -299,7 +299,7 @@ class MegaDataSet(object):
          
         all_dataset = ConcatDataset(all_data_sets)
         all_dataset_sampler = SequentialSampler(all_dataset)
-        all_dataset_sampler = RandomBatchSampler(all_dataset_sampler, batch_size, drop_last=True)
+        all_dataset_sampler = BatchSampler(all_dataset_sampler, batch_size, drop_last=True)
         return all_dataset, all_dataset_sampler
         
 
