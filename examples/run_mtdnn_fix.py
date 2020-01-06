@@ -364,7 +364,7 @@ def main():
         
 
         all_train_datasets, all_dataset_sampler = UniDataSet.load_MTDNN_dataset((args.mini_batch_size * max(1, args.n_gpu)), debug=args.debug)
-        model = train(args, model, all_train_datasets, sampler=all_dataset_sampler)
+        model = train(args, model, all_train_datasets, all_dataset_sampler=all_dataset_sampler)
     
         if not os.path.exists(args.output_dir):
             os.makedirs(args.output_dir)
