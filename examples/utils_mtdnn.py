@@ -30,10 +30,11 @@ class RandomBatchSampler(Sampler):
                 batch = []
         if len(batch) > 0 and not self.drop_last:
             self.batch_list.append(batch)
+        shuffle(self.batch_list)
     def __iter__(self):
         # when iter, do random
-        shuffle(self.batch_list)
-        return iter(self.batch_list)
+        for batch in self.batch_list:
+            yield batch
     
     def __len__(self):
         if self.drop_last:
