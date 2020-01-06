@@ -258,7 +258,7 @@ class MegaDataSet(object):
                 _, dataset = self.load_single_dataset(task, "train")
             all_data_sets.append(dataset)
         # drop tail
-        for i in range(all_data_sets):
+        for i in range(len(all_data_sets)):
             l = len(all_data_sets[i])
             x = math.floor(l*1.00000 / batch_size) * batch_size
             all_data_sets[i] = all_data_sets[i][:x]
