@@ -49,10 +49,7 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
     no_decay = ["bias", "LayerNorm.weight"]
     alpha_sets = ["alpha_list"]
 
-    if mode == "joint":
-        t_total = sum(len(x) for x in datasets) //args.gradient_accumulation_steps
-    else:
-        t_total = len(datasets) // args.gradient_accumulation_steps
+    t_total = sum(len(x) for x in datasets) //args.gradient_accumulation_steps
 
     optimizer_grouped_parameters = [
         {'params': [p for n, p in model.named_parameters() if not any(nd in n for nd in (no_decay + alpha_sets))], 'weight_decay': args.weight_decay},
