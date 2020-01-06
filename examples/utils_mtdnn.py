@@ -6,7 +6,7 @@ from io import open
 import yaml
 from tqdm import *
 import torch
-from torch.utils.data import DataLoader, RandomSampler, SequentialSampler, TensorDataset
+from torch.utils.data import DataLoader, RandomSampler, SequentialSampler, TensorDataset, ConcatDataset, BatchSampler
 from multiprocessing import cpu_count, Pool
 
 logger = logging.getLogger(__name__)
@@ -242,10 +242,26 @@ class MegaDataSet(object):
             all_input_mask = torch.tensor([x[1] for x in features], dtype=torch.long)
             all_segment_ids = torch.tensor([x[2] for x in features], dtype=torch.long)
             all_label_ids = torch.tensor([x[3] for x in features], dtype=torch.long)
+            all_task_ids = torch.tensor([task_id for x in features], dtype=torch.long)
 
-        dataset = TensorDataset(all_input_ids, all_input_mask, all_segment_ids, all_label_ids)
+        dataset = TensorDataset(all_input_ids, all_input_mask, all_segment_ids, all_label_ids, all_task_ids)
         return features, dataset
-    
+
+    def load_MTDNN_dataset(self, batch_size, debug=False):
+        all_data_sets = []
+        for task in self.task_list:
+            if debug:
+                _, dataset = self.load_single_dataset(task, "debug")
+                all_data_sets.append(dataset)
+            else:
+                _, dataset = self.load_single_dataset(task, "train")
+            all_data_sets.append(dataset)
+        all_dataset = ConcatDataset(all_data_sets)
+        all_dataset_sampler = BatchSampler(all_dataset, batch_size, drop_last=True)
+        all_dataset_sampler = RandomSampler(all_dataset_sampler)
+        return all_dataset, all_dataset_sampler
+        
+
     def load_joint_train_dataset(self, debug=False):
         features_batches_list = []
         for task in self.task_list:
