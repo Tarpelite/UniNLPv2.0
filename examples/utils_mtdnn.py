@@ -8,6 +8,7 @@ from tqdm import *
 import torch
 from torch.utils.data import DataLoader, RandomSampler, SequentialSampler, TensorDataset, ConcatDataset, BatchSampler
 from multiprocessing import cpu_count, Pool
+import math
 
 logger = logging.getLogger(__name__)
 
@@ -256,9 +257,16 @@ class MegaDataSet(object):
             else:
                 _, dataset = self.load_single_dataset(task, "train")
             all_data_sets.append(dataset)
+        # drop tail
+        for i in range(all_data_sets):
+            l = len(all_data_sets[i])
+            x = math.floor(l*1.00000 / batch_size) * batch_size
+            all_data_sets[i] = all_data_sets[i][:x]
+        
+         
         all_dataset = ConcatDataset(all_data_sets)
+        all_dataset_sampler = BatchSampler(all_dataset, batch_size)
         all_dataset_sampler = RandomSampler(all_dataset)
-        all_dataset_sampler = BatchSampler(all_dataset_sampler, batch_size, drop_last=True)
         return all_dataset, all_dataset_sampler
         
 

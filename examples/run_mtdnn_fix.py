@@ -87,12 +87,11 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
         epoch_iterator = tqdm(train_dataloader, desc="Iteration", disable=False)
         model.train()
         for step, batch in enumerate(epoch_iterator):
-            batch = tuple(t.to(args.device) for t in batch)
-            input_ids = batch[0]
-            input_mask = batch[1]
-            segment_ids = batch[2]
-            label_ids = batch[3]
-            task_id = batch[4]
+            input_ids = torch.stack([x[0] for x in batch], dim=0).cuda()
+            input_mask = torch.stack([x[1] for x in batch],dim=0).cuda()
+            segment_ids = torch.stack([x[2] for x in batch], dim=0).cuda()
+            label_ids = torch.stack([x[3] for x in batch], dim=0).cuda()
+            task_id = batch[0][4]
             inputs = {"input_ids":input_ids, 
                       "attention_mask":input_mask,
                       "token_type_ids":segment_ids,
