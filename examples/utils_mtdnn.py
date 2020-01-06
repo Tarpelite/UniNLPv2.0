@@ -257,7 +257,7 @@ class MegaDataSet(object):
                 _, dataset = self.load_single_dataset(task, "train")
             all_data_sets.append(dataset)
         all_dataset = ConcatDataset(all_data_sets)
-        all_dataset_sampler = RandomSampler(all_dataset_sampler)
+        all_dataset_sampler = RandomSampler(all_dataset)
         all_dataset_sampler = BatchSampler(all_dataset_sampler, batch_size, drop_last=True)
         return all_dataset, all_dataset_sampler
         
