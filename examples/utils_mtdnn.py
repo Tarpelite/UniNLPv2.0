@@ -247,6 +247,12 @@ class MegaDataSet(object):
 
         dataset = TensorDataset(all_input_ids, all_input_mask, all_segment_ids, all_label_ids, all_task_ids)
         return features, dataset
+    
+    def ConcatDataset(self, all_data_sets):
+        res = []
+        for data in all_data_sets:
+            res.extend(data)
+        return res
 
     def load_MTDNN_dataset(self, batch_size, debug=False):
         all_data_sets = []
@@ -257,6 +263,7 @@ class MegaDataSet(object):
             else:
                 _, dataset = self.load_single_dataset(task, "train")
             all_data_sets.append(dataset)
+
         # drop tail
         for i in range(len(all_data_sets)):
             l = len(all_data_sets[i])
@@ -264,7 +271,7 @@ class MegaDataSet(object):
             all_data_sets[i] = all_data_sets[i][:x]
         
          
-        all_dataset = ConcatDataset(all_data_sets)
+        all_dataset = self.ConcatDataset(all_data_sets)
         all_dataset_sampler = SequentialSampler(all_dataset)
         all_dataset_sampler = BatchSampler(all_dataset_sampler, batch_size, drop_last=True)
         all_dataset_sampler = RandomSampler(all_dataset)
