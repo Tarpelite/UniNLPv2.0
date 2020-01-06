@@ -92,6 +92,7 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
             segment_ids = torch.stack([x[2] for x in batch], dim=0).cuda()
             label_ids = torch.stack([x[3] for x in batch], dim=0).cuda()
             task_id = batch[0][4]
+            print("task_id", task_id)
             inputs = {"input_ids":input_ids, 
                       "attention_mask":input_mask,
                       "token_type_ids":segment_ids,
