@@ -283,12 +283,17 @@ class MegaDataSet(object):
     def load_MTDNN_dataset(self, batch_size, debug=False):
         all_data_sets = []
         for task in self.task_list:
+
             if debug:
                 _, dataset = self.load_single_dataset(task, "debug")
-                all_data_sets.append(dataset)
             else:
                 _, dataset = self.load_single_dataset(task, "train")
-
+            # do unpack
+            datasets_new = []
+            for instance in datasets:
+                datasets_new.append(instance)
+            all_data_sets.append(datasets_new)
+            
         # drop tail
         for i in range(len(all_data_sets)):
             l = len(all_data_sets[i])
