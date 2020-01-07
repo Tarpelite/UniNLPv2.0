@@ -290,10 +290,10 @@ class MegaDataSet(object):
                 _, dataset = self.load_single_dataset(task, "train")
             # do unpack
             datasets_new = []
-            for instance in datasets:
+            for instance in dataset:
                 datasets_new.append(instance)
             all_data_sets.append(datasets_new)
-            
+
         # drop tail
         for i in range(len(all_data_sets)):
             l = len(all_data_sets[i])
