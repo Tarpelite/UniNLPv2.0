@@ -298,9 +298,24 @@ class MegaDataSet(object):
         
          
         all_dataset = ConcatDataset(all_data_sets)
-        all_dataset_sampler = SequentialSampler(all_dataset)
-        all_dataset_sampler = BatchSampler(all_dataset_sampler, batch_size, drop_last=True)
-        return all_dataset, all_dataset_sampler
+        # do batchfy mannually
+        batch_list = []
+        batch = []
+        for instance in all_dataset:
+            batch.appedn(instance)
+            if len(batch) == batch_size:
+                # so transform
+                all_input_ids = torch.stack([x[0] for x in batch], dim=0)
+                all_input_mask = torch.stack([x[1] for x in batch], dim=0)
+                all_segment_ids = torch.stack([x[2] for x in batch], dim=0)
+                all_label_ids = torch.stack([x[3] for x in batch], dim=0)
+                task_ids = [x[4] for x in batch]
+                batch = [all_input_ids, all_input_mask, all_segment_ids, all_label_ids, task_ids]
+                batch_list.append(batch) 
+                batch = []
+
+        all_dataset_sampler = RandomSampler(batch_list)
+        return batch_list, all_dataset_sampler
         
 
     def load_joint_train_dataset(self, debug=False):
