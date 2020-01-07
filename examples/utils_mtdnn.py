@@ -288,7 +288,6 @@ class MegaDataSet(object):
                 all_data_sets.append(dataset)
             else:
                 _, dataset = self.load_single_dataset(task, "train")
-            all_data_sets.append(dataset)
 
         # drop tail
         for i in range(len(all_data_sets)):
