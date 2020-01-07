@@ -296,8 +296,14 @@ class MegaDataSet(object):
             x = math.floor(l*1.00000 / batch_size) * batch_size
             all_data_sets[i] = all_data_sets[i][:x]
         
+        # do concat mannually
+        all_dataset = []
+        for dataset in all_data_sets:
+            for instance in dataset:
+                all_dataset.append(instance)
          
-        all_dataset = ConcatDataset(all_data_sets)
+        # all_dataset = ConcatDataset(all_data_sets)
+        
         # do batchfy mannually
         batch_list = []
         batch = []
