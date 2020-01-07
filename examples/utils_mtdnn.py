@@ -314,7 +314,7 @@ class MegaDataSet(object):
                 batch_list.append(batch) 
                 batch = []
 
-        all_dataset_sampler = RandomSampler(batch_list)
+        all_dataset_sampler = RandomSampler(batch_list, num_samples=1)
         return batch_list, all_dataset_sampler
         
 
