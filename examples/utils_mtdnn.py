@@ -302,7 +302,7 @@ class MegaDataSet(object):
         batch_list = []
         batch = []
         for instance in all_dataset:
-            batch.appedn(instance)
+            batch.append(instance)
             if len(batch) == batch_size:
                 # so transform
                 all_input_ids = torch.stack([x[0] for x in batch], dim=0)
