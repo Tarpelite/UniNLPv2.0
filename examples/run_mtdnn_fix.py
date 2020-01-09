@@ -381,7 +381,10 @@ def main():
         
         tokenizer = tokenizer_class.from_pretrained(args.output_dir, 
                                                     do_lower_case=args.do_lower_case)
-        checkpoint = os.path.join(args.output_dir, "pytorch_model.bin")
+        if args.recover_path:
+            checkpoint = args.recover_path
+        else:
+            checkpoint = os.path.join(args.output_dir, "pytorch_model.bin")
 
         model = model_class.from_pretrained(checkpoint,
                                             from_tf=bool(".ckpt" in args.model_name_or_path),
