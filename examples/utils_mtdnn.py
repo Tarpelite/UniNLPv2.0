@@ -180,6 +180,8 @@ class MegaDataSet(object):
         if "{}-{}".format(task, mode) in self.features_map:
             features = self.features_map["{}-{}".format(task, mode)]
         else:
+            last_tokens = []
+            last_label_ids = []
             for (ex_index, example) in enumerate(tqdm(examples)):
                 # if ex_index % 10000 == 0:
                 #     logger.info("Writing example %d of %d", ex_index, len(examples))
@@ -198,7 +200,7 @@ class MegaDataSet(object):
                     word_tokens = self.tokenizer.tokenize(word)
                     tokens.extend(word_tokens)
                     label_ids.extend([label_map[label]] + [-100]*(len(word_tokens) - 1))
-                if task == "POS":
+                if task == "POS" or "NER" or "ONTO_NER" or "ONTO_POS":
                     if ex_index == 0 :
                         last_tokens = tokens[-half_length:]
                         last_label_ids = label_ids[-half_length:]
