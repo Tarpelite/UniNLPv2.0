@@ -172,7 +172,7 @@ class MegaDataSet(object):
 
         features = []
         cnt_counts = []
-        if task == "POS" or "NER" or "ONTO_POS" or "ONTO_NER":
+        if task in ["POS" , "NER" , "ONTO_POS" , "ONTO_NER"]:
             last_tokens = []
             last_label_ids = []
             half_length = int(self.max_seq_length / 2)
@@ -198,7 +198,7 @@ class MegaDataSet(object):
                     word_tokens = self.tokenizer.tokenize(word)
                     tokens.extend(word_tokens)
                     label_ids.extend([label_map[label]] + [-100]*(len(word_tokens) - 1))
-                if task == "POS" or "NER" or "ONTO_NER" or "ONTO_POS":
+                if task in ["POS","NER", "ONTO_NER" , "ONTO_POS"]:
                     if ex_index == 0 :
                         last_tokens = tokens[-half_length:]
                         last_label_ids = label_ids[-half_length:]
