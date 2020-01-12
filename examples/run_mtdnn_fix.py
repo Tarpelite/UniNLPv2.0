@@ -386,16 +386,16 @@ def main():
         else:
             checkpoint = os.path.join(args.output_dir, "pytorch_model.bin")
 
-        # model = model_class.from_pretrained(checkpoint,
-        #                                     from_tf=bool(".ckpt" in args.model_name_or_path),
-        #                                     config = config,
-        #                                     labels_list=UniDataSet.labels_list,
-        #                                     do_task_embedding=args.do_task_embedding,
-        #                                     do_alpha=args.do_alpha,
-        #                                     do_adapter = args.do_adapter,
-        #                                     num_adapter_layers = args.num_adapter_layers)
+        model = model_class.from_pretrained(checkpoint,
+                                            from_tf=bool(".ckpt" in args.model_name_or_path),
+                                            config = config,
+                                            labels_list=UniDataSet.labels_list,
+                                            do_task_embedding=args.do_task_embedding,
+                                            do_alpha=args.do_alpha,
+                                            do_adapter = args.do_adapter,
+                                            num_adapter_layers = args.num_adapter_layers)
 
-        model = torch.load(checkpoint)
+        # model = torch.load(checkpoint)
         
 
         model.to(args.device)
