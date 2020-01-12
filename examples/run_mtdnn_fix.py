@@ -218,7 +218,7 @@ def evaluate(args, model, UniDataSet, task):
                 out_label_list[i].append(label_map[out_label_ids[i][j]])
                 preds_list[i].append(label_map[preds[i][j]])
     
-    if task == "onto_ner" or task == "ner":
+    if task == "ONTO_NER" or task == "NER":
         for i in range(len(preds_list)):
             for j in range(len(preds_list[i])):
                 preds_list[i][j] =  preds_list[i][j].split("-")[-1]
