@@ -1382,14 +1382,7 @@ class MTDNNModel(BertPreTrainedModel):
 
             adapter_layer = self.adapter_layers[task_id]
             for i in range(len(adapter_layer.layers)):
-<<<<<<< HEAD
                 self.bert.encoder.layer[-(i+1)] = adapter_layer.layers[i]
-=======
-                self.bert.encoder.layer[-i] = adapter_layer.layers[i]
-                if adapter_ft:
-                    for param in self.bert.encoder.layer[-i].parameters():
-                        param.requires_grad = True
->>>>>>> 4504aeb4bb54021385f4fe62ffe79a4827c6fd62
 
         outputs = self.bert(input_ids, 
                             attention_mask=attention_mask,
