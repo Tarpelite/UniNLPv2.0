@@ -268,7 +268,7 @@ class MegaDataSet(object):
             train_data_list.append(features)
         
         if len(train_data_list) > 0:
-            all_dataset = [batchfy(x, batch_size) for x in train_data_list]
+            all_dataset = [self.batchfy(x, batch_size) for x in train_data_list]
         else:
             all_dataset = train_data_list
         return all_dataset, _
