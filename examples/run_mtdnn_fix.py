@@ -151,6 +151,7 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
             # else:
             outputs = model(**inputs)
             loss = outputs[0]
+            print("loss", loss)
             if args.do_task_embedding:
                 alpha = outputs[0]
                 loss = outputs[1]
