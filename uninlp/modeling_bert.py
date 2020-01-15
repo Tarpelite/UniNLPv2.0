@@ -1315,7 +1315,6 @@ class DeepBiAffineDecoder(nn.Module):
 
         self.biaffine = BiAffine(mlp_dim, 1)
 
-        self.init_weights()
     
     def forward(self, sequence_output):
         s_head = self.mlp_head(sequence_output)
