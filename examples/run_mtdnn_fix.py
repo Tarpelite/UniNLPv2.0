@@ -47,7 +47,7 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
 
     args.train_batch_size = args.mini_batch_size * max(1, args.n_gpu)
     train_sampler = all_dataset_sampler
-    train_dataloader  = DataLoader(datasets, smapler=train_sampler)
+    train_dataloader  = DataLoader(datasets, sampler=train_sampler)
     no_decay = ["bias", "LayerNorm.weight"]
     alpha_sets = ["alpha_list"]
 
@@ -137,7 +137,7 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
                 
                 scheduler.step()
                 optimizer.step()
-                
+
                 model.zero_grad()
                 global_step += 1
 
