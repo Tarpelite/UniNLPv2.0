@@ -103,7 +103,7 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
 
     if args.n_gpu > 1:
         
-        model = DataParallelModel(model, device_ids=list(range(args.n_gpu)))
+        model = torch.nn.DataParallel(model)
         # model = DDP(model, device_ids=list(range(args.n_gpu)))
 
     # Distributed training (should be after apex fp16 initialization)
