@@ -434,6 +434,10 @@ def main():
                 total_results["ONTO_POS_ACC"] = results["a"]
             elif task == "ONTO_NER":
                 total_results["ONTO_NER_F1"] = results["f"]
+            elif task == "PARSING_UD":
+                total_results["PARSING_UD_UAS"] = results["a"]
+            elif task == "PARSING_PTB":
+                total_results["PARSING_PTB_UAS"] = results["a"]
         print(total_results)
 
 if __name__ == "__main__":
