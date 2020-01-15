@@ -25,6 +25,9 @@ import sys
 import torch
 from torch import nn
 from torch.nn import CrossEntropyLoss, MSELoss
+from torch import nn
+from torch.nn import CrossEntropyLoss, MSELoss
+import torch.nn.functional as F
 import copy
 import pickle
 
@@ -1369,21 +1372,25 @@ class MTDNNModel(BertPreTrainedModel):
         self.do_adapter = do_adapter
         self.softmax = nn.Softmax(dim=0)
 
+        self.crit_label_dst = nn.KLDivLoss(reduction='none')
+
         self.init_weights()
 
     def forward(self, input_ids=None, attention_mask=None, token_type_ids=None,
                 position_ids=None, head_mask=None, inputs_embeds=None, labels=None,
-                task_id=0, adapter_ft=False):
+                task_id=0, soft_labels=None):
         if self.do_adapter:
-            if adapter_ft:
-                for param in self.bert.parameters():
-                    param.required_grad = False
+            for param in self.bert.parameters():
+                param.required_grad = False
 
             adapter_layer = self.adapter_layers[task_id]
             for i in range(len(adapter_layer.layers)):
-                self.bert.encoder.layer[-(i+1)] = adapter_layer.layers[i]
+                self.bert.encoder.layer[-i] = adapter_layer.layers[i]
+        if isinstance(task_id, torch.Tensor):
+            # avoid 0-dim error
+            task_id = task_id.max()
 
-        outputs = self.bert(input_ids, 
+        outputs = self.bert(input_ids,
                             attention_mask=attention_mask,
                             token_type_ids=token_type_ids,
                             position_ids=position_ids,
@@ -1397,30 +1404,6 @@ class MTDNNModel(BertPreTrainedModel):
 
         classifier = self.classifier_list[task_id]
         num_labels = self.labels_list[task_id]
-        
-
-        if self.do_task_embedding:
-            task_embbedding = self.task_embedding(torch.tensor([task_id]).cuda()).view(-1)
-            hidden_states = hidden_states[1:]
-            hidden_states = torch.stack(hidden_states)
-            # alpha = w1*hidden_states + w2*task_embedding + bias 
-            out1 = self.w1(hidden_states) #[num_hidden_layers, batch_size, seq_len, 1]
-            task_embedding = task_embedding.expand(hidden_states.size(0), hidden_states.size(1), task_embedding.size(0)) # [num_hidden_layers, batch_size, hidden_size]
-            out2 = self.w2(task_embedding) # [num_hidden_layers, batch_size, 1]
-            alpha = out1.squeeze(-1) + out2 # [num_hidden_layers, batch_size, seq_len]
-            alpha = self.softmax(alpha).permute(1, 0, 2) #[batch_size, num_hidden_layers, seq_len]
-            alpha_vis = torch.mean(alpha, dim=0)
-            hidden_states = hidden_states.permute(1,0,2,3)  # [batch_size, num_hidden_layers, seq_len, hidden_size]
-            alpha = alpha.view(alpha.size() + (1,)).expand(alpha.size() + (hidden_states.size(3), )) #[batch_size, num_hidden_layers, seq_len, hidden_size]
-            sequence_output = torch.sum(alpha*hidden_states, dim=1) #[batch_size, seq_len, hidden_size]
-
-        elif self.do_alpha:
-            alpha = self.alpha_list[task_id]
-            alpha = self.softmax(alpha)
-            hidden_states = hidden_states[1:]
-            hidden_states = torch.stack(hidden_states)   # [num_hidden_layers, batch_size, seq_len, hidden_size]
-            hidden_states = hidden_states.permute(1,2,3,0)  # [batch_size, seq_len, hidden_size, num_hidden_layers]
-            sequence_output = torch.matmul(hidden_states, alpha).squeeze(-1) # [batch_size, seq_len, hidden_size]
 
         sequence_output = self.dropout(sequence_output)
         logits = classifier(sequence_output)
@@ -1446,8 +1429,19 @@ class MTDNNModel(BertPreTrainedModel):
                 loss = loss_fct(logits.view(-1, self.num_labels), labels.view(-1))
             outputs = (loss,) + outputs
 
-        if self.do_task_embedding:
-            outputs = (alpha_vis, ) + outputs
-        elif self.do_alpha:
-            outputs = (alpha, ) + outputs
+        if soft_labels is not None:
+            loss_fct = CrossEntropyLoss()
+            if attention_mask is not None:
+                # active_loss = attention_mask.view(-1) == 1
+                # active_logits = logits.view(-1, num_labels)[active_loss]
+                # active_labels = labels.view(-1)[active_loss]
+                # loss = loss_fct(active_logits, active_labels)
+                loss = self.crit_label_dst(F.log_softmax(logits.float(), dim=-1),
+                                  F.softmax(soft_labels.float(), dim=-1))
+            else:
+                assert "Please use attention mask"
+            loss = loss.sum(dim=-1) * attention_mask.type_as(loss)
+            loss = loss.sum(dim=-1).mean()
+            outputs = (loss,) + outputs
+
         return outputs
