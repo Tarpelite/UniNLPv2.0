@@ -95,7 +95,10 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
             input_mask = batch[1].squeeze().cuda()
             segment_ids = batch[2].squeeze().cuda()
             label_ids = batch[3].squeeze().cuda()
-            task_id = batch[4][0]
+            task_id = batch[4].squeeze().long()
+
+            assert task_id.max() == task_id.min()
+            task_id = task_id.max()
             print("task_id", task_id)
             inputs = {"input_ids":input_ids, 
                       "attention_mask":input_mask,
