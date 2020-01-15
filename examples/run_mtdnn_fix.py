@@ -60,7 +60,7 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
 
     args.train_batch_size = args.mini_batch_size * max(1, args.n_gpu)
     train_sampler = all_dataset_sampler
-    train_dataloader  = DataLoader(datasets, sampler=train_sampler, batch_size=args.train_batch_size)
+    train_dataloader  = DataLoader(datasets, sampler=train_sampler, batch_size=1)
     no_decay = ["bias", "LayerNorm.weight"]
     alpha_sets = ["alpha_list"]
 
