@@ -14,33 +14,24 @@ from random import shuffle
 logger = logging.getLogger(__name__)
 
 class RandomBatchSampler(Sampler):
-    def __init__(self, sampler, batch_size, drop_last):
-        
-        self.sampler = sampler
-        self.batch_size = batch_size
-        self.drop_last = drop_last
+    def __init__(self, data_source, batch_size):
 
-        # when init , first batchfy
-        self.batch_list = []
-        batch = []
-        for idx in self.sampler:
-            batch.append(idx)
-            if len(batch) == self.batch_size:
-                self.batch_list.append(batch)
-                batch = []
-        if len(batch) > 0 and not self.drop_last:
-            self.batch_list.append(batch)
-        shuffle(self.batch_list)
+        self.data_source = data_source
+        self.batch_size = batch_size
+        assert len(self.data_source) % self.batch_size == 0
+
+        self.batch_sampler = list(BatchSampler(SequentialSampler(range(len(self.data_source))),
+                                               batch_size=self.batch_size, drop_last=True))
+
+        self.random_id_sampler = torch.randperm(len(self.batch_sampler)).tolist()
+
     def __iter__(self):
         # when iter, do random
-        for batch in self.batch_list:
-            yield batch
-    
+        for ran_id in self.random_id_sampler:
+            yield self.batch_sampler[ran_id]
+
     def __len__(self):
-        if self.drop_last:
-            return len(self.sampler) // self.batch_size
-        else:
-            return (len(self.sampler) + self.batch_size -1) // self.batch_size
+        return len(self.random_id_sampler)
 
 
 class MegaDataSet(object):
