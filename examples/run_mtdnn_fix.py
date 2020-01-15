@@ -70,8 +70,8 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
 
     if args.n_gpu > 1:
         # model = torch.nn.DataParallel(model)
-        model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[-1],
-                                                          output_device=-1,
+        model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank],
+                                                          output_device=args.local_rank,
                                                           find_unused_parameters=True)
 
 
@@ -325,12 +325,12 @@ def main():
     parser.add_argument("--debug", action="store_true")
     args = parser.parse_args()
 
-
+    args.local_rank = 0
     device = torch.device("cuda" if torch.cuda.is_available() and not args.no_cuda else "cpu")
     args.n_gpu = torch.cuda.device_count()
     if args.n_gpu > 1 and not args.no_cuda:
         torch.cuda.set_device(-1)
-        device = torch.device("cuda", -1)
+        device = torch.device("cuda", args.local_rank)
         torch.distributed.init_process_group(backend="nccl")
         
     args.device = device
