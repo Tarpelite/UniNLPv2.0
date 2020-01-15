@@ -1289,9 +1289,45 @@ def copy_model(src):
     target = pickle.load(open("save.pl", "rb"))
     return target
 
+class BiAffine(nn.Module):
+    """Biaffine attention layer. (from Chris Manning.) """
+    def __init__(self, input_dim, output_dim):
+        super(BiAffine, self).__init__()
+        self.input_dim = input_dim
+        self.output_dim = output_dim
+        self.U = nn.Parameter(torch.FloatTensor(output_dim, input_dim, input_dim))
+        nn.init.xavier_uniform_(self.U)
+    
+    def forward(self, Rh, Rd):
+        Rh = Rh.unsqueeze(1)
+        Rd = Rd.unsqueeze(1)
+        S = Rh @ self.U @ Rd.transpose(-1, -2) # Attention! do transpose !
+        return S.squeeze(1)
+
+class DeepBiAffineDecoder(nn.Module):
+    """Parsing decodder"""
+    def __init__(self, hidden_size, mlp_dim=300):
+        super(DeepBiAffineDecoder, self).__init__()
+        self.mlp_dim = mlp_dim
+        self.hidden_size = hidden_size
+        self.mlp_head = nn.Linear(hidden_size, mlp_dim)
+        self.mlp_dep = nn.Linear(hidden_size, mlp_dim)
+
+        self.biaffine = BiAffine(mlp_dim, 1)
+
+        self.init_weights()
+    
+    def forward(self, sequence_output):
+        s_head = self.mlp_head(sequence_output)
+        s_dep = self.mlp_dep(sequence_output)
+        logits = self.biaffine(s_head, s_dep)
+        logits = logits.transpose(-1, -2) #[batch_size, max_seq_len, max_seq_len]
+        return logits
+
+
 
 class MTDNNModel(BertPreTrainedModel):
-    def __init__(self, config, labels_list, 
+    def __init__(self, config, labels_list, task_list,
                  do_task_embedding=False, do_alpha=False,
                  do_adapter=False, num_adapter_layers=2):
         super(MTDNNModel, self).__init__(config)
@@ -1300,14 +1336,21 @@ class MTDNNModel(BertPreTrainedModel):
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
 
         self.num_fixed_layers = config.num_hidden_layers - num_adapter_layers
-        self.classifier_list =  nn.ModuleList([nn.Linear(config.hidden_size, len(labels)) for labels in labels_list])
+
+        decoder_modules = []
+        for labels ,task in zip(labels_list, task_list):
+            if task.startswith("PARSING"):
+                decoder_modules.append(DeepBiAffineDecoder(config.hidden_size, mlp_dim=300))
+            else:
+                decoder_modules.append(nn.Linear(config.hidden_size, len(labels)))
+        self.classifier_list =  nn.ModuleList(decoder_modules)
 
         if do_adapter:
             self.adapter_layers = nn.ModuleList([AdapterLayers(config, num_adapter_layers) for _ in labels_list])
             # init the same as BertModel last layers
             for i in range(len(self.adapter_layers)):
                 for j in range(len(self.adapter_layers[i].layers)):
-                    self.adapter_layers[i].layers[j] = copy_model(self.bert.encoder.layer[-j])
+                    self.adapter_layers[i].layers[j] = copy_model(self.bert.encoder.layer[-(j+1)])
         
         if do_alpha:
             init_value = torch.zeros(config.num_hidden_layers, 1)
@@ -1335,7 +1378,7 @@ class MTDNNModel(BertPreTrainedModel):
         if self.do_adapter:
             adapter_layer = self.adapter_layers[task_id]
             for i in range(len(adapter_layer.layers)):
-                self.bert.encoder.layer[-i] = adapter_layer.layers[i]
+                self.bert.encoder.layer[-(i+1)] = adapter_layer.layers[i]
 
         outputs = self.bert(input_ids, 
                             attention_mask=attention_mask,
@@ -1385,10 +1428,17 @@ class MTDNNModel(BertPreTrainedModel):
             loss_fct = CrossEntropyLoss()
             if attention_mask is not None:
                 active_loss = attention_mask.view(-1) == 1
-                active_logits = logits.view(-1, num_labels)[active_loss]
+                if num_labels == 0: # do parsing, no labels, just heads
+                    active_logits = logits.contiguous().view(-1, logits.size(-1))
+                else:
+                    active_logits = logits.view(-1, num_labels)[active_loss]
                 active_labels = labels.view(-1)[active_loss]
                 loss = loss_fct(active_logits, active_labels)
             else:
+                if num_labels == 0: # do parsing, no labels, just heads
+                    logits = logits.contiguous().view(-1, logits.size(-1)) # do Parsing
+                else:
+                    logits = logits.view(-1, self.num_labels)
                 loss = loss_fct(logits.view(-1, self.num_labels), labels.view(-1))
             outputs = (loss,) + outputs
 

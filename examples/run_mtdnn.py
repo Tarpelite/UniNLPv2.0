@@ -383,6 +383,7 @@ def main():
                                             do_adapter = args.do_adapter,
                                             num_adapter_layers = args.num_adapter_layers)
             model.to(args.device)
+            
         if len(UniDataSet.task_list) == 1:
             _, train_dataset = UniDataSet.load_single_dataset(UniDataSet.task_list[0], "train")
             model = train(args, model, train_dataset, mode="single", task_id=0)

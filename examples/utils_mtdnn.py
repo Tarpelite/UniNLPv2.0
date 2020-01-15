@@ -54,7 +54,7 @@ class MegaDataSet(object):
 
         task_list = data["tasks"]
         task_list = [x.upper() for x in task_list]
-        labels_list = []
+        labels_list = [] # for Parsing, no labels
 
         for task in task_list:
             labels_file = os.path.join(os.path.join(datasets_dir, task, "labels.txt"))
@@ -95,68 +95,7 @@ class MegaDataSet(object):
 
         return examples
 
-    def solve(self, instance):
-        task_name, label_map, example = instance
-        # label_map = {label:i for i, label in enumerate(labels)}
-        tokens = []
-        label_ids = []
-        
-        words = example[0]
-        labels = example[1]
-        if task_name == "SRL":
-            verb = words[0]
-            words = words[1:]
-
-
-        assert len(words) == len(labels)
-        for word, label in zip(words, labels):
-            word_tokens = self.tokenizer.tokenize(word)
-            tokens.extend(word_tokens)
-            label_ids.extend([label_map[label]] + [-100]*(len(word_tokens) - 1))
-
-        # cnt_counts.append(len(tokens))
-        if task_name == "SRL":
-            verb_tokens = self.tokenizer.tokenize(verb)
-            special_tokens_count = 3
-            if len(tokens) > self.max_seq_length - special_tokens_count - len(verb_tokens):
-                tokens = tokens[:(self.max_seq_length - special_tokens_count - len(verb_tokens))]
-                label_ids = label_ids[:(self.max_seq_length - special_tokens_count - len(verb_tokens))]
-        else:
-            special_tokens_count = 2
-            if len(tokens) > self.max_seq_length - special_tokens_count:
-                tokens = tokens[:(self.max_seq_length - special_tokens_count)]
-                label_ids = label_ids[:(self.max_seq_length - special_tokens_count)]
-        
-        tokens += ['[SEP]']
-        label_ids += [-100]
-        segment_ids = [0]*len(tokens)
-
-        tokens = ['[CLS]'] + tokens
-        label_ids = [-100] + label_ids
-        segment_ids = [0] + segment_ids
-
-        if task_name == "SRL":
-            tokens +=   verb_tokens + ['[SEP]']
-            label_ids +=   [-100]*(len(verb_tokens) + 1) 
-            segment_ids +=    [1]*(len(verb_tokens) + 1)
-        
-        input_ids = self.tokenizer.convert_tokens_to_ids(tokens)
-        input_mask = [1]*len(input_ids)
-
-        padding_length = self.max_seq_length - len(input_ids)
-
-        input_ids += [0]*padding_length
-        input_mask += [0]*padding_length
-        segment_ids += [0]*padding_length
-        label_ids += [-100]*padding_length
-
-        assert len(input_ids) == self.max_seq_length
-        assert len(input_mask) == self.max_seq_length
-        assert len(segment_ids) == self.max_seq_length
-        assert len(label_ids) == self.max_seq_length
-
-        return [input_ids, input_mask, segment_ids, label_ids]
-
+    
 
 
     def load_single_dataset(self, task_name, mode):
@@ -168,10 +107,14 @@ class MegaDataSet(object):
         examples = self.load_examples_from_file(file_path, task_name)
         labels = self.labels_list[task_id]
 
-        label_map = {label:i for i, label in enumerate(labels)}
+        if task.startswith("PARSING"):
+            pass
+        else:
+            label_map = {label:i for i, label in enumerate(labels)}
 
         features = []
         cnt_counts = []
+    
         if task in ["POS" , "NER" , "ONTO_POS" , "ONTO_NER"]:
             last_tokens = []
             last_label_ids = []
@@ -185,6 +128,9 @@ class MegaDataSet(object):
                 #     logger.info("Writing example %d of %d", ex_index, len(examples))
                 tokens = []
                 label_ids = []
+                tok_to_orig_index = []
+                orig_to_tok_index = []
+                skip_num = 0 # skip long sentences
                 
                 words = example[0]
                 labels = example[1]
@@ -195,9 +141,18 @@ class MegaDataSet(object):
 
                 assert len(words) == len(labels)
                 for word, label in zip(words, labels):
+                    orig_to_tok_index.append(len(tokens))
                     word_tokens = self.tokenizer.tokenize(word)
                     tokens.extend(word_tokens)
+                    if task.startswith("PARSING"):
+                        if label == "_" or int(label) > (self.max_seq_length - 2):
+                            label = -100
+                        elif label == 0:
+                            label = 0
+                        
+                        label_ids.extend([int(label)] + [-100] * (len(word_tokens) - 1))
                     label_ids.extend([label_map[label]] + [-100]*(len(word_tokens) - 1))
+
                 if task in ["POS","NER", "ONTO_NER" , "ONTO_POS"]:
                     if ex_index == 0 :
                         last_tokens = tokens[-half_length:]
@@ -218,9 +173,26 @@ class MegaDataSet(object):
                 else:
                     special_tokens_count = 2
                     if len(tokens) > self.max_seq_length - special_tokens_count:
-                        tokens = tokens[:(self.max_seq_length - special_tokens_count)]
-                        label_ids = label_ids[:(self.max_seq_length - special_tokens_count)]
+                        if task.startswith("PARSING"):
+                            skip_num += 1 # skip long sentence
+                            continue
+                        else:
+                            tokens = tokens[:(self.max_seq_length - special_tokens_count)]
+                            label_ids = label_ids[:(self.max_seq_length - special_tokens_count)]
                 
+                if task.startswith("PARSING"):
+                    # parsing need new position
+                    orig_to_tok_index = [x+1 for x in orig_to_tok_index] # +1 for the start [CLS]
+                    new_label_ids = []
+                    for x in label_ids:
+                        if x == 0:
+                            new_label_ids += [0] # ROOT will be overlapped with [CLS]
+                        elif x == -100:
+                            new_label_ids += [-100] # PAD token keep same , will be igonred during CrossEntropy
+                        else:
+                            new_label_ids += [orig_to_tok_index[x-1]] # PTB and UD parsing starts with position 1 , need to be 0
+                    label_ids = new_label_ids # redirect 
+
                 tokens += ['[SEP]']
                 label_ids += [-100]
                 segment_ids = [0]*len(tokens)
