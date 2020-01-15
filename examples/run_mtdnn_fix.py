@@ -46,7 +46,8 @@ def set_seed(args):
 def train(args, model, datasets, all_dataset_sampler, task_id=-1):
 
     args.train_batch_size = args.mini_batch_size * max(1, args.n_gpu)
-
+    train_sampler = all_dataset_sampler
+    train_dataloader  = DataLoader(datasets, smapler=train_sampler)
     no_decay = ["bias", "LayerNorm.weight"]
     alpha_sets = ["alpha_list"]
 
@@ -69,10 +70,7 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
         model, optimizer = amp.initialize(model, optimizer, opt_level=args.fp16_opt_level)
 
     if args.n_gpu > 1:
-        # model = torch.nn.DataParallel(model)
-        model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank,1,2,3],
-                                                          output_device=args.local_rank,
-                                                          find_unused_parameters=True)
+        model = torch.nn.DataParallel(model)
 
 
     logger.info("***** Running training *****")
@@ -87,15 +85,14 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
 
     step = 0
     for _ in train_iterator:
-        train_dataloader = DataLoader(datasets, sampler=all_dataset_sampler) 
         epoch_iterator = tqdm(train_dataloader, desc="Iteration", disable=False)
-        model.train()
         for step, batch in enumerate(epoch_iterator):
-            input_ids = batch[0].squeeze().cuda()
-            input_mask = batch[1].squeeze().cuda()
-            segment_ids = batch[2].squeeze().cuda()
-            label_ids = batch[3].squeeze().cuda()
-            task_id = batch[4].squeeze().long()
+            model.train()
+            input_ids = batch[0].squeeze().to(args.device)
+            input_mask = batch[1].squeeze().to(args.device)
+            segment_ids = batch[2].squeeze().to(args.device)
+            label_ids = batch[3].squeeze().to(args.device)
+            task_id = batch[4].squeeze().long().to(args.device)
 
             assert task_id.max() == task_id.min()
             task_id = task_id.max().unsqueeze(0)
@@ -140,6 +137,7 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
                 
                 scheduler.step()
                 optimizer.step()
+                
                 model.zero_grad()
                 global_step += 1
 
@@ -165,7 +163,7 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
 
 def evaluate(args, model, UniDataSet, task):
     
-    _, dataset = UniDataSet.load_single_dataset(task, batch_size=args.mini_batch_size, mode="dev")
+    _, dataset, _ = UniDataSet.load_single_dataset(task, batch_size=args.mini_batch_size, mode="dev")
     task_id = UniDataSet.task_map[task]
     label_list = UniDataSet.labels_list[task_id]
 
@@ -331,12 +329,7 @@ def main():
     args.local_rank = 0
     device = torch.device("cuda" if torch.cuda.is_available() and not args.no_cuda else "cpu")
     args.n_gpu = torch.cuda.device_count()
-    if args.n_gpu > 1 and not args.no_cuda:
-        os.environ['MASTER_ADDR'] = "localhost"
-        os.environ['MASTER_PORT'] = '12345'
-        torch.cuda.set_device(-1)
-        device = torch.device("cuda", args.local_rank)
-        torch.distributed.init_process_group(backend="nccl", rank=args.local_rank, world_size=1)
+    
         
     args.device = device
 
