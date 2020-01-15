@@ -10,6 +10,7 @@ from torch.utils.data import DataLoader, RandomSampler, SequentialSampler, Tenso
 from multiprocessing import cpu_count, Pool
 import math
 from random import shuffle
+import torch.distributed as dist
 
 logger = logging.getLogger(__name__)
 
@@ -32,6 +33,39 @@ class RandomBatchSampler(Sampler):
 
     def __len__(self):
         return len(self.random_id_sampler)
+
+
+class DistributedRandomBatchSampler(Sampler):
+    def __init__(self, data_source, batch_size, num_replicas=None, rank=None, shuffle=False):
+        if num_replicas is None:
+            if not dist.is_available():
+                raise RuntimeError("Requires distributed package to be available")
+            num_replicas = dist.get_world_size()
+        if rank is None:
+            if not dist.is_available():
+                raise RuntimeError("Requires distributed package to be available")
+            rank = dist.get_rank()
+        self.data_source = data_source
+        self.num_replicas = num_replicas
+        self.rank = rank
+        self.epoch = 0
+        
+        self.batch_sampler = list(BatchSampler(SequentialSampler(range(len(self.data_source))),
+                                               batch_size=self.batch_size, drop_last=True))
+
+        self.random_id_sampler = torch.randperm(len(self.batch_sampler)).tolist()
+
+        self.num_samples = int(math.ceil(len(self.random_id_sampler) * 1.0 / self.num_replicas))
+
+        self.total_size = self.num_samples * self.num_replicas
+        self.shuffle = shuffle
+    
+    def __iter__(self):
+        for ran_id in self.random_id_sampler:
+            yield self.batch_sampler[ran_id]
+    
+    def __len__(self):
+        return self.num_samples
 
 
 class MegaDataSet(object):

@@ -23,6 +23,7 @@ from utils_mtdnn import MegaDataSet
 from uninlp import AdamW, get_linear_schedule_with_warmup
 from uninlp import WEIGHTS_NAME, BertConfig, MTDNNModel, BertTokenizer
 from pudb import set_trace
+import torch.distributed as dist
 set_trace()
 
 logger = logging.getLogger(__name__)
@@ -60,7 +61,7 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
 
     args.train_batch_size = args.mini_batch_size * max(1, args.n_gpu)
     train_sampler = all_dataset_sampler
-    train_dataloader  = DataLoader(datasets, sampler=train_sampler, batch_size=1)
+    train_dataloader  = DataLoader(datasets, sampler=train_sampler)
     no_decay = ["bias", "LayerNorm.weight"]
     alpha_sets = ["alpha_list"]
 
@@ -83,7 +84,10 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
         model, optimizer = amp.initialize(model, optimizer, opt_level=args.fp16_opt_level)
 
     if args.n_gpu > 1:
-        model = torch.nn.DataParallel(model, device_ids=list(range(args.n_gpu)))
+        # model = torch.nn.DataParallel(model, device_ids=list(range(args.n_gpu)))
+        model = torch.nn.parallel.DistributedDataParallel(
+            model, device_ids=list(range(args.n_gpu)), output_device=args.local_rank, find_unused_parameters=True
+        )
 
 
     logger.info("***** Running training *****")
@@ -346,8 +350,12 @@ def main():
 
     args.local_rank = 0
     device = torch.device("cuda" if torch.cuda.is_available() and not args.no_cuda else "cpu")
+
+    torch.cuda.set_device(args.local_rank)
     args.n_gpu = torch.cuda.device_count()
+    dist.init_process_group(backend="nccl", rank=args.local_rank, world_size=args.n_gpu)
     
+
     print("device", device)
     args.device = device
 
