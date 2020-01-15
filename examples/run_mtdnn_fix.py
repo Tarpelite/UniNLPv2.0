@@ -25,7 +25,7 @@ from uninlp import WEIGHTS_NAME, BertConfig, MTDNNModel, BertTokenizer
 from pudb import set_trace
 import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel as DDP
-from encoding.nn import DataParallel
+from encoding.nn import DataParallelModel
 
 # set_trace()
 
@@ -103,7 +103,7 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
 
     if args.n_gpu > 1:
         
-        model = DataParallel(model, device_ids=list(range(args.n_gpu)))
+        model = DataParallelModel(model, device_ids=list(range(args.n_gpu)))
         # model = DDP(model, device_ids=list(range(args.n_gpu)))
 
     # Distributed training (should be after apex fp16 initialization)
