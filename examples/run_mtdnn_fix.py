@@ -88,6 +88,7 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
         epoch_iterator = tqdm(train_dataloader, desc="Iteration", disable=False)
         for step, batch in enumerate(epoch_iterator):
             model.train()
+            batch = tuple(t.to(args.device) for t in batch)
             input_ids = batch[0].squeeze().to(args.device)
             input_mask = batch[1].squeeze().to(args.device)
             segment_ids = batch[2].squeeze().to(args.device)
@@ -330,7 +331,7 @@ def main():
     device = torch.device("cuda" if torch.cuda.is_available() and not args.no_cuda else "cpu")
     args.n_gpu = torch.cuda.device_count()
     
-        
+    print("device", device)
     args.device = device
 
     # Setup logging
