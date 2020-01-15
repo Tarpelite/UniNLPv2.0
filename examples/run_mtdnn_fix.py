@@ -351,7 +351,7 @@ def main():
                                         from_tf=bool(".ckpt" in args.model_name_or_path),
                                         config = config,
                                         labels_list=UniDataSet.labels_list,
-                                        task_list = UniDataset.task_list,
+                                        task_list = UniDataSet.task_list,
                                         do_task_embedding=args.do_task_embedding,
                                         do_alpha=args.do_alpha,
                                         do_adapter = args.do_adapter,
