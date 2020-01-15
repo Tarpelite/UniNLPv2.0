@@ -333,7 +333,7 @@ def main():
         os.environ['MASTER_PORT'] = '12345'
         torch.cuda.set_device(-1)
         device = torch.device("cuda", args.local_rank)
-        torch.distributed.init_process_group(backend="nccl")
+        torch.distributed.init_process_group(backend="nccl", rank=args.local_rank)
         
     args.device = device
 
