@@ -395,7 +395,7 @@ def main():
     set_seed(args)
 
     # set multi-gpu
-    setup(args, 0, 4)
+    # setup(args, 0, 4)
 
 
     # Setup tokenizer
