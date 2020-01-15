@@ -70,7 +70,7 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
 
     if args.n_gpu > 1:
         # model = torch.nn.DataParallel(model)
-        model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank],
+        model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank,1,2,3],
                                                           output_device=args.local_rank,
                                                           find_unused_parameters=True)
 
@@ -165,7 +165,7 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
 
 def evaluate(args, model, UniDataSet, task):
     
-    _, dataset = UniDataSet.load_single_dataset(task, "dev")
+    _, dataset = UniDataSet.load_single_dataset(task, batch_size=args.mini_batch_size, mode="dev")
     task_id = UniDataSet.task_map[task]
     label_list = UniDataSet.labels_list[task_id]
 
