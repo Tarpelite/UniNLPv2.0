@@ -25,7 +25,7 @@ from uninlp import WEIGHTS_NAME, BertConfig, MTDNNModel, BertTokenizer
 from pudb import set_trace
 import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel as DDP
-from encoding.nn import DataParallelModel
+from parallel import DataParallelModel
 
 # set_trace()
 
