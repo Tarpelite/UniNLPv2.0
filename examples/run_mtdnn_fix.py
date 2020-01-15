@@ -101,9 +101,9 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
         model, optimizer = amp.initialize(model, optimizer, opt_level=args.fp16_opt_level)
 
     if args.n_gpu > 1:
-        setup(args, 0, 4)
-        # model = torch.nn.DataParallel(model, device_ids=list(range(args.n_gpu)))
-        model = DDP(model, device_ids=list(range(args.n_gpu)))
+        
+        model = torch.nn.DataParallel(model, device_ids=list(range(args.n_gpu)))
+        # model = DDP(model, device_ids=list(range(args.n_gpu)))
 
     # Distributed training (should be after apex fp16 initialization)
     if args.local_rank != -1:
@@ -393,6 +393,10 @@ def main():
 
     # Set seed
     set_seed(args)
+
+    # set multi-gpu
+    setup(args, 0, 4)
+
 
     # Setup tokenizer
     args.model_type = args.model_type.lower()
