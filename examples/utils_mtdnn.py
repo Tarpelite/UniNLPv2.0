@@ -98,7 +98,7 @@ class MegaDataSet(object):
     
 
 
-    def load_single_dataset(self, task_name, mode):
+    def load_single_dataset(self, task_name, batch_size, mode):
         task = task_name.upper()
         task_id = self.task_map[task_name]
         file_path = os.path.join(self.datasets_dir, task_name, "{}.txt".format(mode))
