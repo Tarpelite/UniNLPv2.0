@@ -19,7 +19,7 @@ import requests
 from seqeval.metrics import accuracy_score, precision_score, recall_score, f1_score
 from tqdm import *
 
-from utils_mtdnn import MegaDataSet
+from utils_mtdnn_fix import MegaDataSet
 from uninlp import AdamW, get_linear_schedule_with_warmup
 from uninlp import WEIGHTS_NAME, BertConfig, MTDNNModel, BertTokenizer
 from pudb import set_trace
@@ -77,8 +77,8 @@ def data_parallel(module, input, device_ids, output_device=None):
 def train(args, model, datasets, all_dataset_sampler, task_id=-1):
 
     args.train_batch_size = args.mini_batch_size * max(1, args.n_gpu)
-    train_sampler = all_dataset_sampler
-    train_dataloader  = DataLoader(datasets, sampler=train_sampler)
+    # train_sampler = all_dataset_sampler
+    # train_dataloader  = DataLoader(datasets, sampler=train_sampler)
     no_decay = ["bias", "LayerNorm.weight"]
     alpha_sets = ["alpha_list"]
 
@@ -125,19 +125,52 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
     train_iterator = trange(int(args.num_train_epochs), desc="Epoch", disable=False)
 
     step = 0
+    train_data_list = datasets
+    if len(train_data_list) == 1:
+        # single task don't need MTDNN
+        features = train_data_list[0]
+        all_input_ids = torch.tensor([x[0] for x in features], dtype=torch.long)
+        all_input_mask = torch.tensor([x[1] for x in features], dtype=torch.long)
+        all_segment_ids = torch.tensor([x[2] for x in features], dtype=torch.long)
+        all_label_ids = torch.tensor([x[3] for x in features], dtype=torch.long)
+        all_task_ids = torch.tensor([task_id for x in features], dtype=torch.long)
+        train_dataset = TensorDataset(all_input_ids, all_input_mask, all_segment_ids, all_label_ids, all_task_ids)
+        train_sampler = RandomSampler(train_dataset) 
+        train_dataloader = DataLoader(train_dataset, sampler=train_sampler, batch_size=args.train_batch_size)
+
     for _ in train_iterator:
-        epoch_iterator = tqdm(train_dataloader, desc="Iteration", disable=False)
+        if len(train_data_list) > 1:
+            train_data_list = [sorted(t, key=lambda k:random.random()) for t in train_data_list]
+            all_iters = [iter(item) for item in train_data_list]
+            all_indices = []
+            # all_indices = [0]*len(train_data_list[0]) + [1]*len(train_data_list[1]) + [2]*len(train_data_list[2]) + [3]*len(train_data_list[3])
+            for x in range(len(train_data_list)):
+                all_indices += [x]*len(train_data_list[x])
+            random.shuffle(all_indices)
+            epoch_iterator = tqdm(all_indices, desc="Iteration", disable=args.local_rank not in [-1, 0])
+        else:
+            epoch_iterator = tqdm(train_dataloader, desc="Iteration", disable=False)
         for step, batch in enumerate(epoch_iterator):
             model.train()
-            batch = tuple(t.to(args.device) for t in batch)
-            input_ids = batch[0].squeeze()
-            input_mask = batch[1].squeeze()
-            segment_ids = batch[2].squeeze()
-            label_ids = batch[3].squeeze()
-            task_id = batch[4].squeeze().long()
+            if len(train_data_list) == 1:
+                batch = tuple(t.to(args.device) for t in batch)
+                input_ids = batch[0]
+                input_mask = batch[1]
+                segment_ids = batch[2]
+                label_ids = batch[3]
+                task_id = batch[4]
+                assert task_id.max() == task_id.min()
+                task_id = task_id.max().data                
 
-            assert task_id.max() == task_id.min()
-            task_id = task_id.max().unsqueeze(0)
+            else:
+                task_id = batch
+                features = next(all_iters[task_id])
+                input_ids = torch.tensor([f.input_ids for f in features], dtype=torch.long).to(args.device)
+                input_mask = torch.tensor([f.input_mask for f in features], dtype=torch.long).to(args.device)
+                segment_ids = torch.tensor([f.segment_ids for f in features], dtype=torch.long).to(args.device)
+                label_ids = torch.tensor([f.label_ids for f in features], dtype=torch.long).to(args.device)
+
+            
             print("task_id", task_id)
             inputs = {"input_ids":input_ids, 
                       "attention_mask":input_mask,
@@ -442,6 +475,7 @@ def main():
                                             from_tf=bool(".ckpt" in args.model_name_or_path),
                                             config = config,
                                             labels_list=UniDataSet.labels_list,
+                                            task_list=UniDataSet.task_list,
                                             do_task_embedding=args.do_task_embedding,
                                             do_alpha=args.do_alpha,
                                             do_adapter = args.do_adapter,
