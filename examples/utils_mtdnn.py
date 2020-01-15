@@ -250,55 +250,37 @@ class MegaDataSet(object):
             all_task_ids = torch.tensor([task_id for x in features], dtype=torch.long)
 
         dataset = TensorDataset(all_input_ids, all_input_mask, all_segment_ids, all_label_ids, all_task_ids)
-        return features, dataset
+        return features, dataset, task_id
     
 
     def load_MTDNN_dataset(self, batch_size, debug=False):
         all_data_sets = []
+        all_input_ids = []
+        all_input_mask = []
+        all_segment_ids = []
+        all_label_ids = []
+        all_task_ids = []
         for task in self.task_list:
 
             if debug:
-                _, dataset = self.load_single_dataset(task, "debug")
+                features, dataset, task_id = self.load_single_dataset(task, batch_size, "debug")
             else:
-                _, dataset = self.load_single_dataset(task, "train")
-            # do unpack
-            datasets_new = []
-            for instance in dataset:
-                datasets_new.append(instance)
-            all_data_sets.append(datasets_new)
+                features, dataset, task_id = self.load_single_dataset(task, batch_size, "train")
+            all_input_ids += [x[0] for x in features]
+            all_input_mask += [x[1] for x in features]
+            all_segment_ids += [x[2] for x in features]
+            all_label_ids += [x[3] for x in features]
+            all_task_ids += [task_id for x in features]
+          
+        all_input_ids = torch.tensor(all_input_ids, dtype=torch.long)
+        all_input_mask = torch.tensor(all_input_mask, dtype=torch.long)
+        all_segment_ids = torch.tensor(all_segment_ids, dtype=torch.long)
+        all_label_ids = torch.tensor(all_label_ids, dtype=torch.long)
+        all_task_ids = torch.tensor(all_task_ids, dtype=torch.long)
+        all_dataset = TensorDataset(all_input_ids, all_input_mask, all_segment_ids, all_label_ids, all_task_ids)
 
-        # drop tail
-        for i in range(len(all_data_sets)):
-            l = len(all_data_sets[i])
-            x = math.floor(l*1.00000 / batch_size) * batch_size
-            all_data_sets[i] = all_data_sets[i][:x]
-        
-        # do concat mannually
-        all_dataset = []
-        for dataset in all_data_sets:
-            for instance in dataset:
-                all_dataset.append(instance)
-         
-        # all_dataset = ConcatDataset(all_data_sets)
-        
-        # do batchfy mannually
-        batch_list = []
-        batch = []
-        for instance in all_dataset:
-            batch.append(instance)
-            if len(batch) == batch_size:
-                # so transform
-                all_input_ids = torch.stack([x[0] for x in batch], dim=0)
-                all_input_mask = torch.stack([x[1] for x in batch], dim=0)
-                all_segment_ids = torch.stack([x[2] for x in batch], dim=0)
-                all_label_ids = torch.stack([x[3] for x in batch], dim=0)
-                task_ids = [x[4] for x in batch]
-                batch = [all_input_ids, all_input_mask, all_segment_ids, all_label_ids, task_ids]
-                batch_list.append(batch) 
-                batch = []
-
-        all_dataset_sampler = RandomSampler(batch_list)
-        return batch_list, all_dataset_sampler
+        all_dataset_sampler = RandomBatchSampler(all_dataset, batch_size)
+        return all_dataset, all_dataset_sampler
         
 
     def load_joint_train_dataset(self, debug=False):
