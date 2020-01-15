@@ -84,10 +84,13 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
         model, optimizer = amp.initialize(model, optimizer, opt_level=args.fp16_opt_level)
 
     if args.n_gpu > 1:
-        # model = torch.nn.DataParallel(model, device_ids=list(range(args.n_gpu)))
-        model = torch.nn.parallel.DistributedDataParallel(
-            model, device_ids=[args.local_rank], output_device=args.local_rank, find_unused_parameters=True
-        )
+        model = torch.nn.DataParallel(model, device_ids=list(range(args.n_gpu)))
+        
+    # Distributed training (should be after apex fp16 initialization)
+    if args.local_rank != -1:
+        model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank],
+                                                          output_device=args.local_rank,
+                                                          find_unused_parameters=True)
 
 
     logger.info("***** Running training *****")
@@ -344,19 +347,21 @@ def main():
     parser.add_argument("--do_task_embedding", action="store_true")
     parser.add_argument("--do_lower_case", action="store_true")
     parser.add_argument("--fp16", action="store_true")
+    parser.add_argument("--local_rank", type=int, default=-1,
+                        help="For distributed training: local_rank")
     parser.add_argument("--fp16_opt_level", type=str, default="O1")
     parser.add_argument("--debug", action="store_true")
     args = parser.parse_args()
 
-    args.local_rank = 0
-    device = torch.device("cuda" if torch.cuda.is_available() and not args.no_cuda else "cpu")
 
-    torch.cuda.set_device(args.local_rank)
-    args.n_gpu = torch.cuda.device_count()
-    dist.init_process_group(backend="nccl", rank=args.local_rank, world_size=args.n_gpu)
-    
-
-    print("device", device)
+    if args.local_rank == -1 or args.no_cuda:
+        device = torch.device("cuda" if torch.cuda.is_available() and not args.no_cuda else "cpu")
+        args.n_gpu = torch.cuda.device_count()
+    else:  # Initializes the distributed backend which will take care of sychronizing nodes/GPUs
+        torch.cuda.set_device(args.local_rank)
+        device = torch.device("cuda", args.local_rank)
+        torch.distributed.init_process_group(backend="nccl")
+        args.n_gpu = 1
     args.device = device
 
     # Setup logging
