@@ -82,8 +82,8 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
             raise ImportError("Please install apex from https://www.github.com/nvidia/apex to use fp16 training.")
         model, optimizer = amp.initialize(model, optimizer, opt_level=args.fp16_opt_level)
 
-    # if args.n_gpu > 1:
-    #     model = torch.nn.DataParallel(model)
+    if args.n_gpu > 1:
+        model = torch.nn.DataParallel(model, device_ids=list(range(args.n_gpu)))
 
 
     logger.info("***** Running training *****")
@@ -117,11 +117,11 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
                       "labels":label_ids,
                       "task_id":task_id}
             
-            if args.n_gpu>1:
-                device_ids = list(range(args.n_gpu))
-                outputs = data_parallel(model,inputs, device_ids)
-            else:
-                outputs = model(**inputs)
+            # if args.n_gpu>1:
+            #     device_ids = list(range(args.n_gpu))
+            #     outputs = data_parallel(model,inputs, device_ids)
+            # else:
+            outputs = model(**inputs)
             loss = outputs[0]
             if args.do_task_embedding:
                 alpha = outputs[0]
