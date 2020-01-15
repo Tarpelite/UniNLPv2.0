@@ -151,7 +151,8 @@ class MegaDataSet(object):
                             label = 0
                         
                         label_ids.extend([int(label)] + [-100] * (len(word_tokens) - 1))
-                    label_ids.extend([label_map[label]] + [-100]*(len(word_tokens) - 1))
+                    else:
+                        label_ids.extend([label_map[label]] + [-100]*(len(word_tokens) - 1))
 
                 if task in ["POS","NER", "ONTO_NER" , "ONTO_POS"]:
                     if ex_index == 0 :
