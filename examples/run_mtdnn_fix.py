@@ -24,7 +24,7 @@ from uninlp import AdamW, get_linear_schedule_with_warmup
 from uninlp import WEIGHTS_NAME, BertConfig, MTDNNModel, BertTokenizer
 from pudb import set_trace
 import torch.distributed as dist
-set_trace()
+# set_trace()
 
 logger = logging.getLogger(__name__)
 
@@ -85,7 +85,7 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
 
     if args.n_gpu > 1:
         model = torch.nn.DataParallel(model, device_ids=list(range(args.n_gpu)))
-        
+
     # Distributed training (should be after apex fp16 initialization)
     if args.local_rank != -1:
         model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank],
