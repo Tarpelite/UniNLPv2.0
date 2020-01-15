@@ -229,6 +229,9 @@ class MegaDataSet(object):
             # with Pool(cpu_count()) as p:
             #     features = list(tqdm(p.imap(self.solve, instances), total=len(instances)))
             
+            old_length = len(features)
+            new_length = (old_length // batch_size) * batch_size
+            features = features[:new_length]
 
             self.features_map["{}-{}".format(task, mode)] = features
 
