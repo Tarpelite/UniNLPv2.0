@@ -69,7 +69,10 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
         model, optimizer = amp.initialize(model, optimizer, opt_level=args.fp16_opt_level)
 
     if args.n_gpu > 1:
-        model = torch.nn.DataParallel(model)
+        # model = torch.nn.DataParallel(model)
+        model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[-1],
+                                                          output_device=-1,
+                                                          find_unused_parameters=True)
 
 
     logger.info("***** Running training *****")
@@ -325,7 +328,11 @@ def main():
 
     device = torch.device("cuda" if torch.cuda.is_available() and not args.no_cuda else "cpu")
     args.n_gpu = torch.cuda.device_count()
-
+    if args.n_gpu > 1 and not args.no_cuda:
+        torch.cuda.set_device(-1)
+        device = torch.device("cuda", -1)
+        torch.distributed.init_process_group(backend="nccl")
+        
     args.device = device
 
     # Setup logging
