@@ -206,17 +206,25 @@ def evaluate(args, model, UniDataSet, task):
             out_label_ids = np.append(out_label_ids, batch[3].detach().cpu().numpy(), axis=0)
     
     preds = np.argmax(preds, axis=2)
-
-    label_map = {i: label for i, label in enumerate(label_list)}
+    if len(label_list) == 0:
+        pass
+    else:
+        label_map = {i: label for i, label in enumerate(label_list)}
 
     out_label_list = [[] for _ in range(out_label_ids.shape[0])]
     preds_list = [[] for _ in range(out_label_ids.shape[0])]
 
+    
+
     for i in range(out_label_ids.shape[0]):
         for j in range(out_label_ids.shape[1]):
             if out_label_ids[i, j] != -100:
-                out_label_list[i].append(label_map[out_label_ids[i][j]])
-                preds_list[i].append(label_map[preds[i][j]])
+                if len(label_list) == 0:
+                    out_label_list[i].append(str(out_label_ids[i][j]))
+                    preds_list[i].append(str(preds[i][j]))
+                else:
+                    out_label_list[i].append(label_map[out_label_ids[i][j]])
+                    preds_list[i].append(label_map[preds[i][j]])
     
     if task == "ONTO_NER" or task == "NER":
         for i in range(len(preds_list)):
@@ -226,6 +234,8 @@ def evaluate(args, model, UniDataSet, task):
         for i in range(len(out_label_list)):
             for j in range(len(out_label_list[i])):
                 out_label_list[i][j] = out_label_list[i][j].split("-")[-1]
+    
+    
     
     results = {}
     results["a"] = accuracy_score(out_label_list, preds_list)
