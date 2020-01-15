@@ -42,6 +42,19 @@ def set_seed(args):
     if args.n_gpu > 0:
         torch.cuda.manual_seed_all(args.seed)
 
+def data_parallel(module, input, device_ids, output_device=None):
+    if not device_ids:
+        return module(input)
+
+    if output_device is None:
+        output_device = device_ids[0]
+
+    replicas = nn.parallel.replicate(module, device_ids)
+    inputs = nn.parallel.scatter(input, device_ids)
+    replicas = replicas[:len(inputs)]
+    outputs = nn.parallel.parallel_apply(replicas, inputs)
+    return nn.parallel.gather(outputs, output_device)
+
 
 def train(args, model, datasets, all_dataset_sampler, task_id=-1):
 
@@ -69,8 +82,8 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
             raise ImportError("Please install apex from https://www.github.com/nvidia/apex to use fp16 training.")
         model, optimizer = amp.initialize(model, optimizer, opt_level=args.fp16_opt_level)
 
-    if args.n_gpu > 1:
-        model = torch.nn.DataParallel(model)
+    # if args.n_gpu > 1:
+    #     model = torch.nn.DataParallel(model)
 
 
     logger.info("***** Running training *****")
@@ -89,11 +102,11 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
         for step, batch in enumerate(epoch_iterator):
             model.train()
             batch = tuple(t.to(args.device) for t in batch)
-            input_ids = batch[0].squeeze().to(args.device)
-            input_mask = batch[1].squeeze().to(args.device)
-            segment_ids = batch[2].squeeze().to(args.device)
-            label_ids = batch[3].squeeze().to(args.device)
-            task_id = batch[4].squeeze().long().to(args.device)
+            input_ids = batch[0].squeeze()
+            input_mask = batch[1].squeeze()
+            segment_ids = batch[2].squeeze()
+            label_ids = batch[3].squeeze()
+            task_id = batch[4].squeeze().long()
 
             assert task_id.max() == task_id.min()
             task_id = task_id.max().unsqueeze(0)
@@ -103,8 +116,12 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
                       "token_type_ids":segment_ids,
                       "labels":label_ids,
                       "task_id":task_id}
-
-            outputs = model(**inputs)
+            
+            if args.n_gpu>1:
+                device_ids = list(range(args.n_gpu))
+                outputs = data_parallel(model,inputs, device_ids)
+            else:
+                outputs = model(**inputs)
             loss = outputs[0]
             if args.do_task_embedding:
                 alpha = outputs[0]
