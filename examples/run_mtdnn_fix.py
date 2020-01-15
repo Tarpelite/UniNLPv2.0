@@ -329,6 +329,8 @@ def main():
     device = torch.device("cuda" if torch.cuda.is_available() and not args.no_cuda else "cpu")
     args.n_gpu = torch.cuda.device_count()
     if args.n_gpu > 1 and not args.no_cuda:
+        os.environ['MASTER_ADDR'] = "localhost"
+        os.environ['MASTER_PORT'] = '12345'
         torch.cuda.set_device(-1)
         device = torch.device("cuda", args.local_rank)
         torch.distributed.init_process_group(backend="nccl")
