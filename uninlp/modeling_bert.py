@@ -1431,8 +1431,9 @@ class MTDNNModel(BertPreTrainedModel):
             loss_fct = CrossEntropyLoss()
             if attention_mask is not None:
                 active_loss = attention_mask.view(-1) == 1
+                
                 if num_labels == 0: # do parsing, no labels, just heads
-                    active_logits = logits.contiguous().view(-1, logits.size(-1))
+                    active_logits = logits.contiguous().view(-1, logits.size(-1))[active_loss]
                 else:
                     active_logits = logits.view(-1, num_labels)[active_loss]
                 active_labels = labels.view(-1)[active_loss]
