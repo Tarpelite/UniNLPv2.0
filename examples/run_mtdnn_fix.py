@@ -24,6 +24,8 @@ from uninlp import AdamW, get_linear_schedule_with_warmup
 from uninlp import WEIGHTS_NAME, BertConfig, MTDNNModel, BertTokenizer
 from pudb import set_trace
 import torch.distributed as dist
+from torch.nn.parallel import DistributedDataParallel as DDP
+
 # set_trace()
 
 logger = logging.getLogger(__name__)
@@ -42,6 +44,20 @@ def set_seed(args):
     torch.manual_seed(args.seed)
     if args.n_gpu > 0:
         torch.cuda.manual_seed_all(args.seed)
+
+def setup(args, rank, world_size):
+    os.environ['MASTER_ADDR'] = 'localhost'
+    os.environ['MASTER_PORT'] = '12355'
+    # initialize the process group
+    dist.init_process_group("gloo", rank=rank, world_size=world_size)
+
+    # Explicitly setting seed to make sure that models created in two processes
+    # start from same random weights and biases.
+    torch.manual_seed(args.seed)
+
+def cleanup():
+    dist.destroy_process_group()
+
 
 def data_parallel(module, input, device_ids, output_device=None):
     if not device_ids:
@@ -76,6 +92,7 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
     optimizer = AdamW(optimizer_grouped_parameters, lr=args.learning_rate, eps=args.adam_epsilon)
     scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps=args.warmup_steps, num_training_steps=t_total)
     
+    
     if args.fp16:
         try:
             from apex import amp
@@ -84,13 +101,15 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
         model, optimizer = amp.initialize(model, optimizer, opt_level=args.fp16_opt_level)
 
     if args.n_gpu > 1:
-        model = torch.nn.DataParallel(model, device_ids=list(range(args.n_gpu)))
+        # model = torch.nn.DataParallel(model, device_ids=list(range(args.n_gpu)))
+        model = DDP(model, device_ids=list(range(args.n_gpu)))
 
     # Distributed training (should be after apex fp16 initialization)
     if args.local_rank != -1:
         model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank],
                                                           output_device=args.local_rank,
                                                           find_unused_parameters=True)
+        
 
 
     logger.info("***** Running training *****")
