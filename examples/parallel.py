@@ -13,7 +13,7 @@ import functools
 import torch
 from torch.autograd import Variable, Function
 import torch.cuda.comm as comm
-from torch.nn.parallel.data_parallel import DataParallel
+import torch.nn.parallel.data_parallel as DataParallel
 from torch.nn.parallel.parallel_apply import get_a_var
 from torch.nn.parallel.scatter_gather import gather
 from torch.nn.parallel._functions import ReduceAddCoalesced, Broadcast
