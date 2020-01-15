@@ -86,7 +86,7 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
     if args.n_gpu > 1:
         # model = torch.nn.DataParallel(model, device_ids=list(range(args.n_gpu)))
         model = torch.nn.parallel.DistributedDataParallel(
-            model, device_ids=list(range(args.n_gpu)), output_device=args.local_rank, find_unused_parameters=True
+            model, device_ids=[args.local_rank], output_device=args.local_rank, find_unused_parameters=True
         )
 
 
