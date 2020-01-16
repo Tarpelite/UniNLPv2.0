@@ -84,13 +84,16 @@ def distill_train(args, model, teacher_model, datasets, all_dataset_sampler, tas
     train_iterator = trange(int(args.num_train_epochs), desc="Epoch", disable=False)
 
     step = 0
+
     for _ in train_iterator:
         train_dataloader = DataLoader(datasets, sampler=all_dataset_sampler)
-        epoch_iterator = tqdm(train_dataloader, desc="Iteration", disable=False)
+        # epoch_iterator = tqdm(train_dataloader, desc="Iteration", disable=False)
         model.train()
         teacher_model.eval()
 
-        for step, batch in enumerate(epoch_iterator):
+        iter_bar = tqdm(train_dataloader, desc='Iter (loss=X.XXX)')
+
+        for step, batch in enumerate(iter_bar):
             input_ids = batch[0].squeeze().long().to(args.device)
             input_mask = batch[1].squeeze().long().to(args.device)
             segment_ids = batch[2].squeeze().long().to(args.device)
@@ -103,8 +106,7 @@ def distill_train(args, model, teacher_model, datasets, all_dataset_sampler, tas
 
             assert batch[4].max() == batch[4].min()
 
-            print("task_id", task_id.max())
-
+            # print("task_id", task_id.max())
 
             teacher_inputs = {"input_ids": input_ids,
                       "attention_mask": input_mask,
@@ -139,11 +141,12 @@ def distill_train(args, model, teacher_model, datasets, all_dataset_sampler, tas
             else:
                 loss.backward()
             tr_loss += loss.item()
+            iter_bar.set_description('Iter (loss=%5.3f)' % loss.item())
 
-            print("loss", loss)
+            # print("loss", loss)
 
-            if (step + 1) % 100 == 0:
-                print("loss", loss.item())
+            # if (step + 1) % 100 == 0:
+            #     print("loss", loss.item())
 
             if (step + 1) % args.gradient_accumulation_steps == 0:
                 if args.fp16:
@@ -234,7 +237,7 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
 
             assert batch[4].max() == batch[4].min()
 
-            print("task_id", task_id.max())
+            # print("task_id", task_id.max())
             inputs = {"input_ids":input_ids, 
                       "attention_mask":input_mask,
                       "token_type_ids":segment_ids,
@@ -479,41 +482,46 @@ def main():
                              tokenizer = tokenizer,
                              mini_batch_size = args.mini_batch_size * max(1, args.n_gpu))
 
-    model = model_class.from_pretrained(args.model_name_or_path, 
+    # if args.recover_path:
+    #     checkpoint = args.recover_path
+    # else:
+    #     checkpoint = os.path.join(args.output_dir, "pytorch_model.bin")
+
+    model = model_class.from_pretrained(args.model_name_or_path,
                                         from_tf=bool(".ckpt" in args.model_name_or_path),
-                                        config = config,
+                                        config=config,
                                         labels_list=UniDataSet.labels_list,
+                                        task_list=UniDataSet.task_list,
                                         do_task_embedding=args.do_task_embedding,
                                         do_alpha=args.do_alpha,
-                                        do_adapter = args.do_adapter,
-                                        num_adapter_layers = args.num_adapter_layers
-                                        )
+                                        do_adapter=args.do_adapter,
+                                        num_adapter_layers=args.num_adapter_layers)
 
     # init teacher model, config and model
     teacher_config = config_class.from_pretrained(args.teacher_config_name,
                                           num_labels=2,
                                           cache_dir=None,
                                           output_hidden_states=True)
-    teacher_model = torch.load(args.teacher_model_name_or_path)
-    # teacher_model = model_class.from_pretrained(args.teacher_model_name_or_path,
-    #                                     from_tf=bool(".ckpt" in args.teacher_model_name_or_path),
-    #                                     config=teacher_config,
-    #                                     labels_list=UniDataSet.labels_list,
-    #                                     do_task_embedding=args.do_task_embedding,
-    #                                     do_alpha=args.do_alpha,
-    #                                     do_adapter=args.do_adapter,
-    #                                     num_adapter_layers=args.num_adapter_layers
-    #                                     )
+    # teacher_model = torch.load(args.teacher_model_name_or_path)
+    teacher_model = model_class.from_pretrained(args.teacher_model_name_or_path,
+                                        from_tf=bool(".ckpt" in args.teacher_model_name_or_path),
+                                        config=teacher_config,
+                                        labels_list=UniDataSet.labels_list,
+                                        task_list=UniDataSet.task_list,
+                                        do_task_embedding=args.do_task_embedding,
+                                        do_alpha=args.do_alpha,
+                                        do_adapter=args.do_adapter,
+                                        num_adapter_layers=args.num_adapter_layers)
 
     model.to(args.device)
     teacher_model.to(args.device)
 
-    for task in UniDataSet.task_list:
-        # dataset = UniDataSet.load_single_dataset(task, "dev")
-        # task_id = UniDataSet.task_map[task]
-        # label_list = UniDataSet.labels_list[task_id]
-        results = evaluate(args, teacher_model, UniDataSet, task)
-        print(results)
+    # for task in UniDataSet.task_list:
+    #     # dataset = UniDataSet.load_single_dataset(task, "dev")
+    #     # task_id = UniDataSet.task_map[task]
+    #     # label_list = UniDataSet.labels_list[task_id]
+    #     results = evaluate(args, model, UniDataSet, task)
+    #     print(results)
     logger.info("Training/evaluation parameters %s", args)
 
     if args.do_train:
@@ -554,12 +562,13 @@ def main():
 
         model = model_class.from_pretrained(checkpoint,
                                             from_tf=bool(".ckpt" in args.model_name_or_path),
-                                            config = config,
+                                            config=config,
                                             labels_list=UniDataSet.labels_list,
+                                            task_list=UniDataSet.task_list,
                                             do_task_embedding=args.do_task_embedding,
                                             do_alpha=args.do_alpha,
-                                            do_adapter = args.do_adapter,
-                                            num_adapter_layers = args.num_adapter_layers)
+                                            do_adapter=args.do_adapter,
+                                            num_adapter_layers=args.num_adapter_layers)
         
 
         model.to(args.device)
