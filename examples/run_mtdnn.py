@@ -140,7 +140,7 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
             task_id = batch[4].squeeze().long().to(args.device)
 
             assert batch[4].max() == batch[4].min()
-            print("task_id", task_id.max())
+            
             inputs = {"input_ids":input_ids, 
                       "attention_mask":input_mask,
                       "token_type_ids":segment_ids,
