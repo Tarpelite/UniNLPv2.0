@@ -364,6 +364,7 @@ def main():
     
     parser.add_argument("--do_alpha", action="store_true")
     parser.add_argument("--do_adapter", action="store_true")
+    parser.add_argument("--do_ft", action="store_true")
     parser.add_argument("--num_adapter_layers", type=int, default=2)
     parser.add_argument("--do_task_embedding", action="store_true")
     parser.add_argument("--do_lower_case", action="store_true")

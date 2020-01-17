@@ -399,7 +399,7 @@ class BertEncoder(nn.Module):
 class AdapterLayers(nn.Module):
     def __init__(self, config, num_layers):
         super(AdapterLayers, self).__init__()
-        self.layers = nn.ModuleList([BertLayer(config) for _ in range(2)])
+        self.layers = nn.ModuleList([BertLayer(config) for _ in range(num_layers)])
         self.num_layers = num_layers
 
 
@@ -1284,10 +1284,18 @@ class BertForQuestionAnswering(BertPreTrainedModel):
 
         return outputs  # (loss), start_logits, end_logits, (hidden_states), (attentions)
 
-def copy_model(src):
-    pickle.dump(src, open("save.pl", "wb"))
-    target = pickle.load(open("save.pl", "rb"))
-    return target
+def copy_model(src_model, target_model):
+    src_model_dict = src_model.state_dict()
+    target_model_dict = target_model.state_dict()
+    
+    src_model_dict = {k:v for k,v in src_model_dict.items() if k in target_model_dict}
+
+    target_model_dict.update(src_model_dict)
+    target_model.load_state_dict(target_model_dict)
+
+    return target_model
+
+    
 
 class BiAffine(nn.Module):
     """Biaffine attention layer. (from Chris Manning.) """
@@ -1325,6 +1333,7 @@ class DeepBiAffineDecoder(nn.Module):
 
 
 
+
 class MTDNNModel(BertPreTrainedModel):
     def __init__(self, config, labels_list, task_list,
                  do_task_embedding=False, do_alpha=False,
@@ -1346,10 +1355,12 @@ class MTDNNModel(BertPreTrainedModel):
 
         if do_adapter:
             self.adapter_layers = nn.ModuleList([AdapterLayers(config, num_adapter_layers) for _ in labels_list])
+
             # init the same as BertModel last layers
             for i in range(len(self.adapter_layers)):
                 for j in range(len(self.adapter_layers[i].layers)):
-                    self.adapter_layers[i].layers[j] = copy_model(self.bert.encoder.layer[-(j+1)])
+                    # self.adapter_layers[i] = copy_model(self.bert.encoder.layer[-(j+1)])
+                    copy_model(self.bert.encoder.layer[-(j+1)], self.adapter_layers[i].layers[j])
         
         if do_alpha:
             init_value = torch.zeros(config.num_hidden_layers, 1)
@@ -1381,7 +1392,8 @@ class MTDNNModel(BertPreTrainedModel):
 
             adapter_layer = self.adapter_layers[task_id]
             for i in range(len(adapter_layer.layers)):
-                self.bert.encoder.layer[-(i+1)] = adapter_layer.layers[i]
+                copy_model(adapter_layer.layers[i], self.bert.encoder.layer[-(i+1)])
+                # self.bert.encoder.layer[-(i+1)] = adapter_layer.layers[i]
 
         outputs = self.bert(input_ids, 
                             attention_mask=attention_mask,
@@ -1451,3 +1463,7 @@ class MTDNNModel(BertPreTrainedModel):
         elif self.do_alpha:
             outputs = (alpha, ) + outputs
         return outputs
+
+
+
+    
