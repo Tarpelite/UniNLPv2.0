@@ -23,6 +23,10 @@ from utils_mtdnn import MegaDataSet
 from uninlp import AdamW, get_linear_schedule_with_warmup
 from uninlp import WEIGHTS_NAME, BertConfig, MTDNNModel, BertTokenizer
 from pudb import set_trace
+import torch.distributed as dist
+from torch.nn.parallel import DistributedDataParallel as DDP
+from parallel import DataParallelModel
+
 set_trace()
 
 logger = logging.getLogger(__name__)
@@ -42,17 +46,43 @@ def set_seed(args):
     if args.n_gpu > 0:
         torch.cuda.manual_seed_all(args.seed)
 
-def train(args, model, datasets, mode, task_id=-1):
+def setup(args, rank, world_size):
+    os.environ['MASTER_ADDR'] = 'localhost'
+    os.environ['MASTER_PORT'] = '12355'
+    # initialize the process group
+    dist.init_process_group("gloo", rank=rank, world_size=world_size)
+
+    # Explicitly setting seed to make sure that models created in two processes
+    # start from same random weights and biases.
+    torch.manual_seed(args.seed)
+
+def cleanup():
+    dist.destroy_process_group()
+
+
+def data_parallel(module, input, device_ids, output_device=None):
+    if not device_ids:
+        return module(input)
+
+    if output_device is None:
+        output_device = device_ids[0]
+
+    replicas = nn.parallel.replicate(module, device_ids)
+    inputs = nn.parallel.scatter(input, device_ids)
+    replicas = replicas[:len(inputs)]
+    outputs = nn.parallel.parallel_apply(replicas, inputs)
+    return nn.parallel.gather(outputs, output_device)
+
+
+def train(args, model, datasets, all_dataset_sampler, task_id=-1):
 
     args.train_batch_size = args.mini_batch_size * max(1, args.n_gpu)
-
+    # train_sampler = all_dataset_sampler
+    # train_dataloader  = DataLoader(datasets, sampler=train_sampler)
     no_decay = ["bias", "LayerNorm.weight"]
     alpha_sets = ["alpha_list"]
 
-    if mode == "joint":
-        t_total = sum(len(x) for x in datasets) //args.gradient_accumulation_steps
-    else:
-        t_total = len(datasets) // args.gradient_accumulation_steps
+    t_total = sum(len(x) for x in datasets) //args.gradient_accumulation_steps
 
     optimizer_grouped_parameters = [
         {'params': [p for n, p in model.named_parameters() if not any(nd in n for nd in (no_decay + alpha_sets))], 'weight_decay': args.weight_decay},
@@ -63,6 +93,7 @@ def train(args, model, datasets, mode, task_id=-1):
     optimizer = AdamW(optimizer_grouped_parameters, lr=args.learning_rate, eps=args.adam_epsilon)
     scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps=args.warmup_steps, num_training_steps=t_total)
     
+    
     if args.fp16:
         try:
             from apex import amp
@@ -71,7 +102,16 @@ def train(args, model, datasets, mode, task_id=-1):
         model, optimizer = amp.initialize(model, optimizer, opt_level=args.fp16_opt_level)
 
     if args.n_gpu > 1:
+        
         model = torch.nn.DataParallel(model)
+        # model = DDP(model, device_ids=list(range(args.n_gpu)))
+
+    # Distributed training (should be after apex fp16 initialization)
+    if args.local_rank != -1:
+        model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank],
+                                                          output_device=args.local_rank,
+                                                          find_unused_parameters=True)
+        
 
 
     logger.info("***** Running training *****")
@@ -85,47 +125,35 @@ def train(args, model, datasets, mode, task_id=-1):
     train_iterator = trange(int(args.num_train_epochs), desc="Epoch", disable=False)
 
     step = 0
+
     for _ in train_iterator:
-        if mode == "joint":
-            datasets = [sorted(t, key=lambda k:random.random()) for t in datasets]
-            all_iters = [iter(item) for item in datasets]
-            all_indices = []
-            for x in range(len(datasets)):
-                all_indices += [x]*len(datasets[x])
-            random.shuffle(all_indices)
-            epoch_iterator = tqdm(all_indices, desc="Iteration", disable=False)
-
-        elif mode == "single":
-            train_sampler = RandomSampler(datasets)
-            train_dataloader = DataLoader(datasets, sampler=train_sampler, batch_size=args.mini_batch_size*args.n_gpu) 
-            epoch_iterator = tqdm(train_dataloader, desc="Iteration", disable=False)
-            
+        train_dataloader = DataLoader(datasets, sampler=all_dataset_sampler)
+        epoch_iterator = tqdm(train_dataloader, desc="Iteration", disable=False)
         model.train()
-        for step, iter_item in enumerate(epoch_iterator):
-            if mode == "joint":
-                task_id = iter_item
-                features = next(all_iters[task_id])  
-                input_ids = torch.tensor([f[0] for f in features], dtype=torch.long).to(args.device)
-                input_mask = torch.tensor([f[1] for f in features], dtype=torch.long).to(args.device)
-                segment_ids = torch.tensor([f[2] for f in features], dtype=torch.long).to(args.device)
-                label_ids = torch.tensor([f[3] for f in features], dtype=torch.long).to(args.device)
+        iter_bar = tqdm(train_dataloader, desc="Iter(loss=X.XXX)")
+        for step, batch in enumerate(epoch_iterator):
+            input_ids = batch[0].squeeze().long().to(args.device)
+            input_mask = batch[1].squeeze().long().to(args.device)
+            segment_ids = batch[2].squeeze().long().to(args.device)
+            label_ids = batch[3].squeeze().long().to(args.device)
             
-            elif mode == "single":
-                batch = iter_item
-                batch = tuple(t.to(args.device) for t in batch)
-                input_ids = batch[0]
-                input_mask = batch[1]
-                segment_ids = batch[2]
-                label_ids = batch[3]
+            task_id = batch[4].squeeze().long().to(args.device)
 
+            assert batch[4].max() == batch[4].min()
+            print("task_id", task_id.max())
             inputs = {"input_ids":input_ids, 
                       "attention_mask":input_mask,
                       "token_type_ids":segment_ids,
                       "labels":label_ids,
                       "task_id":task_id}
-
+            
+            # if args.n_gpu>1:
+            #     device_ids = list(range(args.n_gpu))
+            #     outputs = data_parallel(model,inputs, device_ids)
+            # else:
             outputs = model(**inputs)
             loss = outputs[0]
+
             if args.do_task_embedding:
                 alpha = outputs[0]
                 loss = outputs[1]
@@ -145,11 +173,8 @@ def train(args, model, datasets, mode, task_id=-1):
                 loss.backward()
             tr_loss += loss.item()
 
-            print("loss", loss)
-            
-            if (step + 1) % 100 == 0:
-                print("loss", loss.item())
-            
+            iter_bar.set_description("Iter (loss=%5.3f)" % loss.item())
+         
             if (step + 1) % args.gradient_accumulation_steps == 0:
                 if args.fp16:
                     torch.nn.utils.clip_grad_norm_(amp.master_params(optimizer), args.max_grad_norm)
@@ -158,10 +183,11 @@ def train(args, model, datasets, mode, task_id=-1):
                 
                 scheduler.step()
                 optimizer.step()
+
                 model.zero_grad()
                 global_step += 1
 
-                if args.save_steps > 0 and global_step % args.save_steps == 0:
+                if args.local_rank in [-1, 0] and args.save_steps > 0 and global_step % args.save_steps == 0:
                     # Save model checkpoint
                     output_dir = os.path.join(args.output_dir, "checkpoint-{}".format(global_step))
                     if not os.path.exists(output_dir):
@@ -183,7 +209,7 @@ def train(args, model, datasets, mode, task_id=-1):
 
 def evaluate(args, model, UniDataSet, task):
     
-    _, dataset = UniDataSet.load_single_dataset(task, "dev")
+    _, dataset, _ = UniDataSet.load_single_dataset(task, batch_size=args.mini_batch_size, mode="dev")
     task_id = UniDataSet.task_map[task]
     label_list = UniDataSet.labels_list[task_id]
 
@@ -230,17 +256,36 @@ def evaluate(args, model, UniDataSet, task):
             out_label_ids = np.append(out_label_ids, batch[3].detach().cpu().numpy(), axis=0)
     
     preds = np.argmax(preds, axis=2)
-
-    label_map = {i: label for i, label in enumerate(label_list)}
+    if len(label_list) == 0:
+        pass
+    else:
+        label_map = {i: label for i, label in enumerate(label_list)}
 
     out_label_list = [[] for _ in range(out_label_ids.shape[0])]
     preds_list = [[] for _ in range(out_label_ids.shape[0])]
 
+    
+
     for i in range(out_label_ids.shape[0]):
         for j in range(out_label_ids.shape[1]):
             if out_label_ids[i, j] != -100:
-                out_label_list[i].append(label_map[out_label_ids[i][j]])
-                preds_list[i].append(label_map[preds[i][j]])
+                if len(label_list) == 0:
+                    out_label_list[i].append(str(out_label_ids[i][j]))
+                    preds_list[i].append(str(preds[i][j]))
+                else:
+                    out_label_list[i].append(label_map[out_label_ids[i][j]])
+                    preds_list[i].append(label_map[preds[i][j]])
+    
+    if task == "ONTO_NER" or task == "NER":
+        for i in range(len(preds_list)):
+            for j in range(len(preds_list[i])):
+                preds_list[i][j] =  preds_list[i][j].split("-")[-1]
+        
+        for i in range(len(out_label_list)):
+            for j in range(len(out_label_list[i])):
+                out_label_list[i][j] = out_label_list[i][j].split("-")[-1]
+    
+    
     
     results = {}
     results["a"] = accuracy_score(out_label_list, preds_list)
@@ -255,6 +300,12 @@ def evaluate(args, model, UniDataSet, task):
     print("predict_sample")
     print("predict_list", preds_list[0])
     print("out_label_list", out_label_list[0])
+
+    # write the results to text
+    with open("results-v2.txt", "w+", encoding="utf-8") as f:
+        for line in preds_list:
+            line = " ".join(line) + "\n"
+            f.write(line)
 
     return results
 
@@ -317,14 +368,21 @@ def main():
     parser.add_argument("--do_task_embedding", action="store_true")
     parser.add_argument("--do_lower_case", action="store_true")
     parser.add_argument("--fp16", action="store_true")
+    parser.add_argument("--local_rank", type=int, default=-1,
+                        help="For distributed training: local_rank")
     parser.add_argument("--fp16_opt_level", type=str, default="O1")
     parser.add_argument("--debug", action="store_true")
     args = parser.parse_args()
 
 
-    device = torch.device("cuda" if torch.cuda.is_available() and not args.no_cuda else "cpu")
-    args.n_gpu = torch.cuda.device_count()
-
+    if args.local_rank == -1 or args.no_cuda:
+        device = torch.device("cuda" if torch.cuda.is_available() and not args.no_cuda else "cpu")
+        args.n_gpu = torch.cuda.device_count()
+    else:  # Initializes the distributed backend which will take care of sychronizing nodes/GPUs
+        torch.cuda.set_device(args.local_rank)
+        device = torch.device("cuda", args.local_rank)
+        torch.distributed.init_process_group(backend="nccl")
+        args.n_gpu = 1
     args.device = device
 
     # Setup logging
@@ -336,6 +394,10 @@ def main():
 
     # Set seed
     set_seed(args)
+
+    # set multi-gpu
+    # setup(args, 0, 4)
+
 
     # Setup tokenizer
     args.model_type = args.model_type.lower()
@@ -360,6 +422,7 @@ def main():
                                         from_tf=bool(".ckpt" in args.model_name_or_path),
                                         config = config,
                                         labels_list=UniDataSet.labels_list,
+                                        task_list = UniDataSet.task_list,
                                         do_task_embedding=args.do_task_embedding,
                                         do_alpha=args.do_alpha,
                                         do_adapter = args.do_adapter,
@@ -378,18 +441,16 @@ def main():
                                             from_tf=bool(".ckpt" in args.model_name_or_path),
                                             config = config,
                                             labels_list=UniDataSet.labels_list,
+                                            task_list=UniDataSet.task_list,
                                             do_task_embedding=args.do_task_embedding,
                                             do_alpha=args.do_alpha,
                                             do_adapter = args.do_adapter,
                                             num_adapter_layers = args.num_adapter_layers)
             model.to(args.device)
-            
-        if len(UniDataSet.task_list) == 1:
-            _, train_dataset = UniDataSet.load_single_dataset(UniDataSet.task_list[0], "train")
-            model = train(args, model, train_dataset, mode="single", task_id=0)
-        else:
-            joint_train_dataset = UniDataSet.load_joint_train_dataset(debug=args.debug)
-            model = train(args, model, joint_train_dataset, mode="joint")
+        
+
+        all_train_datasets, all_dataset_sampler = UniDataSet.load_MTDNN_dataset((args.mini_batch_size * max(1, args.n_gpu)), debug=args.debug)
+        model = train(args, model, all_train_datasets, all_dataset_sampler=all_dataset_sampler)
     
         if not os.path.exists(args.output_dir):
             os.makedirs(args.output_dir)
@@ -408,16 +469,22 @@ def main():
         
         tokenizer = tokenizer_class.from_pretrained(args.output_dir, 
                                                     do_lower_case=args.do_lower_case)
-        checkpoint = os.path.join(args.output_dir, "pytorch_model.bin")
+        if args.recover_path:
+            checkpoint = args.recover_path
+        else:
+            checkpoint = os.path.join(args.output_dir, "pytorch_model.bin")
 
         model = model_class.from_pretrained(checkpoint,
                                             from_tf=bool(".ckpt" in args.model_name_or_path),
                                             config = config,
                                             labels_list=UniDataSet.labels_list,
+                                            task_list = UniDataSet.task_list,
                                             do_task_embedding=args.do_task_embedding,
                                             do_alpha=args.do_alpha,
                                             do_adapter = args.do_adapter,
                                             num_adapter_layers = args.num_adapter_layers)
+
+        # model = torch.load(checkpoint)
         
 
         model.to(args.device)
@@ -439,6 +506,10 @@ def main():
                 total_results["ONTO_POS_ACC"] = results["a"]
             elif task == "ONTO_NER":
                 total_results["ONTO_NER_F1"] = results["f"]
+            elif task == "PARSING_UD":
+                total_results["PARSING_UD_UAS"] = results["a"]
+            elif task == "PARSING_PTB":
+                total_results["PARSING_PTB_UAS"] = results["a"]
         print(total_results)
 
 if __name__ == "__main__":

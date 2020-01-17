@@ -1443,7 +1443,7 @@ class MTDNNModel(BertPreTrainedModel):
                     logits = logits.contiguous().view(-1, logits.size(-1)) # do Parsing
                 else:
                     logits = logits.view(-1, self.num_labels)
-                loss = loss_fct(logits.view(-1, self.num_labels), labels.view(-1))
+                loss = loss_fct(logits, labels.view(-1))
             outputs = (loss,) + outputs
 
         if self.do_task_embedding:
