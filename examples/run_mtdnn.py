@@ -521,6 +521,7 @@ def main():
                                             do_adapter = args.do_adapter,
                                             num_adapter_layers = args.num_adapter_layers)
                 features,dataset, task_id = UniDataSet.load_single_dataset(task, max(1, args.n_gpu)*args.mini_batch_size, mode="train")
+                model.to(args.device)
                 model = train(args, dataset, all_dataset_sampler=None, task_id=task_id)
 
             results = evaluate(args, model, UniDataSet, task)
