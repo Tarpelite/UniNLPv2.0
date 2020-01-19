@@ -46,6 +46,17 @@ def set_seed(args):
     if args.n_gpu > 0:
         torch.cuda.manual_seed_all(args.seed)
 
+def copy_model(src_model_dict, target_model):
+    src_model_dict = src_model.state_dict()
+    target_model_dict = target_model.state_dict()
+    
+    src_model_dict = {k:v for k,v in src_model_dict.items() if k in target_model_dict}
+
+    target_model_dict.update(src_model_dict)
+    target_model.load_state_dict(target_model_dict)
+
+    return target_model
+
 def setup(args, rank, world_size):
     os.environ['MASTER_ADDR'] = 'localhost'
     os.environ['MASTER_PORT'] = '12355'
@@ -127,7 +138,11 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
     step = 0
 
     for _ in train_iterator:
-        train_dataloader = DataLoader(datasets, sampler=all_dataset_sampler)
+        if all_dataset_sampler == None:
+            train_sampler = RandomSampler(datasets)
+            train_dataloader = DataLoader(datasets, sampler=train_sampler, batch_size=args.train_batch_size)
+        else:
+            train_dataloader = DataLoader(datasets, sampler=all_dataset_sampler)
         epoch_iterator = tqdm(train_dataloader, desc="Iteration", disable=False)
         model.train()
         iter_bar = tqdm(train_dataloader, desc="Iter(loss=X.XXX)")
@@ -490,10 +505,24 @@ def main():
 
         model.to(args.device)
         total_results = {}
+        source_model_dict = copy.deepcoy(model.state_dict())
         for task in UniDataSet.task_list:
             # dataset = UniDataSet.load_single_dataset(task, "dev")
             # task_id = UniDataSet.task_map[task]
             # label_list = UniDataSet.labels_list[task_id]
+            if args.do_ft:
+                model = model_class.from_pretrained(checkpoint,
+                                            from_tf=bool(".ckpt" in args.model_name_or_path),
+                                            config = config,
+                                            labels_list=UniDataSet.labels_list,
+                                            task_list = UniDataSet.task_list,
+                                            do_task_embedding=args.do_task_embedding,
+                                            do_alpha=args.do_alpha,
+                                            do_adapter = args.do_adapter,
+                                            num_adapter_layers = args.num_adapter_layers)
+                features,dataset, task_id = UniDataSet.load_single_dataset(task, max(1, args.n_gpu)*args.mini_batch_size, mode="train")
+                model = train(args, dataset, all_dataset_sampler=None, task_id=task_id)
+
             results = evaluate(args, model, UniDataSet, task)
             if task == "POS":
                 total_results["POS_ACC"] = results["a"]
@@ -511,6 +540,12 @@ def main():
                 total_results["PARSING_UD_UAS"] = results["a"]
             elif task == "PARSING_PTB":
                 total_results["PARSING_PTB_UAS"] = results["a"]
+            if args.do_ft:
+                ft_model_path = os.path.join(args.output_dir, "{}-ft.bin".format(task))
+                logger.info("Saving finetuned model to {}".format(ft_model_path))
+                model_to_save = model.module if hasattr(model, "module") else model  # Take care of distributed/parallel training
+                torch.save(model_to_save.state_dict(), ft_model_path)
+
         print(total_results)
 
 if __name__ == "__main__":
