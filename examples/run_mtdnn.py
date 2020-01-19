@@ -160,7 +160,8 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
                       "attention_mask":input_mask,
                       "token_type_ids":segment_ids,
                       "labels":label_ids,
-                      "task_id":task_id}
+                      "task_id":task_id,
+                      "adapter_ft":args.adapter_ft}
             
             # if args.n_gpu>1:
             #     device_ids = list(range(args.n_gpu))
