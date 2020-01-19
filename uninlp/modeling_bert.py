@@ -1394,7 +1394,7 @@ class MTDNNModel(BertPreTrainedModel):
                     param.required_grad = True
                 
                 update_params = [param for param in self.bert.parameters() if param.requires_grad]
-            
+                print(update_params)
             # self.bert.encoder.layer[-1] = self.adapter_layers[-1]
             # self.bert.encoder.layer[-2] = self.adapter_layers[-2]
 
