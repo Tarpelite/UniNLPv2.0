@@ -1405,8 +1405,13 @@ class MTDNNModel(BertPreTrainedModel):
         if self.do_adapter:
             
             if adapter_ft:
-                for param in self.bert.parameters():
+                for param in self.bert.encoder.paramters():
                     param.required_grad = False
+                for param in self.bert.encoder.layer[-1].parameters():
+                    param.required_grad = True
+                
+                for param in self.bert.encoder.layer[-2].parameters():
+                    param.required_grad = True
             
             # self.bert.encoder.layer[-1] = self.adapter_layers[-1]
             # self.bert.encoder.layer[-2] = self.adapter_layers[-2]
