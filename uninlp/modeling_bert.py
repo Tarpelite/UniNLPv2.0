@@ -1383,7 +1383,7 @@ class MTDNNModel(BertPreTrainedModel):
                 task_id=0, adapter_ft=False):
         if self.do_adapter:
             
-            if adapter_ft:
+            if adapter_ft and labels is not None:
                 for param in self.bert.encoder.parameters():
                     param.required_grad = False
 
