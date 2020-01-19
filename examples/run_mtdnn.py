@@ -513,9 +513,10 @@ def main():
             # task_id = UniDataSet.task_map[task]
             # label_list = UniDataSet.labels_list[task_id]
 
-            logger.info("*** {} Evaluate before finetuning ***".format(task)) 
-            results = evaluate(args, model, UniDataSet, task)
+            
             if args.do_ft:
+                logger.info("*** {} Evaluate before finetuning ***".format(task)) 
+                results = evaluate(args, model, UniDataSet, task)
                 model = model_class.from_pretrained(checkpoint,
                                             from_tf=bool(".ckpt" in args.model_name_or_path),
                                             config = config,
@@ -529,8 +530,8 @@ def main():
                 features,dataset, task_id = UniDataSet.load_single_dataset(task, max(1, args.n_gpu)*args.mini_batch_size, mode="train")
                 model.to(args.device)
                 model = train(args, model, dataset, all_dataset_sampler=None, task_id=task_id)
-
-                results = evaluate(args, model, UniDataSet, task)
+            results = evaluate(args, model, UniDataSet, task)
+            
             if task == "POS":
                 total_results["POS_ACC"] = results["a"]
             elif task == "NER":
