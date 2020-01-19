@@ -1388,7 +1388,7 @@ class MTDNNModel(BertPreTrainedModel):
 
         self.init_weights()
 
-        if do_adpter:
+        if do_adapter:
             copy_model(self.bert.encoder.layer[-1], self.adapter_layers[-1])
             copy_model(self.bert.encoder.layer[-2], self.adapter_layers[-2])
             try:
