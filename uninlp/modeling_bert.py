@@ -1364,7 +1364,7 @@ class MTDNNModel(BertPreTrainedModel):
             #         copy_model(self.bert.encoder.layer[-(j+1)], self.adapter_layers[i].layers[j])
             self.adapter_layers = nn.ModuleList([BertLayer(config) for _ in range(num_adapter_layers)])
             copy_model(self.bert.encoder.layer[-1], self.adapter_layers[-1])
-            copy_model(self.bert.decoder.layer[-2], self.adapter_layers[-2])
+            copy_model(self.bert.encoder.layer[-2], self.adapter_layers[-2])
             try:
                 assert self.bert.encoder.layer[-1].state_dict() == self.adapter_layers[-1].state_dict()
             except Exception as e:
@@ -1372,6 +1372,7 @@ class MTDNNModel(BertPreTrainedModel):
                 print(self.bert.encoder.layer[-1].state_dict())
                 print("tgt")
                 print(self.bert.adapter_layers[-1].state_dict())
+
         if do_alpha:
             init_value = torch.zeros(config.num_hidden_layers, 1)
             self.alpha_list = nn.ModuleList([nn.Parameter(init_value, requires_grad=True)])
@@ -1395,10 +1396,14 @@ class MTDNNModel(BertPreTrainedModel):
     def forward(self, input_ids=None, attention_mask=None, token_type_ids=None,
                 position_ids=None, head_mask=None, inputs_embeds=None, labels=None,
                 task_id=0, adapter_ft=False):
-        # if self.do_adapter:
-        #     if adapter_ft:
-        #         for param in self.bert.parameters():
-        #             param.required_grad = False
+        if self.do_adapter:
+            
+            if adapter_ft:
+                for param in self.bert.parameters():
+                    param.required_grad = False
+            
+            self.bert.encoder.layer[-1] = self.adapter_layers[-1]
+            self.bert.encoder.layer[-2] = self.adapter_layers[-2]
 
         #     adapter_layer = self.adapter_layers[task_id]
         #     for i in range(len(adapter_layer.layers)):
