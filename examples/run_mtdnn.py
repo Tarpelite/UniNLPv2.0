@@ -489,6 +489,18 @@ def main():
             checkpoint = args.recover_path
         else:
             checkpoint = os.path.join(args.output_dir, "pytorch_model.bin")
+        
+        # for debug
+
+        no_adapt_model = model_class.from_pretrained(checkpoint,
+                                            from_tf=bool(".ckpt" in args.model_name_or_path),
+                                            config = config,
+                                            labels_list=UniDataSet.labels_list,
+                                            task_list = UniDataSet.task_list,
+                                            do_task_embedding=args.do_task_embedding,
+                                            do_alpha=args.do_alpha,
+                                            do_adapter = False,
+                                            num_adapter_layers = args.num_adapter_layers)
 
         model = model_class.from_pretrained(checkpoint,
                                             from_tf=bool(".ckpt" in args.model_name_or_path),
@@ -502,7 +514,7 @@ def main():
 
         # model = torch.load(checkpoint)
         
-
+        
         model.to(args.device)
         total_results = {}
       
@@ -526,7 +538,7 @@ def main():
                 
                 features,dataset, task_id = UniDataSet.load_single_dataset(task, max(1, args.n_gpu)*args.mini_batch_size, mode="train")
                 model.to(args.device)
-                model = train(args, dataset, all_dataset_sampler=None, task_id=task_id)
+                model = train(args, model, dataset, all_dataset_sampler=None, task_id=task_id)
 
             results = evaluate(args, model, UniDataSet, task)
             if task == "POS":
