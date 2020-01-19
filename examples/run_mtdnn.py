@@ -251,7 +251,8 @@ def evaluate(args, model, UniDataSet, task):
                 "input_ids":batch[0],
                 "attention_mask":batch[1],
                 "token_type_ids":batch[2],
-                "task_id":task_id}
+                "task_id":task_id,
+                "adapter_ft":args.adapter_ft}
             
             outputs = model(**inputs)
 
@@ -383,6 +384,7 @@ def main():
     parser.add_argument("--num_adapter_layers", type=int, default=2)
     parser.add_argument("--do_task_embedding", action="store_true")
     parser.add_argument("--do_lower_case", action="store_true")
+    parser.add_argument("--adapter_ft", action="store_true")
     parser.add_argument("--fp16", action="store_true")
     parser.add_argument("--local_rank", type=int, default=-1,
                         help="For distributed training: local_rank")
@@ -526,8 +528,9 @@ def main():
                                             do_adapter = args.do_adapter,
                                             num_adapter_layers = args.num_adapter_layers)
                 model.to(args.device)
-                logger.info("*** {} Evaluate before finetuning ***".format(task)) 
-                results = evaluate(args, model, UniDataSet, task)
+                if not args.adapter_ft:
+                    logger.info("*** {} Evaluate before finetuning ***".format(task)) 
+                    results = evaluate(args, model, UniDataSet, task)
                 features,dataset, task_id = UniDataSet.load_single_dataset(task, max(1, args.n_gpu)*args.mini_batch_size, mode="train")
                 
                 model = train(args, model, dataset, all_dataset_sampler=None, task_id=task_id)
