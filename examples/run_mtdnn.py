@@ -508,12 +508,6 @@ def main():
         model.to(args.device)
         total_results = {}
 
-        try:
-            assert no_adapt_model.bert.encoder.layer[-1].attention.self.query.weight.data == model.bert.encoder.layer[-1].attention.self.query.weight.data
-        except Exception as e:
-            print("no adapt",  no_adapt_model.bert.encoder.layer[-1].attention.self.query.weight.data)
-            print("adapt",  model.bert.encoder.layer[-1].attention.self.query.weight.data)
-      
         for task in UniDataSet.task_list:
             # dataset = UniDataSet.load_single_dataset(task, "dev")
             # task_id = UniDataSet.task_map[task]
