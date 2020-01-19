@@ -505,7 +505,7 @@ def main():
 
         model.to(args.device)
         total_results = {}
-        source_model_dict = copy.deepcoy(model.state_dict())
+      
         for task in UniDataSet.task_list:
             # dataset = UniDataSet.load_single_dataset(task, "dev")
             # task_id = UniDataSet.task_map[task]
