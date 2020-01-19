@@ -1356,7 +1356,6 @@ class MTDNNModel(BertPreTrainedModel):
                 decoder_modules.append(nn.Linear(config.hidden_size, len(labels)))
         self.classifier_list =  nn.ModuleList(decoder_modules)
 
-        
         if do_alpha:
             init_value = torch.zeros(config.num_hidden_layers, 1)
             self.alpha_list = nn.ModuleList([nn.Parameter(init_value, requires_grad=True)])
@@ -1385,7 +1384,7 @@ class MTDNNModel(BertPreTrainedModel):
         if self.do_adapter:
             
             if adapter_ft:
-                for param in self.bert.encoder.paramters():
+                for param in self.bert.encoder.parameters():
                     param.required_grad = False
                 for param in self.bert.encoder.layer[-1].parameters():
                     param.required_grad = True
