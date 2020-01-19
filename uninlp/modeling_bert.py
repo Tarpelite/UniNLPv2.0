@@ -1385,13 +1385,13 @@ class MTDNNModel(BertPreTrainedModel):
             
             if adapter_ft and labels is not None:
                 for param in self.bert.encoder.parameters():
-                    param.required_grad = False
+                    param.requires_grad = False
 
                 for param in self.bert.encoder.layer[-1].parameters():
-                    param.required_grad = True
+                    param.requires_grad = True
                 
                 for param in self.bert.encoder.layer[-2].parameters():
-                    param.required_grad = True
+                    param.requires_grad = True
                 
                 update_params = [param for param in self.bert.parameters() if param.requires_grad]
                 no_update_params = [param for param in self.bert.parameters() if not param.requires_grad]
