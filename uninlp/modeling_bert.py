@@ -1369,9 +1369,9 @@ class MTDNNModel(BertPreTrainedModel):
                 assert self.bert.encoder.layer[-1].attention.self.query.weight.data == self.adapter_layers[-1].attention.self.query.weight.data
             except Exception as e:
                 print("src")
-                print(self.bert.encoder.layer[-1].state_dict())
+                print(self.bert.encoder.layer[-1].attention.self.query.weight.data)
                 print("tgt")
-                print(self.bert.encoder.layers[-1].state_dict())
+                print(self.bert.encoder.layer[-1].attention.self.query.weight.data)
 
         if do_alpha:
             init_value = torch.zeros(config.num_hidden_layers, 1)
