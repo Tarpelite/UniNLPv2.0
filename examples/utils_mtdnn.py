@@ -269,8 +269,8 @@ class MegaDataSet(object):
 
             self.features_map["{}-{}".format(task, mode)] = features
 
-        logger.info("*** Statistics ***")
-        logger.info("*** max_len:{}  min_len:{} avg_len:{}***".format(max(cnt_counts), min(cnt_counts), sum(cnt_counts) / len(cnt_counts)))
+        # logger.info("*** Statistics ***")
+        # logger.info("*** max_len:{}  min_len:{} avg_len:{}***".format(max(cnt_counts), min(cnt_counts), sum(cnt_counts) / len(cnt_counts)))
         all_input_ids = torch.tensor([x[0] for x in features], dtype=torch.long)
         all_input_mask = torch.tensor([x[1] for x in features], dtype=torch.long)
         all_segment_ids = torch.tensor([x[2] for x in features], dtype=torch.long)

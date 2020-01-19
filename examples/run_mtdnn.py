@@ -492,16 +492,6 @@ def main():
         
         # for debug
 
-        no_adapt_model = model_class.from_pretrained(checkpoint,
-                                            from_tf=bool(".ckpt" in args.model_name_or_path),
-                                            config = config,
-                                            labels_list=UniDataSet.labels_list,
-                                            task_list = UniDataSet.task_list,
-                                            do_task_embedding=args.do_task_embedding,
-                                            do_alpha=args.do_alpha,
-                                            do_adapter = False,
-                                            num_adapter_layers = args.num_adapter_layers)
-
         model = model_class.from_pretrained(checkpoint,
                                             from_tf=bool(".ckpt" in args.model_name_or_path),
                                             config = config,

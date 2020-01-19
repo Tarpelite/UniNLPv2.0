@@ -1356,18 +1356,7 @@ class MTDNNModel(BertPreTrainedModel):
                 decoder_modules.append(nn.Linear(config.hidden_size, len(labels)))
         self.classifier_list =  nn.ModuleList(decoder_modules)
 
-        if do_adapter:
-            # self.adapter_layers = nn.ModuleList([AdapterLayers(config, num_adapter_layers) for _ in labels_list])
-            
-            # # init the same as BertModel last layers
-            # for i in range(len(self.adapter_layers)):
-            #     for j in range(len(self.adapter_layers[i].layers)):
-            #         # self.adapter_layers[i] = copy_model(self.bert.encoder.layer[-(j+1)])
-            #         copy_model(self.bert.encoder.layer[-(j+1)], self.adapter_layers[i].layers[j])
-            self.adapter_layers = nn.ModuleList([BertLayer(config) for _ in range(num_adapter_layers)])
-            
         
-
         if do_alpha:
             init_value = torch.zeros(config.num_hidden_layers, 1)
             self.alpha_list = nn.ModuleList([nn.Parameter(init_value, requires_grad=True)])
@@ -1388,16 +1377,7 @@ class MTDNNModel(BertPreTrainedModel):
 
         self.init_weights()
 
-        if do_adapter:
-            copy_model(self.bert.encoder.layer[-1], self.adapter_layers[-1])
-            copy_model(self.bert.encoder.layer[-2], self.adapter_layers[-2])
-            try:
-                assert self.bert.encoder.layer[-1].attention.self.query.weight.data == self.adapter_layers[-1].attention.self.query.weight.data
-            except Exception as e:
-                print("src")
-                print(self.bert.encoder.layer[-1].attention.self.query.weight.data)
-                print("tgt")
-                print(self.bert.encoder.layer[-1].attention.self.query.weight.data)
+        
 
     def forward(self, input_ids=None, attention_mask=None, token_type_ids=None,
                 position_ids=None, head_mask=None, inputs_embeds=None, labels=None,
