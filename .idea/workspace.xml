@@ -1,11 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="a806d39e-2617-4124-b8cc-162f1d0d505e" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/examples/run_distill.py" beforeDir="false" afterPath="$PROJECT_DIR$/examples/run_distill.py" afterDir="false" />
-    </list>
+    <list default="true" id="a806d39e-2617-4124-b8cc-162f1d0d505e" name="Default Changelist" comment="" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -54,7 +50,7 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/uninlp/modeling_utils.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="9275">
+            <state>
               <caret line="387" selection-start-line="387" selection-end-line="387" />
               <folding>
                 <element signature="e#23121#23505#0" />
@@ -96,23 +92,11 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/examples/run_distill.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="175">
-              <caret line="531" column="11" selection-start-line="531" selection-start-column="11" selection-end-line="531" selection-end-column="11" />
+            <state relative-caret-position="100">
+              <caret line="288" column="110" selection-start-line="288" selection-start-column="104" selection-end-line="288" selection-end-column="110" />
               <folding>
                 <element signature="e#0#64#0" expanded="true" />
               </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/README.md">
-          <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
-            <state split_layout="SPLIT">
-              <first_editor relative-caret-position="280">
-                <caret line="62" column="1" selection-start-line="62" selection-start-column="1" selection-end-line="62" selection-end-column="1" />
-              </first_editor>
-              <second_editor />
             </state>
           </provider>
         </entry>
@@ -128,14 +112,11 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/examples/run_mtdnn_fix.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="11150">
-              <caret line="473" column="8" selection-start-line="473" selection-start-column="8" selection-end-line="477" />
-              <folding>
-                <element signature="e#0#64#0" expanded="true" />
-              </folding>
+            <state relative-caret-position="-1775">
+              <caret line="26" column="53" selection-start-line="26" selection-start-column="30" selection-end-line="26" selection-end-column="53" />
             </state>
           </provider>
         </entry>
@@ -180,6 +161,9 @@
       <find>print</find>
       <find>loss</find>
       <find>gradient_accumulation_steps</find>
+      <find>distri</find>
+      <find>dist</find>
+      <find>DistributedDataParallel</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -547,7 +531,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/uninlp/modeling_utils.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="9275">
+        <state>
           <caret line="387" selection-start-line="387" selection-end-line="387" />
           <folding>
             <element signature="e#23121#23505#0" />
@@ -588,16 +572,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/examples/run_mtdnn_fix.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="11150">
-          <caret line="473" column="8" selection-start-line="473" selection-start-column="8" selection-end-line="477" />
-          <folding>
-            <element signature="e#0#64#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/uninlp/modeling_bert.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="32800">
@@ -615,16 +589,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/examples/run_distill.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="175">
-          <caret line="531" column="11" selection-start-line="531" selection-start-column="11" selection-end-line="531" selection-end-column="11" />
-          <folding>
-            <element signature="e#0#64#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/README.md">
       <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
         <state split_layout="SPLIT">
@@ -632,6 +596,23 @@
             <caret line="62" column="1" selection-start-line="62" selection-start-column="1" selection-end-line="62" selection-end-column="1" />
           </first_editor>
           <second_editor />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/examples/run_distill.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="100">
+          <caret line="288" column="110" selection-start-line="288" selection-start-column="104" selection-end-line="288" selection-end-column="110" />
+          <folding>
+            <element signature="e#0#64#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/examples/run_mtdnn_fix.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-1775">
+          <caret line="26" column="53" selection-start-line="26" selection-start-column="30" selection-end-line="26" selection-end-column="53" />
         </state>
       </provider>
     </entry>
