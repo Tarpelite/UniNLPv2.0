@@ -1355,14 +1355,23 @@ class MTDNNModel(BertPreTrainedModel):
         self.classifier_list =  nn.ModuleList(decoder_modules)
 
         if do_adapter:
-            self.adapter_layers = nn.ModuleList([AdapterLayers(config, num_adapter_layers) for _ in labels_list])
-
-            # init the same as BertModel last layers
-            for i in range(len(self.adapter_layers)):
-                for j in range(len(self.adapter_layers[i].layers)):
-                    # self.adapter_layers[i] = copy_model(self.bert.encoder.layer[-(j+1)])
-                    copy_model(self.bert.encoder.layer[-(j+1)], self.adapter_layers[i].layers[j])
-        
+            # self.adapter_layers = nn.ModuleList([AdapterLayers(config, num_adapter_layers) for _ in labels_list])
+            
+            # # init the same as BertModel last layers
+            # for i in range(len(self.adapter_layers)):
+            #     for j in range(len(self.adapter_layers[i].layers)):
+            #         # self.adapter_layers[i] = copy_model(self.bert.encoder.layer[-(j+1)])
+            #         copy_model(self.bert.encoder.layer[-(j+1)], self.adapter_layers[i].layers[j])
+            self.adapter_layers = nn.ModuleList([BertLayer(config) for _ in range(num_adapter_layers)])
+            copy_model(self.bert.encoder.layer[-1], self.adapter_layers[-1])
+            copy_model(self.bert.decoder.layer[-2], self.adapter_layers[-2])
+            try:
+                assert self.bert.encoder.layer[-1].state_dict() == self.adapter_layers[-1].state_dict()
+            except Exception as e:
+                print("src")
+                print(self.bert.encoder.layer[-1].state_dict())
+                print("tgt")
+                print(self.bert.adapter_layers[-1].state_dict())
         if do_alpha:
             init_value = torch.zeros(config.num_hidden_layers, 1)
             self.alpha_list = nn.ModuleList([nn.Parameter(init_value, requires_grad=True)])
