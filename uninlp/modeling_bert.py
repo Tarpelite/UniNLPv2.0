@@ -1293,7 +1293,9 @@ def copy_model(src_model, target_model):
 
     target_model_dict.update(src_model_dict)
     target_model.load_state_dict(target_model_dict)
-
+    # torch.save(src_model, "tmp.bin")
+    # target_model = torch.load("tmp.bin").to(src_model.device)
+    
     return target_model
 
     
@@ -1363,15 +1365,8 @@ class MTDNNModel(BertPreTrainedModel):
             #         # self.adapter_layers[i] = copy_model(self.bert.encoder.layer[-(j+1)])
             #         copy_model(self.bert.encoder.layer[-(j+1)], self.adapter_layers[i].layers[j])
             self.adapter_layers = nn.ModuleList([BertLayer(config) for _ in range(num_adapter_layers)])
-            copy_model(self.bert.encoder.layer[-1], self.adapter_layers[-1])
-            copy_model(self.bert.encoder.layer[-2], self.adapter_layers[-2])
-            try:
-                assert self.bert.encoder.layer[-1].attention.self.query.weight.data == self.adapter_layers[-1].attention.self.query.weight.data
-            except Exception as e:
-                print("src")
-                print(self.bert.encoder.layer[-1].attention.self.query.weight.data)
-                print("tgt")
-                print(self.bert.encoder.layer[-1].attention.self.query.weight.data)
+            
+        
 
         if do_alpha:
             init_value = torch.zeros(config.num_hidden_layers, 1)
@@ -1392,6 +1387,17 @@ class MTDNNModel(BertPreTrainedModel):
         self.softmax = nn.Softmax(dim=0)
 
         self.init_weights()
+
+        if do_adpter:
+            copy_model(self.bert.encoder.layer[-1], self.adapter_layers[-1])
+            copy_model(self.bert.encoder.layer[-2], self.adapter_layers[-2])
+            try:
+                assert self.bert.encoder.layer[-1].attention.self.query.weight.data == self.adapter_layers[-1].attention.self.query.weight.data
+            except Exception as e:
+                print("src")
+                print(self.bert.encoder.layer[-1].attention.self.query.weight.data)
+                print("tgt")
+                print(self.bert.encoder.layer[-1].attention.self.query.weight.data)
 
     def forward(self, input_ids=None, attention_mask=None, token_type_ids=None,
                 position_ids=None, head_mask=None, inputs_embeds=None, labels=None,
