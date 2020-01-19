@@ -1398,9 +1398,9 @@ class MTDNNModel(BertPreTrainedModel):
                 task_id=0, adapter_ft=False):
         if self.do_adapter:
             
-            if adapter_ft:
-                for param in self.bert.parameters():
-                    param.required_grad = False
+            # if adapter_ft:
+            #     for param in self.bert.parameters():
+            #         param.required_grad = False
             
             self.bert.encoder.layer[-1] = self.adapter_layers[-1]
             self.bert.encoder.layer[-2] = self.adapter_layers[-2]
