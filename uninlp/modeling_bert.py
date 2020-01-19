@@ -1366,12 +1366,12 @@ class MTDNNModel(BertPreTrainedModel):
             copy_model(self.bert.encoder.layer[-1], self.adapter_layers[-1])
             copy_model(self.bert.encoder.layer[-2], self.adapter_layers[-2])
             try:
-                assert self.bert.encoder.layer[-1].state_dict() == self.adapter_layers[-1].state_dict()
+                assert self.bert.encoder.layer[-1].attention.self.query.weight.data == self.adapter_layers[-1].attention.self.query.weight.data
             except Exception as e:
                 print("src")
                 print(self.bert.encoder.layer[-1].state_dict())
                 print("tgt")
-                print(self.bert.adapter_layers[-1].state_dict())
+                print(self.bert.encoder.layers[-1].state_dict())
 
         if do_alpha:
             init_value = torch.zeros(config.num_hidden_layers, 1)
