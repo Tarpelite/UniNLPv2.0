@@ -356,6 +356,6 @@ class MegaDataSet(object):
         all_task_ids = torch.tensor(all_task_ids, dtype=torch.long)
         all_dataset = TensorDataset(all_input_ids, all_input_mask, all_segment_ids, all_label_ids, all_task_ids)
 
-        all_dataset_sampler = RandomBatchSampler(all_dataset, batch_size)
-        return all_dataset, all_dataset_sample
+        all_dataset_sampler = DistributedRandomBatchSampler(all_dataset, batch_size)
+        return all_dataset, all_dataset_sampler
 
