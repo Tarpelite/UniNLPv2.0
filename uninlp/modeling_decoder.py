@@ -18,7 +18,7 @@ import copy
 import requests
 from tqdm import *
 
-
+import time
 from uninlp import WEIGHTS_NAME, BertConfig, MTDNNModel, BertTokenizer
 
 
@@ -227,8 +227,10 @@ if __name__ == "__main__":
     nlp = uninlp()
     nlp.setup_model(args.model_path, args.config_path, args.no_cuda)
     test_text = "I have a dog and he likes playing with me."
+    s = time.time()
     tokens = nlp.analyze(test_text)
-    
+    e = time.time()
+    print("Time Used: {} s".format(e - s))
     print("**** test POS tag ****")
     print(tokens)
     print([token._pos for token in tokens])
