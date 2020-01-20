@@ -56,8 +56,8 @@ class Token(object):
 class uninlp(object):
 
     def __init__(self):
-
-        self.special_token_count = 2
+        
+        self.special_tokens_count = 2
         self.sep_token = "[SEP]"
         self.sequence_a_segment_id = 0
         self.sequence_b_segment_id = 1
