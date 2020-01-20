@@ -31,6 +31,7 @@ import pickle
 from .modeling_utils import PreTrainedModel, prune_linear_layer, AverageMeter
 from .configuration_bert import BertConfig
 from .file_utils import add_start_docstrings
+from pudb import set_trace
 
 logger = logging.getLogger(__name__)
 
@@ -1292,7 +1293,9 @@ def copy_model(src_model, target_model):
 
     target_model_dict.update(src_model_dict)
     target_model.load_state_dict(target_model_dict)
-
+    # torch.save(src_model, "tmp.bin")
+    # target_model = torch.load("tmp.bin").to(src_model.device)
+    
     return target_model
 
     
@@ -1353,15 +1356,6 @@ class MTDNNModel(BertPreTrainedModel):
                 decoder_modules.append(nn.Linear(config.hidden_size, len(labels)))
         self.classifier_list =  nn.ModuleList(decoder_modules)
 
-        if do_adapter:
-            self.adapter_layers = nn.ModuleList([AdapterLayers(config, num_adapter_layers) for _ in labels_list])
-
-            # init the same as BertModel last layers
-            for i in range(len(self.adapter_layers)):
-                for j in range(len(self.adapter_layers[i].layers)):
-                    # self.adapter_layers[i] = copy_model(self.bert.encoder.layer[-(j+1)])
-                    copy_model(self.bert.encoder.layer[-(j+1)], self.adapter_layers[i].layers[j])
-        
         if do_alpha:
             init_value = torch.zeros(config.num_hidden_layers, 1)
             self.alpha_list = nn.ModuleList([nn.Parameter(init_value, requires_grad=True)])
@@ -1382,17 +1376,33 @@ class MTDNNModel(BertPreTrainedModel):
 
         self.init_weights()
 
+        
+
     def forward(self, input_ids=None, attention_mask=None, token_type_ids=None,
                 position_ids=None, head_mask=None, inputs_embeds=None, labels=None,
                 task_id=0, adapter_ft=False):
         if self.do_adapter:
-            if adapter_ft:
-                for param in self.bert.parameters():
-                    param.required_grad = False
+            
+            if adapter_ft and labels is not None:
+                for param in self.bert.encoder.parameters():
+                    param.requires_grad = False
 
-            adapter_layer = self.adapter_layers[task_id]
-            for i in range(len(adapter_layer.layers)):
-                copy_model(adapter_layer.layers[i], self.bert.encoder.layer[-(i+1)])
+                for param in self.bert.encoder.layer[-1].parameters():
+                    param.requires_grad = True
+                
+                for param in self.bert.encoder.layer[-2].parameters():
+                    param.requires_grad = True
+                
+                # update_params = [param for param in self.bert.parameters() if param.requires_grad]
+                # no_update_params = [param for param in self.bert.parameters() if not param.requires_grad]
+                # # print(update_params)
+                # print(no_update_params)
+            # self.bert.encoder.layer[-1] = self.adapter_layers[-1]
+            # self.bert.encoder.layer[-2] = self.adapter_layers[-2]
+
+        #     adapter_layer = self.adapter_layers[task_id]
+        #     for i in range(len(adapter_layer.layers)):
+        #         copy_model(adapter_layer.layers[i], self.bert.encoder.layer[-(i+1)])
                 # self.bert.encoder.layer[-(i+1)] = adapter_layer.layers[i]
 
         outputs = self.bert(input_ids, 

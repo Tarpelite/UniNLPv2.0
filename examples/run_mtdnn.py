@@ -143,7 +143,7 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
             train_dataloader = DataLoader(datasets, sampler=train_sampler, batch_size=args.train_batch_size)
         else:
             train_dataloader = DataLoader(datasets, sampler=all_dataset_sampler)
-        epoch_iterator = tqdm(train_dataloader, desc="Iteration", disable=False)
+        # epoch_iterator = tqdm(train_dataloader, desc="Iteration", disable=False)
         model.train()
         iter_bar = tqdm(train_dataloader, desc="Iter(loss=X.XXX)")
         for step, batch in enumerate(iter_bar):
@@ -160,7 +160,8 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
                       "attention_mask":input_mask,
                       "token_type_ids":segment_ids,
                       "labels":label_ids,
-                      "task_id":task_id}
+                      "task_id":task_id,
+                      "adapter_ft":args.adapter_ft}
             
             # if args.n_gpu>1:
             #     device_ids = list(range(args.n_gpu))
@@ -202,7 +203,7 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
                 model.zero_grad()
                 global_step += 1
 
-                if args.local_rank in [-1, 0] and args.save_steps > 0 and global_step % args.save_steps == 0:
+                if args.local_rank in [-1, 0] and args.save_steps > 0 and global_step % args.save_steps == 0 and all_dataset_sampler != None:
                     # Save model checkpoint
                     output_dir = os.path.join(args.output_dir, "checkpoint-{}".format(global_step))
                     if not os.path.exists(output_dir):
@@ -213,7 +214,7 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
                     logger.info("Saving model checkpoint to %s", output_dir)
 
             if args.max_steps > 0 and global_step > args.max_steps:
-                epoch_iterator.close()
+                iter_bar.close()
                 break
         if args.max_steps > 0 and global_step > args.max_steps:
             train_iterator.close()
@@ -251,7 +252,8 @@ def evaluate(args, model, UniDataSet, task):
                 "input_ids":batch[0],
                 "attention_mask":batch[1],
                 "token_type_ids":batch[2],
-                "task_id":task_id}
+                "task_id":task_id,
+                "adapter_ft":args.adapter_ft}
             
             outputs = model(**inputs)
 
@@ -383,6 +385,7 @@ def main():
     parser.add_argument("--num_adapter_layers", type=int, default=2)
     parser.add_argument("--do_task_embedding", action="store_true")
     parser.add_argument("--do_lower_case", action="store_true")
+    parser.add_argument("--adapter_ft", action="store_true")
     parser.add_argument("--fp16", action="store_true")
     parser.add_argument("--local_rank", type=int, default=-1,
                         help="For distributed training: local_rank")
@@ -489,6 +492,8 @@ def main():
             checkpoint = args.recover_path
         else:
             checkpoint = os.path.join(args.output_dir, "pytorch_model.bin")
+        
+        # for debug
 
         model = model_class.from_pretrained(checkpoint,
                                             from_tf=bool(".ckpt" in args.model_name_or_path),
@@ -502,15 +507,18 @@ def main():
 
         # model = torch.load(checkpoint)
         
-
+        
         model.to(args.device)
         total_results = {}
-        source_model_dict = copy.deepcoy(model.state_dict())
+
         for task in UniDataSet.task_list:
             # dataset = UniDataSet.load_single_dataset(task, "dev")
             # task_id = UniDataSet.task_map[task]
             # label_list = UniDataSet.labels_list[task_id]
+
+            
             if args.do_ft:
+                
                 model = model_class.from_pretrained(checkpoint,
                                             from_tf=bool(".ckpt" in args.model_name_or_path),
                                             config = config,
@@ -520,11 +528,15 @@ def main():
                                             do_alpha=args.do_alpha,
                                             do_adapter = args.do_adapter,
                                             num_adapter_layers = args.num_adapter_layers)
-                features,dataset, task_id = UniDataSet.load_single_dataset(task, max(1, args.n_gpu)*args.mini_batch_size, mode="train")
                 model.to(args.device)
-                model = train(args, dataset, all_dataset_sampler=None, task_id=task_id)
-
+                if not args.adapter_ft:
+                    logger.info("*** {} Evaluate before finetuning ***".format(task)) 
+                    results = evaluate(args, model, UniDataSet, task)
+                features,dataset, task_id = UniDataSet.load_single_dataset(task, max(1, args.n_gpu)*args.mini_batch_size, mode="train")
+                
+                model = train(args, model, dataset, all_dataset_sampler=None, task_id=task_id)
             results = evaluate(args, model, UniDataSet, task)
+            
             if task == "POS":
                 total_results["POS_ACC"] = results["a"]
             elif task == "NER":

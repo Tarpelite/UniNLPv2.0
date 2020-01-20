@@ -270,13 +270,13 @@ class MegaDataSet(object):
 
             self.features_map["{}-{}".format(task, mode)] = features
 
-            logger.info("*** Statistics ***")
-            logger.info("*** max_len:{}  min_len:{} avg_len:{}***".format(max(cnt_counts), min(cnt_counts), sum(cnt_counts) / len(cnt_counts)))
-            all_input_ids = torch.tensor([x[0] for x in features], dtype=torch.long)
-            all_input_mask = torch.tensor([x[1] for x in features], dtype=torch.long)
-            all_segment_ids = torch.tensor([x[2] for x in features], dtype=torch.long)
-            all_label_ids = torch.tensor([x[3] for x in features], dtype=torch.long)
-            all_task_ids = torch.tensor([task_id for x in features], dtype=torch.long)
+        # logger.info("*** Statistics ***")
+        # logger.info("*** max_len:{}  min_len:{} avg_len:{}***".format(max(cnt_counts), min(cnt_counts), sum(cnt_counts) / len(cnt_counts)))
+        all_input_ids = torch.tensor([x[0] for x in features], dtype=torch.long)
+        all_input_mask = torch.tensor([x[1] for x in features], dtype=torch.long)
+        all_segment_ids = torch.tensor([x[2] for x in features], dtype=torch.long)
+        all_label_ids = torch.tensor([x[3] for x in features], dtype=torch.long)
+        all_task_ids = torch.tensor([task_id for x in features], dtype=torch.long)
 
         dataset = TensorDataset(all_input_ids, all_input_mask, all_segment_ids, all_label_ids, all_task_ids)
         return features, dataset, task_id
