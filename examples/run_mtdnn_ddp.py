@@ -186,9 +186,11 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
                     scaled_loss.backward()
             else:
                 loss.backward()
+            
             tr_loss += loss.item()
 
-            iter_bar.set_description("Iter (loss=%5.3f)" % loss.item())
+            if args.local_rank in [-1, 0]:
+                iter_bar.set_description("Iter (loss=%5.3f)" % loss.item())
          
             if (step + 1) % args.gradient_accumulation_steps == 0:
                 if args.fp16:
