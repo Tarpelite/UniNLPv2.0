@@ -46,20 +46,22 @@ class DistributedRandomBatchSampler(Sampler):
             if not dist.is_available():
                 raise RuntimeError("Requires distributed package to be available")
             rank = dist.get_rank()
+
+        self.data_source = data_source
         self.batch_size = batch_size
+        self.num_replicas = num_replicas
         assert len(self.data_source) % self.batch_size == 0
 
         self.batch_sampler = list(BatchSampler(SequentialSampler(range(len(self.data_source))),
                                                batch_size=self.batch_size, drop_last=True))
 
-        self.num_samples = int(math.ceil(len(self.batch_sampler) * 1.0 / self.num_replicas))
+        self.num_samples = int(math.floor(len(self.batch_sampler) * 1.0 / self.num_replicas))
 
         self.total_size = self.num_samples * self.num_replicas
 
+        print("sample log --------------", self.total_size, len(self.batch_sampler))
         self.random_id_sampler = torch.randperm(self.total_size).tolist()
 
-        self.data_source = data_source
-        self.num_replicas = num_replicas
         self.rank = rank
         self.epoch = 0
 
