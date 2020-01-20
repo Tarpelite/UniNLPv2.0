@@ -40,12 +40,12 @@ TASK_MAP = {name:num for num, name in enumerate(TASK_LIST)}
 class Token(object):
     def __init__(self, text):
         self.text = text
-        self._pos = None
-        self._ner = None
-        self._onto_pos = None
-        self._onto_ner = None
-        self._chunking = None
-        self._head = None
+        self.pos_ = None
+        self.ner_ = None
+        self.onto_pos_ = None
+        self.onto_ner_ = None
+        self.chunking_ = None
+        self.head_ = None
 
     def __repr__(self):
         return self.text
@@ -190,30 +190,30 @@ class uninlp(object):
         pos_tag = self.do_predict(input_text, "pos")
         self.tokens = [Token(text) for text in pos_tag["token_list"]]
         for token, pos in zip(self.tokens, pos_tag["preds"]):
-            token._pos = pos
+            token.pos_ = pos
         
         ner_tag = self.do_predict(input_text, "ner")
         for token, pred in zip(self.tokens,ner_tag["preds"]):
-            token._ner = pred.split("-")[-1]
+            token.ner_ = pred.split("-")[-1]
         
         onto_pos_tag = self.do_predict(input_text, "onto_pos")
         for token, pred in zip(self.tokens, onto_pos_tag["preds"]):
-            token._onto_pos = pred
+            token.onto_pos_ = pred
         
         onto_ner_tag = self.do_predict(input_text, "onto_ner")
         for token, pred in zip(self.tokens, onto_ner_tag["preds"]):
-            token._onto_ner = pred
+            token.onto_ner_ = pred
     
         chunking_tags = self.do_predict(input_text, "chunking")
         for token, pred in zip(self.tokens, chunking_tags["preds"]):
-            token._chunking = pred.split("-")[-1]
+            token.chunking_ = pred.split("-")[-1]
 
         heads = self.do_predict(input_text, "parsing_ptb")
         for token, pred in zip(self.tokens, heads["preds"]):
             if pred == 0:
-                token._head = (0, '[ROOT]')
+                token.head_ = (0, '[ROOT]')
             else:
-                token._head = (pred-1, self.tokens[pred-1].text)
+                token.head_ = (pred-1, self.tokens[pred-1].text)
         
         return self.tokens
         
@@ -233,22 +233,22 @@ if __name__ == "__main__":
     print("Time Used: {} s".format(e - s))
     print("**** test POS tag ****")
     print(tokens)
-    print([token._pos for token in tokens])
+    print([token.pos_ for token in tokens])
     print("**** test NER tag ****")
     print(tokens)
-    print([token._ner for token in tokens])
+    print([token.ner_ for token in tokens])
     print("**** test ONTO_POS tag ****")
     print(tokens)
-    print([token._onto_pos for token in tokens])
+    print([token.onto_pos_ for token in tokens])
     print("**** test ONTO_NER tag ****")
     print(tokens)
-    print([token._onto_ner for token in tokens])
+    print([token.onto_ner_ for token in tokens])
     print("**** test CHUNKING tag ****")
     print(tokens)
-    print([token._chunking for token in tokens])
+    print([token.chunking_ for token in tokens])
     print("**** test Parsing ****")
     print(tokens)
-    print([token._head for token in tokens])
+    print([token.head_ for token in tokens])
 
 
 
