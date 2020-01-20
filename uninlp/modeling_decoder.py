@@ -208,14 +208,14 @@ class uninlp(object):
     
         chunking_tags = self.do_predict(input_text, "chunking")
         for token, pred in zip(self.tokens, chunking_tags["preds"]):
-            token._chunking_ = pred.split("-")[-1]
+            token._chunking = pred.split("-")[-1]
 
         heads = self.do_predict(input_text, "parsing_ptb")
         for token, pred in zip(self.tokens, heads["preds"]):
             if pred == 0:
                 token._head = (0, '[ROOT]')
             else:
-                token._head = (pred, self.tokens[pred].text)
+                token._head = (pred-1, self.tokens[pred-1].text)
         
         return self.tokens
         
