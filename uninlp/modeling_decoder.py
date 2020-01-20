@@ -19,21 +19,11 @@ import requests
 from seqeval.metrics import accuracy_score, precision_score, recall_score, f1_score
 from tqdm import *
 
-from utils_mtdnn import MegaDataSet
+
 from uninlp import AdamW, get_linear_schedule_with_warmup
 from uninlp import WEIGHTS_NAME, BertConfig, MTDNNModel, BertTokenizer
-from pudb import set_trace
-import torch.distributed as dist
-from torch.nn.parallel import DistributedDataParallel as DDP
-from parallel import DataParallelModel
 
-ALL_MODELS = sum(
-    (tuple(conf.pretrained_config_archive_map.keys()) for conf in (BertConfig, )),
-    ())
 
-MODEL_CLASSES = {
-    "bert":(BertConfig, MTDNNModel, BertTokenizer)
-}
 
 TASK_LIST=["POS","NER", "CHUNKING", "SRL", "ONTO_POS", "ONTO_NER", "PARSING_UD", "PARSING_PTB"]
 LABELS_LIST = [
