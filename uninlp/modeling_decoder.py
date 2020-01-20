@@ -171,9 +171,7 @@ class uninlp(object):
                 results.append(pred)
         
         if not task.upper().startswith("PARSING"):
-            print(task)
             label_list = LABELS_LIST[task_id]
-            print(label_list)
             results = [label_list[x] for x in results]
 
         result_dict = {
