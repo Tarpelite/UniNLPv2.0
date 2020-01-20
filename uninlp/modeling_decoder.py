@@ -96,7 +96,7 @@ class uninlp(object):
                                         from_tf=bool(".ckpt" in args.model_name_or_path),
                                         config = config,
                                         labels_list=LABELS_LIST,
-                                        task_list = TASK_LIST
+                                        task_list = TASK_LIST,
                                         do_task_embedding=False,
                                         do_alpha=False,
                                         do_adapter = False,
