@@ -81,7 +81,7 @@ class uninlp(object):
 
 
         model = MTDNNModel.from_pretrained(model_path, 
-                                        from_tf=bool(".ckpt" in args.model_name_or_path),
+                                        from_tf=bool(".ckpt" in model_path),
                                         config = config,
                                         labels_list=LABELS_LIST,
                                         task_list = TASK_LIST,
