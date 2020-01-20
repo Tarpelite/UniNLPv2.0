@@ -279,8 +279,6 @@ def evaluate(args, model, UniDataSet, task):
     out_label_list = [[] for _ in range(out_label_ids.shape[0])]
     preds_list = [[] for _ in range(out_label_ids.shape[0])]
 
-    
-
     for i in range(out_label_ids.shape[0]):
         for j in range(out_label_ids.shape[1]):
             if out_label_ids[i, j] != -100:
@@ -495,10 +493,13 @@ def main():
 
             # Good practice: save your training arguments together with the trained model
             torch.save(args, os.path.join(args.output_dir, "training_args.bin"))
-    
+
+    if args.local_rank not in [-1, 0]:
+        # evaluate using single processor
+        return
+
     if args.do_eval:
-        
-        tokenizer = tokenizer_class.from_pretrained(args.output_dir, 
+        tokenizer = tokenizer_class.from_pretrained(args.output_dir,
                                                     do_lower_case=args.do_lower_case)
         if args.recover_path:
             checkpoint = args.recover_path
@@ -520,7 +521,7 @@ def main():
 
         model.to(args.device)
         total_results = {}
-        source_model_dict = copy.deepcoy(model.state_dict())
+        # source_model_dict = copy.deepcoy(model.state_dict())
         for task in UniDataSet.task_list:
             # dataset = UniDataSet.load_single_dataset(task, "dev")
             # task_id = UniDataSet.task_map[task]
