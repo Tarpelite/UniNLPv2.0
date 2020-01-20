@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="a806d39e-2617-4124-b8cc-162f1d0d505e" name="Default Changelist" comment="" />
+    <list default="true" id="a806d39e-2617-4124-b8cc-162f1d0d505e" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/examples/run_mtdnn_ddp.py" beforeDir="false" afterPath="$PROJECT_DIR$/examples/run_mtdnn_ddp.py" afterDir="false" />
+    </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -12,39 +14,40 @@
     <session id="-742368874">
       <usages-collector id="statistics.lifecycle.project">
         <counts>
-          <entry key="project.open.time.0" value="1" />
-          <entry key="project.opened" value="1" />
+          <entry key="project.closed" value="1" />
+          <entry key="project.open.time.0" value="2" />
+          <entry key="project.opened" value="2" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.open">
         <counts>
-          <entry key="py" value="18" />
+          <entry key="py" value="19" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.open">
         <counts>
-          <entry key="Python" value="18" />
+          <entry key="Python" value="19" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.edit">
         <counts>
-          <entry key="py" value="1215" />
+          <entry key="py" value="1449" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.edit">
         <counts>
-          <entry key="Python" value="1215" />
+          <entry key="Python" value="1449" />
         </counts>
       </usages-collector>
     </session>
   </component>
   <component name="FileEditorManager">
-    <leaf>
+    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/uninlp/modeling_utils.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="347">
-              <caret line="450" selection-start-line="450" selection-end-line="450" />
+            <state relative-caret-position="9275">
+              <caret line="387" selection-start-line="387" selection-end-line="387" />
               <folding>
                 <element signature="e#23121#23505#0" />
               </folding>
@@ -55,7 +58,7 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/uninlp/file_utils.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="40">
+            <state relative-caret-position="4150">
               <caret line="184" selection-start-line="184" selection-end-line="184" />
             </state>
           </provider>
@@ -64,7 +67,7 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/uninlp/configuration_utils.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="39">
+            <state relative-caret-position="3625">
               <caret line="154" selection-start-line="154" selection-end-line="154" />
             </state>
           </provider>
@@ -73,17 +76,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/examples/utils_mtdnn.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="973">
-              <caret line="126" column="8" selection-start-line="126" selection-start-column="8" selection-end-line="126" selection-end-column="8" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/examples/run_mtdnn_fix.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state>
-              <caret line="474" column="42" selection-start-line="474" selection-start-column="42" selection-end-line="474" selection-end-column="42" />
+            <state relative-caret-position="-295">
+              <caret line="64" column="24" selection-start-line="64" selection-start-column="24" selection-end-line="64" selection-end-column="24" />
               <folding>
                 <element signature="e#0#64#0" expanded="true" />
               </folding>
@@ -91,11 +85,37 @@
           </provider>
         </entry>
       </file>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/examples/run_mtdnn_ddp.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="400">
+              <caret line="501" selection-start-line="501" selection-end-line="501" />
+              <folding>
+                <element signature="e#0#64#0" expanded="true" />
+                <element signature="e#1025#1179#0" />
+                <element signature="e#2045#2422#0" />
+                <element signature="e#8359#11956#0" />
+                <element signature="e#19361#21367#0" />
+                <element signature="e#22842#23782#0" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://C:/ProgramData/Anaconda3/Lib/runpy.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="162">
+              <caret line="192" selection-start-line="192" selection-end-line="192" />
+            </state>
+          </provider>
+        </entry>
+      </file>
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/uninlp/modeling_bert.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="195">
-              <caret line="1452" selection-start-line="1452" selection-end-line="1452" />
+            <state relative-caret-position="33475">
+              <caret line="1339" column="16" selection-start-line="1339" selection-start-column="16" selection-end-line="1339" selection-end-column="16" />
               <folding>
                 <element signature="e#737#819#0" expanded="true" />
               </folding>
@@ -106,7 +126,7 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://C:/ProgramData/Anaconda3/Lib/site-packages/torch/nn/modules/module.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="95">
+            <state relative-caret-position="12625">
               <caret line="512" selection-start-line="512" selection-end-line="512" />
             </state>
           </provider>
@@ -126,6 +146,9 @@
       <find>RandomBatchSampler</find>
       <find>do_lower</find>
       <find>state_dict</find>
+      <find>MegaDataSet</find>
+      <find>weight</find>
+      <find>save</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -135,26 +158,27 @@
     <option name="CHANGED_PATHS">
       <list>
         <option value="$PROJECT_DIR$/examples/__init__.py" />
-        <option value="$PROJECT_DIR$/examples/utils_mtdnn.py" />
         <option value="$PROJECT_DIR$/uninlp/modeling_bert.py" />
         <option value="$PROJECT_DIR$/uninlp/modeling_utils.py" />
         <option value="$PROJECT_DIR$/examples/run_distill.py" />
         <option value="$PROJECT_DIR$/examples/run_mtdnn_fix.py" />
+        <option value="$PROJECT_DIR$/examples/utils_mtdnn.py" />
+        <option value="$PROJECT_DIR$/examples/run_mtdnn_ddp.py" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds" extendedState="6">
-    <option name="x" value="7" />
-    <option name="y" value="1" />
-    <option name="width" value="1274" />
-    <option name="height" value="645" />
+    <option name="x" value="624" />
+    <option name="y" value="115" />
+    <option name="width" value="1292" />
+    <option name="height" value="812" />
   </component>
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectView">
     <navigator proportions="" version="1">
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -171,10 +195,12 @@
           <select />
         </subPane>
       </pane>
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
@@ -193,7 +219,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.run_mtdnn_fix">
+  <component name="RunManager" selected="Python.run_mtdnn_ddp">
     <configuration name="run_distill" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="UniNLPv2.0" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -208,6 +234,27 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/examples/run_distill.py" />
       <option name="PARAMETERS" value="--dataset_dir F:\shaohanh\2020\uninlp_data\UniNLP_datasets_v2_ontoner --model_type bert --tokenizer_name bert-base-uncased --model_name_or_path F:\shaohanh\2020\uninlp_data\model_release\unilm_small_T6_e10\pytorch_model.bin --config_name F:\shaohanh\2020\uninlp_data\model_release\unilm_small_T6_e10\config.json --output_dir F:\shaohanh\2020\uninlp_data\on_ner_distill --do_train --do_eval --do_lower_case --teacher_model_name_or_path F:\shaohanh\2020\uninlp_data\model_release_v2\unilm_base_T6_e10\onto_ner-ft.bin --teacher_config_name F:\shaohanh\2020\uninlp_data\model_release_v2\unilm_base_T6_e10\config.json --mini_batch_size 32 --max_seq_length 128 --gradient_accumulation_steps 1 --learning_rate 5e-5 --weight_decay 0.01 --warmup_steps 500 --save_steps 500 --debug" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="run_mtdnn_ddp" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="UniNLPv2.0" />
+      <option name="INTERPRETER_OPTIONS" value="-m torch.distributed.launch --nproc_per_node=1" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="C:\ProgramData\Anaconda3\python.exe" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/examples" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/examples/run_mtdnn_ddp.py" />
+      <option name="PARAMETERS" value="--dataset_dir F:\shaohanh\2020\uninlp_data\UniNLP_datasets_v2_ontoner --model_type bert --tokenizer_name bert-base-uncased --model_name_or_path F:\shaohanh\2020\uninlp_data\model_release_v2\unilm_base_T6_e10\ner-ft.bin --recover_path F:\shaohanh\2020\uninlp_data\model_release_v2\unilm_base_T6_e10\ner-ft.bin --config_name F:\shaohanh\2020\uninlp_data\model_release_v2\unilm_base_T6_e10\config.json --output_dir F:\shaohanh\2020\uninlp_data\on_ner_distill --do_eval --do_lower_case --mini_batch_size 32 --max_seq_length 128 --gradient_accumulation_steps 1 --learning_rate 5e-5 --weight_decay 0.01 --warmup_steps 500 --save_steps 500 --debug" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
@@ -239,9 +286,11 @@
     <list>
       <item itemvalue="Python.run_distill" />
       <item itemvalue="Python.run_mtdnn_fix" />
+      <item itemvalue="Python.run_mtdnn_ddp" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.run_mtdnn_ddp" />
         <item itemvalue="Python.run_mtdnn_fix" />
         <item itemvalue="Python.run_distill" />
       </list>
@@ -261,18 +310,19 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="-8" y="-8" width="1296" height="776" extended-state="6" />
+    <frame x="-8" y="-8" width="1932" height="943" extended-state="6" />
+    <editor active="true" />
     <layout>
       <window_info id="Favorites" order="0" side_tool="true" />
-      <window_info active="true" content_ui="combo" id="Project" order="1" visible="true" weight="0.20985691" />
+      <window_info content_ui="combo" id="Project" order="1" visible="true" weight="0.2096093" />
       <window_info id="Structure" order="2" side_tool="true" weight="0.25" />
       <window_info anchor="bottom" id="Terminal" order="0" />
       <window_info anchor="bottom" id="Event Log" order="1" side_tool="true" />
       <window_info anchor="bottom" id="Python Console" order="2" />
       <window_info anchor="bottom" id="Message" order="3" />
       <window_info anchor="bottom" id="Find" order="4" />
-      <window_info anchor="bottom" id="Version Control" order="5" />
-      <window_info anchor="bottom" id="Run" order="6" visible="true" weight="0.15109034" />
+      <window_info anchor="bottom" id="Version Control" order="5" show_stripe_button="false" />
+      <window_info active="true" anchor="bottom" id="Run" order="6" visible="true" weight="0.11248455" />
       <window_info anchor="bottom" id="Debug" order="7" weight="0.06805293" />
       <window_info anchor="bottom" id="Cvs" order="8" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="9" weight="0.4" />
@@ -281,6 +331,25 @@
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
     </layout>
+    <layout-to-restore>
+      <window_info id="Favorites" order="0" side_tool="true" />
+      <window_info active="true" content_ui="combo" id="Project" order="1" weight="0.20985691" />
+      <window_info id="Structure" order="2" side_tool="true" weight="0.25" />
+      <window_info anchor="bottom" id="Terminal" order="0" />
+      <window_info anchor="bottom" id="Event Log" order="1" side_tool="true" />
+      <window_info anchor="bottom" id="Python Console" order="2" />
+      <window_info anchor="bottom" id="Message" order="3" />
+      <window_info anchor="bottom" id="Find" order="4" />
+      <window_info anchor="bottom" id="Version Control" order="5" show_stripe_button="false" />
+      <window_info anchor="bottom" id="Run" order="6" visible="true" weight="0.15109034" />
+      <window_info anchor="bottom" id="Debug" order="7" weight="0.06805293" />
+      <window_info anchor="bottom" id="Cvs" order="8" weight="0.25" />
+      <window_info anchor="bottom" id="Inspection" order="9" weight="0.4" />
+      <window_info anchor="bottom" id="TODO" order="10" />
+      <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
+      <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
+      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
+    </layout-to-restore>
   </component>
   <component name="VcsContentAnnotationSettings">
     <option name="myLimit" value="2678400000" />
@@ -290,22 +359,22 @@
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/examples/utils_mtdnn.py</url>
-          <line>291</line>
+          <line>293</line>
           <option name="timeStamp" value="7" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/examples/utils_mtdnn.py</url>
-          <line>306</line>
+          <line>308</line>
           <option name="timeStamp" value="11" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/examples/utils_mtdnn.py</url>
-          <line>26</line>
+          <line>27</line>
           <option name="timeStamp" value="13" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/uninlp/modeling_bert.py</url>
-          <line>1446</line>
+          <line>1474</line>
           <option name="timeStamp" value="22" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
@@ -315,7 +384,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/uninlp/modeling_bert.py</url>
-          <line>1427</line>
+          <line>1466</line>
           <option name="timeStamp" value="34" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
@@ -399,9 +468,7 @@
     </expressions>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/examples/__init__.py">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
+    <entry file="file://$PROJECT_DIR$/examples/__init__.py" />
     <entry file="file://C:/ProgramData/Anaconda3/Lib/site-packages/torch/utils/data/sampler.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="4">
@@ -437,13 +504,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/uninlp/configuration_utils.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="39">
-          <caret line="154" selection-start-line="154" selection-end-line="154" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://C:/ProgramData/Anaconda3/Lib/codecs.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="40">
@@ -458,17 +518,36 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/examples/utils_mtdnn.py">
+    <entry file="file://$PROJECT_DIR$/examples/run_distill.py" />
+    <entry file="file://$PROJECT_DIR$/examples/run_mtdnn_fix.py" />
+    <entry file="file://$PROJECT_DIR$/uninlp/modeling_utils.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="973">
-          <caret line="126" column="8" selection-start-line="126" selection-start-column="8" selection-end-line="126" selection-end-column="8" />
+        <state relative-caret-position="9275">
+          <caret line="387" selection-start-line="387" selection-end-line="387" />
+          <folding>
+            <element signature="e#23121#23505#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/uninlp/file_utils.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="4150">
+          <caret line="184" selection-start-line="184" selection-end-line="184" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/uninlp/configuration_utils.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="3625">
+          <caret line="154" selection-start-line="154" selection-end-line="154" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/uninlp/modeling_bert.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="195">
-          <caret line="1452" selection-start-line="1452" selection-end-line="1452" />
+        <state relative-caret-position="33475">
+          <caret line="1339" column="16" selection-start-line="1339" selection-start-column="16" selection-end-line="1339" selection-end-column="16" />
           <folding>
             <element signature="e#737#819#0" expanded="true" />
           </folding>
@@ -477,48 +556,39 @@
     </entry>
     <entry file="file://C:/ProgramData/Anaconda3/Lib/site-packages/torch/nn/modules/module.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="95">
+        <state relative-caret-position="12625">
           <caret line="512" selection-start-line="512" selection-end-line="512" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/uninlp/file_utils.py">
+    <entry file="file://C:/ProgramData/Anaconda3/Lib/runpy.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="40">
-          <caret line="184" selection-start-line="184" selection-end-line="184" />
+        <state relative-caret-position="162">
+          <caret line="192" selection-start-line="192" selection-end-line="192" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/examples/run_distill.py">
+    <entry file="file://$PROJECT_DIR$/examples/utils_mtdnn.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="7">
-          <caret line="300" column="4" selection-start-line="300" selection-start-column="4" selection-end-line="300" selection-end-column="4" />
+        <state relative-caret-position="-295">
+          <caret line="64" column="24" selection-start-line="64" selection-start-column="24" selection-end-line="64" selection-end-column="24" />
           <folding>
             <element signature="e#0#64#0" expanded="true" />
-            <element signature="e#895#1049#0" />
-            <element signature="e#1124#6007#0" />
-            <element signature="e#1124#6067#0" />
-            <element signature="e#14743#15519#0" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/uninlp/modeling_utils.py">
+    <entry file="file://$PROJECT_DIR$/examples/run_mtdnn_ddp.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="347">
-          <caret line="450" selection-start-line="450" selection-end-line="450" />
-          <folding>
-            <element signature="e#23121#23505#0" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/examples/run_mtdnn_fix.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state>
-          <caret line="474" column="42" selection-start-line="474" selection-start-column="42" selection-end-line="474" selection-end-column="42" />
+        <state relative-caret-position="400">
+          <caret line="501" selection-start-line="501" selection-end-line="501" />
           <folding>
             <element signature="e#0#64#0" expanded="true" />
+            <element signature="e#1025#1179#0" />
+            <element signature="e#2045#2422#0" />
+            <element signature="e#8359#11956#0" />
+            <element signature="e#19361#21367#0" />
+            <element signature="e#22842#23782#0" />
           </folding>
         </state>
       </provider>

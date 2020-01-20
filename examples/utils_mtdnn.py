@@ -14,6 +14,7 @@ import torch.distributed as dist
 
 logger = logging.getLogger(__name__)
 
+
 class RandomBatchSampler(Sampler):
     def __init__(self, data_source, batch_size):
 
@@ -36,7 +37,7 @@ class RandomBatchSampler(Sampler):
 
 
 class DistributedRandomBatchSampler(Sampler):
-    def __init__(self, data_source, batch_size, num_replicas=None, rank=None, shuffle=False):
+    def __init__(self, data_source, batch_size, num_replicas=None, rank=None):
         if num_replicas is None:
             if not dist.is_available():
                 raise RuntimeError("Requires distributed package to be available")
@@ -45,27 +46,32 @@ class DistributedRandomBatchSampler(Sampler):
             if not dist.is_available():
                 raise RuntimeError("Requires distributed package to be available")
             rank = dist.get_rank()
+
         self.data_source = data_source
+        self.batch_size = batch_size
         self.num_replicas = num_replicas
-        self.rank = rank
-        self.epoch = 0
-        
+        assert len(self.data_source) % self.batch_size == 0
+
         self.batch_sampler = list(BatchSampler(SequentialSampler(range(len(self.data_source))),
                                                batch_size=self.batch_size, drop_last=True))
 
-        self.random_id_sampler = torch.randperm(len(self.batch_sampler)).tolist()
-
-        self.num_samples = int(math.ceil(len(self.random_id_sampler) * 1.0 / self.num_replicas))
+        self.num_samples = int(math.floor(len(self.batch_sampler) * 1.0 / self.num_replicas))
 
         self.total_size = self.num_samples * self.num_replicas
-        self.shuffle = shuffle
-    
+
+        print("sample log --------------", self.total_size, len(self.batch_sampler))
+        self.random_id_sampler = torch.randperm(self.total_size).tolist()
+
+        self.rank = rank
+        self.epoch = 0
+
     def __iter__(self):
-        for ran_id in self.random_id_sampler:
+        # when iter, do random
+        for ran_id in self.random_id_sampler[self.rank:self.total_size:self.num_replicas]:
             yield self.batch_sampler[ran_id]
-    
+
     def __len__(self):
-        return self.num_samples
+        return len(self.random_id_sampler)
 
 
 class MegaDataSet(object):
@@ -119,9 +125,6 @@ class MegaDataSet(object):
                     examples.append([words, labels])
 
         return examples
-
-    
-
 
     def load_single_dataset(self, task_name, batch_size, mode):
         task = task_name.upper()
@@ -280,7 +283,6 @@ class MegaDataSet(object):
         dataset = TensorDataset(all_input_ids, all_input_mask, all_segment_ids, all_label_ids, all_task_ids)
         return features, dataset, task_id
     
-
     def load_MTDNN_dataset(self, batch_size, debug=False):
         all_data_sets = []
         all_input_ids = []
@@ -309,7 +311,6 @@ class MegaDataSet(object):
 
         all_dataset_sampler = RandomBatchSampler(all_dataset, batch_size)
         return all_dataset, all_dataset_sampler
-        
 
     def load_joint_train_dataset(self, debug=False):
         features_batches_list = []
@@ -331,14 +332,32 @@ class MegaDataSet(object):
             features_batches_list.append(features_batches)
         return features_batches_list
 
+    def load_MTDNN_dataset_for_distribute(self, batch_size, debug=False):
+        all_data_sets = []
+        all_input_ids = []
+        all_input_mask = []
+        all_segment_ids = []
+        all_label_ids = []
+        all_task_ids = []
+        for task in self.task_list:
 
-    
-        
+            if debug:
+                features, dataset, task_id = self.load_single_dataset(task, batch_size, "debug")
+            else:
+                features, dataset, task_id = self.load_single_dataset(task, batch_size, "train")
+            all_input_ids += [x[0] for x in features]
+            all_input_mask += [x[1] for x in features]
+            all_segment_ids += [x[2] for x in features]
+            all_label_ids += [x[3] for x in features]
+            all_task_ids += [task_id for x in features]
 
-        
+        all_input_ids = torch.tensor(all_input_ids, dtype=torch.long)
+        all_input_mask = torch.tensor(all_input_mask, dtype=torch.long)
+        all_segment_ids = torch.tensor(all_segment_ids, dtype=torch.long)
+        all_label_ids = torch.tensor(all_label_ids, dtype=torch.long)
+        all_task_ids = torch.tensor(all_task_ids, dtype=torch.long)
+        all_dataset = TensorDataset(all_input_ids, all_input_mask, all_segment_ids, all_label_ids, all_task_ids)
 
+        all_dataset_sampler = DistributedRandomBatchSampler(all_dataset, batch_size)
+        return all_dataset, all_dataset_sampler
 
-
-
-
-            
