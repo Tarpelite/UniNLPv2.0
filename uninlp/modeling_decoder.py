@@ -196,11 +196,11 @@ class uninlp(object):
         for token, pred in zip(self.tokens,ner_tag["preds"]):
             token._ner = pred.split("-")[-1]
         
-        onto_pos_tag = self.do_predict(input_text, "onto_pos_tag")
+        onto_pos_tag = self.do_predict(input_text, "onto_pos")
         for token, pred in zip(self.tokens, onto_pos_tag["preds"]):
             token._onto_pos = pred
         
-        onto_ner_tag = self.do_predict(input_text, "onto_ner_tag")
+        onto_ner_tag = self.do_predict(input_text, "onto_ner")
         for token, pred in zip(self.tokens, onto_ner_tag["preds"]):
             token._onto_ner = pred
     
