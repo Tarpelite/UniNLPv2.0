@@ -16,11 +16,9 @@ from torch.utils.data import DataLoader, RandomSampler, SequentialSampler, Tenso
 
 import copy 
 import requests
-from seqeval.metrics import accuracy_score, precision_score, recall_score, f1_score
 from tqdm import *
 
 
-from uninlp import AdamW, get_linear_schedule_with_warmup
 from uninlp import WEIGHTS_NAME, BertConfig, MTDNNModel, BertTokenizer
 
 
