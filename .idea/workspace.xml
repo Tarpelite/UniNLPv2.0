@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="a806d39e-2617-4124-b8cc-162f1d0d505e" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/examples/run_mtdnn_ddp.py" beforeDir="false" afterPath="$PROJECT_DIR$/examples/run_mtdnn_ddp.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/examples/utils_mtdnn.py" beforeDir="false" afterPath="$PROJECT_DIR$/examples/utils_mtdnn.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -73,11 +73,11 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/examples/utils_mtdnn.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-295">
-              <caret line="64" column="24" selection-start-line="64" selection-start-column="24" selection-end-line="64" selection-end-column="24" />
+            <state relative-caret-position="-477">
+              <caret line="80" column="9" selection-start-line="80" selection-start-column="9" selection-end-line="80" selection-end-column="9" />
               <folding>
                 <element signature="e#0#64#0" expanded="true" />
               </folding>
@@ -85,17 +85,18 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/examples/run_mtdnn_ddp.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="400">
-              <caret line="501" selection-start-line="501" selection-end-line="501" />
+            <state relative-caret-position="1238">
+              <caret line="519" column="8" lean-forward="true" selection-start-line="519" selection-start-column="8" selection-end-line="519" selection-end-column="8" />
               <folding>
                 <element signature="e#0#64#0" expanded="true" />
                 <element signature="e#1025#1179#0" />
                 <element signature="e#2045#2422#0" />
+                <element signature="e#2497#8302#0" />
                 <element signature="e#8359#11956#0" />
-                <element signature="e#19361#21367#0" />
+                <element signature="e#19438#20394#0" />
                 <element signature="e#22842#23782#0" />
               </folding>
             </state>
@@ -162,8 +163,8 @@
         <option value="$PROJECT_DIR$/uninlp/modeling_utils.py" />
         <option value="$PROJECT_DIR$/examples/run_distill.py" />
         <option value="$PROJECT_DIR$/examples/run_mtdnn_fix.py" />
-        <option value="$PROJECT_DIR$/examples/utils_mtdnn.py" />
         <option value="$PROJECT_DIR$/examples/run_mtdnn_ddp.py" />
+        <option value="$PROJECT_DIR$/examples/utils_mtdnn.py" />
       </list>
     </option>
   </component>
@@ -314,7 +315,7 @@
     <editor active="true" />
     <layout>
       <window_info id="Favorites" order="0" side_tool="true" />
-      <window_info content_ui="combo" id="Project" order="1" visible="true" weight="0.2096093" />
+      <window_info active="true" content_ui="combo" id="Project" order="1" visible="true" weight="0.2096093" />
       <window_info id="Structure" order="2" side_tool="true" weight="0.25" />
       <window_info anchor="bottom" id="Terminal" order="0" />
       <window_info anchor="bottom" id="Event Log" order="1" side_tool="true" />
@@ -322,7 +323,7 @@
       <window_info anchor="bottom" id="Message" order="3" />
       <window_info anchor="bottom" id="Find" order="4" />
       <window_info anchor="bottom" id="Version Control" order="5" show_stripe_button="false" />
-      <window_info active="true" anchor="bottom" id="Run" order="6" visible="true" weight="0.11248455" />
+      <window_info anchor="bottom" id="Run" order="6" visible="true" weight="0.368356" />
       <window_info anchor="bottom" id="Debug" order="7" weight="0.06805293" />
       <window_info anchor="bottom" id="Cvs" order="8" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="9" weight="0.4" />
@@ -568,27 +569,28 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/examples/utils_mtdnn.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-295">
-          <caret line="64" column="24" selection-start-line="64" selection-start-column="24" selection-end-line="64" selection-end-column="24" />
-          <folding>
-            <element signature="e#0#64#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/examples/run_mtdnn_ddp.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="400">
-          <caret line="501" selection-start-line="501" selection-end-line="501" />
+        <state relative-caret-position="1238">
+          <caret line="519" column="8" lean-forward="true" selection-start-line="519" selection-start-column="8" selection-end-line="519" selection-end-column="8" />
           <folding>
             <element signature="e#0#64#0" expanded="true" />
             <element signature="e#1025#1179#0" />
             <element signature="e#2045#2422#0" />
+            <element signature="e#2497#8302#0" />
             <element signature="e#8359#11956#0" />
-            <element signature="e#19361#21367#0" />
+            <element signature="e#19438#20394#0" />
             <element signature="e#22842#23782#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/examples/utils_mtdnn.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-477">
+          <caret line="80" column="9" selection-start-line="80" selection-start-column="9" selection-end-line="80" selection-end-column="9" />
+          <folding>
+            <element signature="e#0#64#0" expanded="true" />
           </folding>
         </state>
       </provider>

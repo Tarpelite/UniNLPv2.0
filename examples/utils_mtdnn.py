@@ -59,7 +59,7 @@ class DistributedRandomBatchSampler(Sampler):
 
         self.total_size = self.num_samples * self.num_replicas
 
-        print("sample log --------------", self.total_size, len(self.batch_sampler))
+        # print("sample log --------------", self.total_size, len(self.batch_sampler))
         self.random_id_sampler = torch.randperm(self.total_size).tolist()
 
         self.rank = rank
