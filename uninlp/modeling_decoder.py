@@ -49,6 +49,22 @@ LABELS_LIST = [
 
 TASK_MAP = {name:num for num, name in enumerate(TASK_LIST)}
 
+class Token(object):
+    def __init__(self, text):
+        self.text = text
+        self._pos = None
+        self._ner = None
+        self._onto_pos = None
+        self._onto_ner = None
+        self._chunking = None
+        self._head = None
+
+    def __repr__(self):
+        return self.text
+    
+    def __str__(self):
+        return self.text
+
 class uninlp(object):
 
     def __init__(self):
@@ -180,10 +196,73 @@ class uninlp(object):
             result_dict["verb"] = verb
         
         return result_dict
-            
+    
+    def analyze(self, input_text):
+           
+        pos_tag = self.do_predict(input_text, "pos")
+        self.tokens = [Token(text) for text in pos_tag.token_list]
+        for token, pos in zip(self.tokens, pos_tag.preds):
+            token._pos = pos
+        
+        ner_tag = self.do_predict(input_text, "ner")
+        for token, pred in zip(self.tokens,ner_tag.preds):
+            token._ner = pred.split("-")[-1]
+        
+        onto_pos_tag = self.do_predict(input_text, "onto_pos_tag")
+        for token, pred in zip(self.tokens, onto_pos_tag.preds):
+            token._onto_pos = pred
+        
+        onto_ner_tag = self.do_predict(input_text, "onto_ner_tag")
+        for token, pred in zip(self.tokens, onto_ner_tag.preds):
+            token._onto_ner = pred
+    
+        chunking_tags = self.do_predict(input_text, "chunking")
+        for token, pred in zip(self.tokens, chunking_tags.preds):
+            token._chunking_ = pred.split("-")[-1]
 
+        heads = self.do_predict(input_text, "parsing_ptb")
+        for token, pred in zip(self.tokens, heads):
+            if pred == 0:
+                token._head = (0, '[ROOT]')
+            else:
+                token._head = (pred, self.tokens[pred].text)
         
+        return self.tokens
         
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("--config_path", type=str)
+    parser.add_argument("--model_path", type=str)
+    parser.add_argument("--no_cuda", action="store_true")
+    args = parser.parse_args()
+    nlp = uninlp()
+    nlp.setup(args.model_path, args.config_path, args.no_cuda)
+    test_text = "I have a dog and he likes playing with me."
+    tokens = nlp.analyze(test_text)
+    
+    print("**** test POS tag ****")
+    print(tokens)
+    print([token._pos for token in tokens])
+    print("**** test NER tag ****")
+    print(tokens)
+    print([token._ner for token in tokens])
+    print("**** test ONTO_POS tag ****")
+    print(tokens)
+    print([token._onto_pos for token in tokens])
+    print("**** test ONTO_NER tag ****")
+    print(tokens)
+    print([token._onto_ner for token in tokens])
+    print("**** test CHUNKING tag ****")
+    print(tokens)
+    print([token._chunking for token in tokens])
+    print("**** test Parsing ****")
+    print(tokens)
+    print([token._head for token in tokens])
+
+
+
+
 
 
 
