@@ -56,7 +56,7 @@ class Token(object):
 class uninlp(object):
 
     def __init__(self):
-        
+
         self.special_tokens_count = 2
         self.sep_token = "[SEP]"
         self.sequence_a_segment_id = 0
@@ -188,28 +188,28 @@ class uninlp(object):
     def analyze(self, input_text):
            
         pos_tag = self.do_predict(input_text, "pos")
-        self.tokens = [Token(text) for text in pos_tag.token_list]
-        for token, pos in zip(self.tokens, pos_tag.preds):
+        self.tokens = [Token(text) for text in pos_tag["token_list"]]
+        for token, pos in zip(self.tokens, pos_tag["preds"]):
             token._pos = pos
         
         ner_tag = self.do_predict(input_text, "ner")
-        for token, pred in zip(self.tokens,ner_tag.preds):
+        for token, pred in zip(self.tokens,ner_tag["preds"]):
             token._ner = pred.split("-")[-1]
         
         onto_pos_tag = self.do_predict(input_text, "onto_pos_tag")
-        for token, pred in zip(self.tokens, onto_pos_tag.preds):
+        for token, pred in zip(self.tokens, onto_pos_tag["preds"]):
             token._onto_pos = pred
         
         onto_ner_tag = self.do_predict(input_text, "onto_ner_tag")
-        for token, pred in zip(self.tokens, onto_ner_tag.preds):
+        for token, pred in zip(self.tokens, onto_ner_tag["preds"]):
             token._onto_ner = pred
     
         chunking_tags = self.do_predict(input_text, "chunking")
-        for token, pred in zip(self.tokens, chunking_tags.preds):
+        for token, pred in zip(self.tokens, chunking_tags["preds"]):
             token._chunking_ = pred.split("-")[-1]
 
         heads = self.do_predict(input_text, "parsing_ptb")
-        for token, pred in zip(self.tokens, heads):
+        for token, pred in zip(self.tokens, heads["preds"]):
             if pred == 0:
                 token._head = (0, '[ROOT]')
             else:
