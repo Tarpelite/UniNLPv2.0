@@ -225,7 +225,7 @@ if __name__ == "__main__":
     parser.add_argument("--no_cuda", action="store_true")
     args = parser.parse_args()
     nlp = uninlp()
-    nlp.setup(args.model_path, args.config_path, args.no_cuda)
+    nlp.setup_model(args.model_path, args.config_path, args.no_cuda)
     test_text = "I have a dog and he likes playing with me."
     tokens = nlp.analyze(test_text)
     
