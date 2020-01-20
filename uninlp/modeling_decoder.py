@@ -170,7 +170,7 @@ class uninlp(object):
                 r_list.append(tk)
                 results.append(pred)
         
-        if not task.upper().startswith("PASING"):
+        if not task.upper().startswith("PARSING"):
             print(task)
             label_list = LABELS_LIST[task_id]
             print(label_list)
