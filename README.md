@@ -52,6 +52,20 @@ The file determines which task will be added and also the order of the tasks
 python -m torch.distributed.launch --nproc_per_node=4 run_mtdnn_ddp.py --dataset_dir /mnt/shaohan/uninlp/UniNLP_datasets_v2_ontoner/ --model_type bert --tokenizer_name bert-base-uncased --model_name_or_path bert-base-uncased --config_name /mnt/shaohan/uninlp/model_release_v2/unilm_base_T6_e10/config.json --output_dir /mnt/shaohan/uninlp/ner_test --do_train  --do_eval --do_lower_case --mini_batch_size 32 --max_seq_length 128 --gradient_accumulation_steps 1 --learning_rate 5e-5 --weight_decay 0.01 --warmup_steps 500 --save_steps 5000
 ```
 ## Benchmark
+
+### NLP Progress
+
+|Task                                |Type| Score |  Parper/Source                                              |
+|------------------------------------|----|------ |  --------------------------------------------------------   |
+|Universe Dependency (Part-of-speech)|Acc |96.77  | [Multilingual BERT and BPEmb (Heinzerling and Strube, 2019)](https://arxiv.org/abs/1906.01569)|  
+|Penn Treebank (Part-of-speech)      |Acc |97.96  | [Meta BiLSTM (Bohnet et al., 2018)](https://arxiv.org/abs/1805.08237)              |
+|CoNLL 2003(Named Entity Recognition)|F1  |93.50  | [CNN Large + fine-tune (Baevski et al., 2019)](https://arxiv.org/pdf/1903.07785.pdf)|
+|OntoNotes v5(Named Entity Recognition)|F1|89.71  | [Flair embeddings(Akbik et al., 2018)](http://aclweb.org/anthology/C18-1139)|
+|OntoNotes v5(Semantic Role Labelling)|F1 |85.50  | [He et al., (2018) + ELMO](http://aclweb.org/anthology/P18-2058)|
+|Penn Treebank (Dependency Parsing)  |UAS |97.33  | [Label Attention Layer + HPSG + XLNet (Mrini et al., 2019)](https://khalilmrini.github.io/Label_Attention_Layer.pdf)|
+|Universal Dependencies (Dependency Parsing) | UAS |95.80| [Stack-only RNNG (Kuncoro et al., 2017)](https://arxiv.org/abs/1611.05774) |
+
+### Toolkits
 |                |POS_UD|POS_ONTO|NER_CONLL|NER_ONTO|Chunking|SRL  |PARSING_PTB|PARSING_UD|    
 |----------------|------|--------|---------|--------|--------|-----|-----------|----------|
 |stanford_corenlp|94.94 |-       |89.38    |-       |-       |-    |-          |84.53     | 
