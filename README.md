@@ -100,6 +100,7 @@ python -m torch.distributed.launch --nproc_per_node=4 run_mtdnn_ddp.py --dataset
 |spacy_md    | 1352               |
 |spacy_lg    | 1431               |  
 |CoreNLP_java_vm| 18404           |
+|CoreNLP_python_interface|412     |
 
 
 
