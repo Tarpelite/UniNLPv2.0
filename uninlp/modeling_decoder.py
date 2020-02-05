@@ -102,7 +102,7 @@ class uninlp(object):
     
     def do_predict(self, input_text, task, verb=None, max_seq_length=128):
         
-        tokens = self.tokenizer.tokenize(input_text)
+        tokens, orig_tokens = self.tokenizer._tokenize_with_orig(input_text)
 
         if task == "srl":
             verb_tokens = self.tokenizer.tokenize(input_text)
@@ -162,14 +162,17 @@ class uninlp(object):
 
         results = []
         r_list = []
+        orig_tokens = orig_tokens[:len(tokens)]
+        orig_token_list = []
 
-        for tk, pred in zip(tokens, preds):
+        for tk, pred, orig_token in zip(tokens, preds, orig_tokens):
             if tk.startswith("##") and len(r_list) > 0:
                 r_list[-1] = r_list[-1] + tk[2:]
             else:
                 r_list.append(tk)
                 results.append(pred)
-        
+                orig_token_list.append(orig_token)
+
         if not task.upper().startswith("PARSING"):
             label_list = LABELS_LIST[task_id]
             results = [label_list[x] for x in results]
@@ -177,6 +180,7 @@ class uninlp(object):
         result_dict = {
             "task":task,
             "token_list":r_list,
+            "orig_token_list": orig_token_list,
             "preds":results
         }
 

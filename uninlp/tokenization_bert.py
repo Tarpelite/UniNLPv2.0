@@ -180,6 +180,19 @@ class BertTokenizer(PreTrainedTokenizer):
             split_tokens = self.wordpiece_tokenizer.tokenize(text)
         return split_tokens
 
+    def _tokenize_with_orig(self, text):
+        split_tokens = []
+        orig_split_tokens = []
+        if self.do_basic_tokenize:
+            tokens, orig_tokens = self.basic_tokenizer.tokenize(text, never_split=self.all_special_tokens, with_orig=True)
+            for token, orig_token in zip(tokens, orig_tokens):
+                for sub_token in self.wordpiece_tokenizer.tokenize(token):
+                    split_tokens.append(sub_token)
+                    orig_split_tokens.append(orig_token)
+        else:
+            split_tokens = self.wordpiece_tokenizer.tokenize(text)
+        return split_tokens, orig_split_tokens
+
     def _convert_token_to_id(self, token):
         """ Converts a token (str/unicode) in an id using the vocab. """
         return self.vocab.get(token, self.vocab.get(self.unk_token))
@@ -289,7 +302,7 @@ class BasicTokenizer(object):
         self.never_split = never_split
         self.tokenize_chinese_chars = tokenize_chinese_chars
 
-    def tokenize(self, text, never_split=None):
+    def tokenize(self, text, never_split=None, with_orig=False):
         """ Basic Tokenization of a piece of text.
             Split on "white spaces" only, for sub-word tokenization, see WordPieceTokenizer.
 
@@ -311,13 +324,27 @@ class BasicTokenizer(object):
             text = self._tokenize_chinese_chars(text)
         orig_tokens = whitespace_tokenize(text)
         split_tokens = []
+        orig_split_tokens = []
         for token in orig_tokens:
+            orig_token = token
             if self.do_lower_case and token not in never_split:
                 token = token.lower()
                 token = self._run_strip_accents(token)
-            split_tokens.extend(self._run_split_on_punc(token))
+            split_token = self._run_split_on_punc(token)
+            split_tokens.extend(split_token)
+            # find original token for each token
+            start_idx = 0
+            for _split_token in split_token:
+                idx = orig_token.lower().find(_split_token, start_idx)
+                orig_split_tokens.append(orig_token[idx: idx+len(_split_token)])
+                start_idx += len(_split_token)
 
+        assert len(split_tokens) == len(orig_split_tokens)
         output_tokens = whitespace_tokenize(" ".join(split_tokens))
+        if with_orig:
+            orig_split_tokens = whitespace_tokenize(" ".join(orig_split_tokens))
+            return output_tokens, orig_split_tokens
+
         return output_tokens
 
     def _run_strip_accents(self, text):
