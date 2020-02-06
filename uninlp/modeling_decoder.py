@@ -127,8 +127,8 @@ class uninlp(object):
         segment_ids = [self.cls_token_segment_id] + segment_ids
 
         if task == "srl":
-            tokens += [self.sep_token] + verb_tokens + [self.sep_token]
-            segment_ids += [self.sequence_a_segment_id] + [self.sequence_b_segment_id]*len(verb_tokens) + [self.sequence_b_segment_id]
+            tokens += verb_tokens + [self.sep_token]
+            segment_ids += [self.sequence_b_segment_id]*len(verb_tokens) + [self.sequence_b_segment_id]
         
         input_ids = self.tokenizer.convert_tokens_to_ids(tokens)
         input_mask = [1 if self.mask_padding_with_zero else 0]*len(input_ids)
