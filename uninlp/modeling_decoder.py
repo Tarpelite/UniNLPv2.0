@@ -181,7 +181,7 @@ class uninlp(object):
                     orig_token_list.append(orig_token)
             
             label_list = self.labels_list[task_id]
-            results_head = [str(x) for x in results_head]
+            results_head = [x for x in results_head]
             results = [label_list[x] for x in results]
             result_dict = {
                 "task":task,
@@ -257,7 +257,7 @@ class uninlp(object):
                 token.head_ptb_ = (0, '[ROOT]')
                 token.dep_ptb_ = dep
             else:
-                token.head_ptb_ = (pred-1, self.tokens[pred-1].text)
+                token.head_ptb_ = (head-1, self.tokens[head-1].text)
                 token.dep_ptb_ = dep
         
         heads = self.do_predict(input_text, "parsing_ud")
@@ -266,7 +266,7 @@ class uninlp(object):
                 token.head_ud_ = (0, '[ROOT]')
                 token.dep_ud_ = dep
             else:
-                token.head_ud_ = (pred-1, self.tokens[pred-1].text)
+                token.head_ud_ = (head-1, self.tokens[head-1].text)
                 token.dep_ud_ = dep
         
         return self.tokens
