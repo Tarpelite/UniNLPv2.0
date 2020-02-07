@@ -326,25 +326,32 @@ class MegaDataSet(object):
         all_label_ids = []
         all_head_ids = []
         all_task_ids = []
-        for task in self.task_list:
-            if debug:
-                features, dataset, task_id = self.load_single_dataset(task, batch_size, "debug")
-            else:
-                features, dataset, task_id = self.load_single_dataset(task, batch_size, "train")
-            all_input_ids += [x[0] for x in features]
-            all_input_mask += [x[1] for x in features]
-            all_segment_ids += [x[2] for x in features]
-            all_label_ids += [x[3] for x in features]
-            all_head_ids +=[x[4] for x in features]
-            all_task_ids += [task_id for x in features]
-          
-        all_input_ids = torch.tensor(all_input_ids, dtype=torch.long)
-        all_input_mask = torch.tensor(all_input_mask, dtype=torch.long)
-        all_segment_ids = torch.tensor(all_segment_ids, dtype=torch.long)
-        all_label_ids = torch.tensor(all_label_ids, dtype=torch.long)
-        all_head_ids = torch.tensor(all_head_ids, dtype=torch.long)
-        all_task_ids = torch.tensor(all_task_ids, dtype=torch.long)
-        all_dataset = TensorDataset(all_input_ids, all_input_mask, all_segment_ids, all_label_ids, all_head_ids, all_task_ids)
+        cache_path = os.path.join(self.datasets_dir, "joint_cache.pl")
+        if os.path.exisits(cache_path):
+            print("Loading MTDNN datasets from cache {}".format(cache_path))
+            all_dataset = torch.load(cache_path)
+        else:
+            for task in self.task_list:
+                if debug:
+                    features, dataset, task_id = self.load_single_dataset(task, batch_size, "debug")
+                else:
+                    features, dataset, task_id = self.load_single_dataset(task, batch_size, "train")
+                all_input_ids += [x[0] for x in features]
+                all_input_mask += [x[1] for x in features]
+                all_segment_ids += [x[2] for x in features]
+                all_label_ids += [x[3] for x in features]
+                all_head_ids +=[x[4] for x in features]
+                all_task_ids += [task_id for x in features]
+            
+            all_input_ids = torch.tensor(all_input_ids, dtype=torch.long)
+            all_input_mask = torch.tensor(all_input_mask, dtype=torch.long)
+            all_segment_ids = torch.tensor(all_segment_ids, dtype=torch.long)
+            all_label_ids = torch.tensor(all_label_ids, dtype=torch.long)
+            all_head_ids = torch.tensor(all_head_ids, dtype=torch.long)
+            all_task_ids = torch.tensor(all_task_ids, dtype=torch.long)
+            all_dataset = TensorDataset(all_input_ids, all_input_mask, all_segment_ids, all_label_ids, all_head_ids, all_task_ids)
+            print("saving MTNN datasets to cache {}".format(cache_path))
+            torch.save(all_dataset, cache_path)
 
         all_dataset_sampler = RandomBatchSampler(all_dataset, batch_size)
         return all_dataset, all_dataset_sampler
