@@ -1336,7 +1336,7 @@ class DeepBiAffineDecoder(nn.Module):
 
 class DeepBiAffineDecoderV2(nn.Module):
     """Parsing decodder"""
-    def __init__(self, hidden_size, mlp_dim=300, num_labels):
+    def __init__(self, hidden_size, mlp_dim=300, num_labels=2):
         super(DeepBiAffineDecoderV2, self).__init__()
         self.mlp_dim = mlp_dim
         self.num_labels = num_labels
