@@ -528,7 +528,7 @@ def main():
                                             num_adapter_layers = args.num_adapter_layers)
             model.to(args.device)
         
-        all_train_datasets, all_dataset_sampler = UniDataSet.load_MTDNN_dataset_for_distribute((args.mini_batch_size * max(1, args.n_gpu)), debug=args.debug)
+        all_train_datasets, all_dataset_sampler = UniDataSet.load_MTDNN_dataset((args.mini_batch_size * max(1, args.n_gpu)), debug=args.debug)
         model = train(args, model, all_train_datasets, all_dataset_sampler=all_dataset_sampler)
     
         if not os.path.exists(args.output_dir):
