@@ -546,6 +546,7 @@ def main():
             # Good practice: save your training arguments together with the trained model
             torch.save(args, os.path.join(args.output_dir, "training_args.bin"))
 
+
     if args.local_rank not in [-1, 0]:
         # evaluate using single processor
         return
@@ -590,7 +591,7 @@ def main():
                                             num_adapter_layers = args.num_adapter_layers)
                 features,dataset, task_id = UniDataSet.load_single_dataset(task, max(1, args.n_gpu)*args.mini_batch_size, mode="train")
                 model.to(args.device)
-                model = train(args, dataset, all_dataset_sampler=None, task_id=task_id)
+                model = train(args, model, dataset, all_dataset_sampler=None, task_id=task_id)
 
             results = evaluate(args, model, UniDataSet, task)
             if task == "POS":
