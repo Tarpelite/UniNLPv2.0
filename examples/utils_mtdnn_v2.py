@@ -130,8 +130,9 @@ class MegaDataSet(object):
                     examples.append([words, labels])  
                 elif task.startswith("PARSING"):
                     words = inputs[0].strip().split()
-                    left = inputs[0].strip().split()
-                    right = inputs[1].strip().split()  
+                    heads = inputs[1].strip().split()
+                    labels = inputs[2].strip().split()
+                    examples.append([words, heads, labels])  
                 else:
                     words = left
                     labels = right
