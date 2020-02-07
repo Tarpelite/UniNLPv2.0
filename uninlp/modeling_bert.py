@@ -1485,7 +1485,7 @@ class MTDNNModelV2(BertPreTrainedModel):
                 labels = labels.view(-1)
 
                 loss_labels = loss_fct(logits_label, labels)
-                loss = loss + loss_labels
+                loss = loss_arc + loss_labels
                 outputs = (loss, ) + outputs
         else:
             logits = classifier(sequence_output)
