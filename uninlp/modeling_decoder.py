@@ -307,7 +307,7 @@ if __name__ == "__main__":
     print( ([token.dep_ptb_ for token in tokens]))
     print("**** test UD Parsing ****")
     print(tokens)
-    print([token.dep_ud_ for token in tokens])
+    print([token.head_ud_ for token in tokens])
     print([token.dep_ud_ for token in tokens])
 
 
