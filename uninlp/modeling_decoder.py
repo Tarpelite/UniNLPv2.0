@@ -24,16 +24,6 @@ from uninlp import WEIGHTS_NAME, BertConfig, MTDNNModel, BertTokenizer
 
 
 TASK_LIST=["POS","NER", "CHUNKING", "SRL", "ONTO_POS", "ONTO_NER", "PARSING_UD", "PARSING_PTB"]
-LABELS_LIST = [
-    ["ADJ", "ADP", "ADV", "AUX", "CCONJ", "DET", "INTJ", "NOUN", "NUM", "PART", "PRON", "PROPN", "PUNCT", "SCONJ", "SYM", "VERB", "X"], 
-    ['O', 'B-MISC', 'I-MISC', 'B-PER', 'I-PER', 'B-ORG', 'I-ORG', 'B-LOC', 'I-LOC'],
-    ['O', 'B-NP', 'B-VP', 'B-PP', 'B-ADVP', 'B-SBAR', 'B-ADJP', 'B-PRT', 'B-CONJP', 'B-INTJ', 'B-LST', 'B-UCP', 'I-NP', 'I-VP', 'I-PP', 'I-ADVP', 'I-SBAR', 'I-ADJP', 'I-PRT', 'I-CONJP', 'I-INTJ', 'I-LST', 'I-UCP'],
-    ['O', 'B-V', 'B-A1', 'B-A0', 'I-A0', 'I-A1', 'B-AM-LOC', 'I-AM-LOC', 'B-AM-MNR', 'B-A2', 'I-A2', 'B-A3', 'I-AM-MNR', 'B-AM-TMP', 'I-AM-TMP', 'B-A4', 'I-A4', 'I-A3', 'B-AM-NEG', 'B-AM-MOD', 'B-R-A0', 'B-AM-DIS', 'B-AM-EXT', 'B-AM-ADV', 'I-AM-ADV', 'B-AM-PNC', 'I-AM-PNC', 'I-AM-DIS', 'B-R-A1', 'B-C-A1', 'I-C-A1', 'B-R-AM-TMP', 'I-V', 'B-C-V', 'B-AM-DIR', 'I-AM-DIR', 'B-R-A2', 'B-AM-PRD', 'I-AM-PRD', 'I-R-A2', 'B-R-AM-PNC', 'B-C-AM-MNR', 'I-C-AM-MNR', 'I-R-AM-TMP', 'B-AM-CAU', 'B-R-A3', 'B-R-AM-MNR', 'I-AM-CAU', 'I-AM-EXT', 'B-C-A4', 'I-C-A4', 'I-R-A1', 'B-R-AM-LOC', 'I-R-A0', 'B-C-A0', 'I-C-A0', 'B-C-A2', 'I-C-A2', 'B-R-AM-EXT', 'I-R-AM-EXT', 'B-A5', 'I-R-AM-MNR', 'B-C-AM-LOC', 'I-C-AM-LOC', 'I-R-AM-LOC', 'B-C-A3', 'I-C-A3', 'I-AM-NEG', 'B-R-AM-CAU', 'B-R-A4', 'B-C-AM-ADV', 'I-C-AM-ADV', 'B-R-AM-ADV', 'I-R-AM-ADV', 'I-R-A3', 'B-AM-REC', 'B-AM-TM', 'I-AM-TM', 'B-AM', 'I-AM', 'B-C-A5', 'I-C-A5', 'B-C-AM-TMP', 'I-C-AM-TMP', 'B-AA', 'I-AA', 'B-R-AA', 'I-A5', 'I-AM-MOD', 'B-C-AM-EXT', 'I-AM-REC', 'B-C-AM-NEG', 'I-C-AM-EXT', 'I-C-V', 'B-C-AM-DIS', 'I-C-AM-DIS', 'B-C-AM-CAU', 'I-C-AM-CAU', 'I-R-AM-PNC', 'B-R-AM-DIR', 'I-R-AM-DIR', 'B-C-AM-DIR', 'I-C-AM-DIR', 'B-C-AM-PNC', 'I-C-AM-PNC', 'I-R-A4'],
-    ['$', '``', "''", ',', '-LRB-', '-RRB-', '.', ':', 'ADD', 'AFX', 'CC', 'CD', 'DT', 'EX', 'FW', 'GW', 'HYPH', 'IN', 'JJ', 'JJR', 'JJS', 'LS', 'MD', 'NFP', 'NIL', 'NN', 'NNP', 'NNPS', 'NNS', 'PDT', 'POS', 'PRP', 'PRP$', 'RB', 'RBR', 'RBS', 'RP', 'SP', 'SYM', 'TO', 'UH', 'VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ', 'WDT', 'WP', 'WP$', 'WRB', 'XX', '_SP', ''],
-    ['O', 'B-PERSON', 'I-PERSON', 'B-NORP', 'I-NORP', 'B-FAC', 'I-FAC', 'B-ORG', 'I-ORG', 'B-GPE', 'I-GPE', 'B-LOC', 'I-LOC', 'B-PRODUCT', 'I-PRODUCT', 'B-EVENT', 'I-EVENT', 'B-WORK_OF_ART', 'I-WORK_OF_ART', 'B-LAW', 'I-LAW', 'B-LANGUAGE', 'I-LANGUAGE', 'B-DATE', 'I-DATE', 'B-TIME', 'I-TIME', 'B-PERCENT', 'I-PERCENT', 'B-MONEY', 'I-MONEY', 'B-QUANTITY', 'I-QUANTITY', 'B-ORDINAL', 'I-ORDINAL', 'B-CARDINAL', 'I-CARDINAL'],
-    [],
-    []
-]
 
 TASK_MAP = {name:num for num, name in enumerate(TASK_LIST)}
 
@@ -45,8 +35,10 @@ class Token(object):
         self.onto_pos_ = None
         self.onto_ner_ = None
         self.chunking_ = None
-        self.head_ = None
-        self.dep_ = None
+        self.head_ptb_ = None
+        self.dep_ptb_ = None
+        self.head_ud_ = None
+        self.dep_ud_ = None
 
     def __repr__(self):
         return self.text
@@ -70,8 +62,15 @@ class uninlp(object):
         self.model_type = "bert"
         self.labels_pos = []
 
-    def setup_model(self, model_path, config=None, no_cuda=False):
+    def setup_model(self, model_path, config=None, label_file=None, no_cuda=False):
         self.device  =  torch.device("cuda" if torch.cuda.is_available() and not no_cuda else "cpu")
+        # load labels
+        self.labels_list = []
+        with open(labels_file, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip().split()
+                self.labels_list.append(line)
+
         config = BertConfig.from_pretrained(config, 
                                             num_labels=2, 
                                             cache_dir=None, 
@@ -84,7 +83,7 @@ class uninlp(object):
         model = MTDNNModel.from_pretrained(model_path, 
                                         from_tf=bool(".ckpt" in model_path),
                                         config = config,
-                                        labels_list=LABELS_LIST,
+                                        labels_list=self.labels_list,
                                         task_list = TASK_LIST,
                                         do_task_embedding=False,
                                         do_alpha=False,
@@ -96,6 +95,9 @@ class uninlp(object):
         self.tokenizer = tokenizer
         self.model = model
         self.model.to(self.device)
+
+        
+
     
     def tokenize(self, text):
         # tokenize based on word-piece
@@ -156,41 +158,72 @@ class uninlp(object):
             self.model.eval()
             outputs = self.model(**inputs)
         
-        # if task.startswith("parsing"):
-        #     logits_arc, logits_label = outputs[:2]
+        if task.startswith("parsing"):
+            logits_arc, logits_label = outputs[:2]
+            preds_arc = logits_arc.squeeze().detach().cpu().numpy()
+            preds_label = logits_label.squeeze().detach().cpu().numpy()
+            tokens = tokens[1:valid_length + 1]
+
+            results_head = []
+            results = []
+            token_list = []
+            orig_tokens = orig_tokens[:len(tokens)]
+            orig_token_list = []
+
+            for tk, pred_head, pred_label, orig_token in zip(tokens, preds_arc, preds_label, orig_tokens):
+                if tk.startswith("##") and len(r_list) > 0:
+                    token_list[-1] = token_list[-1] + tk[2:]
+                else:
+                    token_list.append(tk)
+                    results_head.append(pred_head)
+                    results.append(pred_label)
+                    orig_token_list.append(orig_token)
             
-        
-        logits = outputs[0]
-        preds = logits.squeeze().detach().cpu().numpy()
-        preds = np.argmax(preds, axis=1)[1:valid_length + 1]
-        tokens = tokens[1:valid_length + 1]
+            label_list = self.labels_list[task_id]
+            results_head = [str(x) for x in results_head]
+            results = [label_list[x] for x in results]
+            result_dict = {
+                "task":task,
+                "token_list":token_list,
+                "orig_token_list": orig_token_list,
+                "heads":results_head,
+                "preds":results
+            }
 
-        results = []
-        r_list = []
-        orig_tokens = orig_tokens[:len(tokens)]
-        orig_token_list = []
+            
+            
+        else:
+            logits = outputs[0]
+            preds = logits.squeeze().detach().cpu().numpy()
+            preds = np.argmax(preds, axis=1)[1:valid_length + 1]
+            tokens = tokens[1:valid_length + 1]
 
-        for tk, pred, orig_token in zip(tokens, preds, orig_tokens):
-            if tk.startswith("##") and len(r_list) > 0:
-                r_list[-1] = r_list[-1] + tk[2:]
-            else:
-                r_list.append(tk)
-                results.append(pred)
-                orig_token_list.append(orig_token)
+            results = []
+            r_list = []
+            orig_tokens = orig_tokens[:len(tokens)]
+            orig_token_list = []
 
-        if not task.upper().startswith("PARSING"):
-            label_list = LABELS_LIST[task_id]
+            for tk, pred, orig_token in zip(tokens, preds, orig_tokens):
+                if tk.startswith("##") and len(r_list) > 0:
+                    r_list[-1] = r_list[-1] + tk[2:]
+                else:
+                    r_list.append(tk)
+                    results.append(pred)
+                    orig_token_list.append(orig_token)
+
+            
+            label_list = self.labels_list[task_id]
             results = [label_list[x] for x in results]
 
-        result_dict = {
-            "task":task,
-            "token_list":r_list,
-            "orig_token_list": orig_token_list,
-            "preds":results
-        }
+            result_dict = {
+                "task":task,
+                "token_list":r_list,
+                "orig_token_list": orig_token_list,
+                "preds":results
+            }
 
-        if task == "srl":
-            result_dict["verb"] = verb
+            if task == "srl":
+                result_dict["verb"] = verb
         
         return result_dict
     
@@ -218,11 +251,22 @@ class uninlp(object):
             token.chunking_ = pred.split("-")[-1]
 
         heads = self.do_predict(input_text, "parsing_ptb")
-        for token, pred in zip(self.tokens, heads["preds"]):
-            if pred == 0:
-                token.head_ = (0, '[ROOT]')
+        for token, head, dep in zip(self.tokens, heads["heads"], heads["preds"]):
+            if head == 0:
+                token.head_ptb_ = (0, '[ROOT]')
+                token.dep_ptb_ = dep
             else:
-                token.head_ = (pred-1, self.tokens[pred-1].text)
+                token.head_ptb_ = (pred-1, self.tokens[pred-1].text)
+                token.dep_ptb_ = dep
+        
+        heads = self.do_predict(input_text, "parsing_ud")
+        for token, head, dep in zip(self.tokens, heads["heads"], heads["preds"]):
+            if head == 0:
+                token.head_ud_ = (0, '[ROOT]')
+                token.dep_ud_ = dep
+            else:
+                token.head_ud_ = (pred-1, self.tokens[pred-1].text)
+                token.dep_ud_ = dep
         
         return self.tokens
         
@@ -231,6 +275,7 @@ if __name__ == "__main__":
 
     parser.add_argument("--config_path", type=str)
     parser.add_argument("--model_path", type=str)
+    parser.add_argument("--label_file", type=str)
     parser.add_argument("--no_cuda", action="store_true")
     args = parser.parse_args()
     nlp = uninlp()
@@ -241,23 +286,29 @@ if __name__ == "__main__":
     e = time.time()
     print("Time Used: {} s".format(e - s))
     print("**** test POS tag ****")
-    print(tokens)
-    print([token.pos_ for token in tokens])
+    print(" ".join(tokens))
+    print(" ".join([token.pos_ for token in tokens]))
     print("**** test NER tag ****")
-    print(tokens)
-    print([token.ner_ for token in tokens])
+    print(" ".join(tokens))
+    print(" ".join([token.ner_ for token in tokens]))
     print("**** test ONTO_POS tag ****")
-    print(tokens)
-    print([token.onto_pos_ for token in tokens])
+    print(" ".join(tokens))
+    print(" ".join([token.onto_pos_ for token in tokens]))
     print("**** test ONTO_NER tag ****")
-    print(tokens)
-    print([token.onto_ner_ for token in tokens])
+    print(" ".join(tokens))
+    print(" ".join([token.onto_ner_ for token in tokens]))
     print("**** test CHUNKING tag ****")
-    print(tokens)
-    print([token.chunking_ for token in tokens])
-    print("**** test Parsing ****")
-    print(tokens)
-    print([token.head_ for token in tokens])
+    print(" ".join(tokens))
+    print(" ".join([token.chunking_ for token in tokens]))
+    print("**** test PTB Parsing ****")
+    print(" ".join(tokens))
+    print(" ".join([token.head_ptb_ for token in tokens]))
+    print(" ".join([token.label_ptb_ for token in tokens]))
+    print("**** test UD Parsing ****")
+    print(" ".join(tokens))
+    print(" ".join([token.head_ud_ for token in tokens]))
+    print(" ".join([token.label_ud_ for token in tokens]))
+
 
 
 
