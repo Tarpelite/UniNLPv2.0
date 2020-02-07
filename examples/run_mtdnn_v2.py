@@ -273,7 +273,7 @@ def evaluate(args, model, UniDataSet, task):
             # print("preds", logits.shape)
             if type(model.classifier_list[task_id]) == DeepBiAffineDecoderV2:
                 preds_arc = logits_arc.detach().cpu().numpy()
-                preds_label = logits_label.detach()/cpu().numpy()
+                preds_label = logits_label.detach().cpu().numpy()
                 out_head_ids = batch[3].detach().cpu().numpy()
                 out_label_ids = batch[4].detach().cpu().numpy()
             else:
