@@ -66,7 +66,7 @@ class uninlp(object):
         self.device  =  torch.device("cuda" if torch.cuda.is_available() and not no_cuda else "cpu")
         # load labels
         self.labels_list = []
-        with open(labels_file, "r", encoding="utf-8") as f:
+        with open(label_file, "r", encoding="utf-8") as f:
             for line in f:
                 line = line.strip().split()
                 self.labels_list.append(line)
@@ -96,9 +96,6 @@ class uninlp(object):
         self.model = model
         self.model.to(self.device)
 
-        
-
-    
     def tokenize(self, text):
         # tokenize based on word-piece
         return self.tokenizer.tokenize(text)
@@ -279,7 +276,7 @@ if __name__ == "__main__":
     parser.add_argument("--no_cuda", action="store_true")
     args = parser.parse_args()
     nlp = uninlp()
-    nlp.setup_model(args.model_path, args.config_path, args.no_cuda)
+    nlp.setup_model(args.model_path, args.config_path, args.label_file, args.no_cuda)
     test_text = "I have a dog and he likes playing with me."
     s = time.time()
     tokens = nlp.analyze(test_text)
