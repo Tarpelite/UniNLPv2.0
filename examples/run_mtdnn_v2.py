@@ -299,6 +299,7 @@ def evaluate(args, model, UniDataSet, task):
     label_map = {i: label for i, label in enumerate(label_list)}
 
     if type(model.classifier_list[task_id]) == DeepBiAffineDecoderV2:
+        pad_token_label_id = -100
         out_head_list = [[] for _ in range(out_head_ids.shape[0])]
         preds_arc_list = [[] for _ in range(out_head_ids.shape[0])]
 
