@@ -161,6 +161,8 @@ class uninlp(object):
             logits_arc, logits_label = outputs[:2]
             preds_arc = logits_arc.squeeze().detach().cpu().numpy()
             preds_label = logits_label.squeeze().detach().cpu().numpy()
+            preds_arc = np.argmax(preds_arc, axis=1)[1:valid_length + 1]
+            preds_label = np.argmax(preds_label, axis=1)[1:valid_length+1]
             tokens = tokens[1:valid_length + 1]
 
             results_head = []
