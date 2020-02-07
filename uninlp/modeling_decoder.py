@@ -20,6 +20,8 @@ from tqdm import *
 
 import time
 from uninlp import WEIGHTS_NAME, BertConfig, MTDNNModelV2, BertTokenizer
+from pudb import set_trace
+set_trace()
 
 
 
