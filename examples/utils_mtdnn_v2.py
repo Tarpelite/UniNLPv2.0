@@ -311,13 +311,9 @@ class MegaDataSet(object):
         all_input_mask = torch.tensor([x[1] for x in features], dtype=torch.long)
         all_segment_ids = torch.tensor([x[2] for x in features], dtype=torch.long)
         all_label_ids = torch.tensor([x[3] for x in features], dtype=torch.long)
+        all_head_ids = torch.tensor([x[4] for x in features], dtype=torch.long)    
         all_task_ids = torch.tensor([task_id for x in features], dtype=torch.long)
         
-        if task.startswith("PARSING"):
-            all_head_ids = torch.tensor([x[4] for x in features], dtype=torch.long)    
-        else:
-            all_head_ids = torch.tensor([[0]*len(x[4]) for x in features], dtype=torch.long)
-
         dataset = TensorDataset(all_input_ids, all_input_mask, all_segment_ids, all_label_ids, all_head_ids, all_task_ids)
         return features, dataset, task_id
     
@@ -377,6 +373,7 @@ class MegaDataSet(object):
         all_input_mask = []
         all_segment_ids = []
         all_label_ids = []
+        all_head_ids = []
         all_task_ids = []
         for task in self.task_list:
             if debug:
