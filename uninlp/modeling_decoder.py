@@ -68,7 +68,7 @@ class uninlp(object):
         self.labels_list = []
         with open(label_file, "r", encoding="utf-8") as f:
             for line in f:
-                line = line.strip().split()
+                line = line.strip().split("\t")
                 self.labels_list.append(line)
 
         config = BertConfig.from_pretrained(config, 
