@@ -1334,6 +1334,183 @@ class DeepBiAffineDecoder(nn.Module):
         logits = logits.transpose(-1, -2) #[batch_size, max_seq_len, max_seq_len]
         return logits
 
+class DeepBiAffineDecoderV2(nn.Module):
+    """Parsing decodder"""
+    def __init__(self, hidden_size, mlp_dim=300, num_labels):
+        super(DeepBiAffineDecoderV2, self).__init__()
+        self.mlp_dim = mlp_dim
+        self.num_labels = num_labels
+        self.hidden_size = hidden_size
+        
+        self.mlp_head_arc = nn.Linear(config.hidden_size, mlp_dim)
+        self.mlp_dep_arc = nn.Linear(config.hidden_size, mlp_dim)
+        self.biaffine_arc = BiAffine(mlp_dim, 1)
+
+        self.mlp_head_label = nn.Linear(config.hidden_size, mlp_dim)
+        self.mlp_dep_label = nn.Linear(config.hidden_size, mlp_dim)
+        self.biaffine_label = BiAffine(mlp_dim, num_labels)
+
+    
+    def forward(self, sequence_output):
+
+        s_head_arc = self.mlp_head_arc(sequence_output)
+        s_dep_arc = self.mlp_dep_arc(sequence_output)
+
+        s_head_label = self.mlp_head_label(sequence_output)
+        s_dep_label = self.mlp_head_label(sequence_output)
+
+        logits_arc = self.biaffine_arc(s_head_arc, s_dep_arc) # [batch_size, seq_len, seq_len]
+        logits_arc = logits_arc.transpose(-1, -2)
+
+        logits_label = self.biaffine_label(s_head_label, s_dep_label) #[batch_size, num_labels, seq_len, seq_len]
+        logits_label = logits_label.transpose(-1, -3) #[batch_size, seq_len, seq_len, num_labels]
+
+        preds = torch.argmax(logits_arc, dim=1).unsqueeze(-1) #[batch_size, seq_len, 1]
+        indices = preds.unsqueeze(-1).expand(preds.shape + (self.num_labels,)) #[batch_size, seq_len, 1 , num_labels]
+
+        logits_label = torch.gather(logits_label, -2, indices).squeeze(-2) #[batch_size, seq_len,num_labels]
+
+        return (logits_arc, logits_label)
+
+
+class MTDNNModelV2(BertPreTrainedModel):
+    def __init__(self, config, labels_list, task_list,
+                 do_task_embedding=False, do_alpha=False,
+                 do_adapter=False, num_adapter_layers=2):
+        super(MTDNNModelV2, self).__init__(config)
+
+        self.bert = BertModel(config)
+        self.dropout = nn.Dropout(config.hidden_dropout_prob)
+
+        self.num_fixed_layers = config.num_hidden_layers - num_adapter_layers
+
+        decoder_modules = []
+        for labels ,task in zip(labels_list, task_list):
+            if task.startswith("PARSING"):
+                decoder_modules.append(DeepBiAffineDecoderV2(config.hidden_size, mlp_dim=300, num_labels))
+            else:
+                decoder_modules.append(nn.Linear(config.hidden_size, len(labels)))
+        self.classifier_list =  nn.ModuleList(decoder_modules)
+
+        if do_alpha:
+            init_value = torch.zeros(config.num_hidden_layers, 1)
+            self.alpha_list = nn.ModuleList([nn.Parameter(init_value, requires_grad=True)])
+
+            self.softmax = nn.Softmax(dim=0)
+            self.labels_list = labels_list
+
+        if do_task_embedding:
+            self.task_embedding = nn.Embedding(len(labels_list), config.hidden_size)
+            self.w1 = nn.Linear(config.hidden_size, 1)
+            self.w2 = nn.Linear(config.hidden_size, 1)
+
+        self.labels_list = [len(x) for x in labels_list]
+        self.do_task_embedding = do_task_embedding
+        self.do_alpha = do_alpha
+        self.do_adapter = do_adapter
+        self.softmax = nn.Softmax(dim=0)
+
+        self.init_weights()
+
+        
+
+    def forward(self, input_ids=None, attention_mask=None, token_type_ids=None,
+                position_ids=None, head_mask=None, inputs_embeds=None, heads=None, labels=None,
+                task_id=0, adapter_ft=False):
+        if self.do_adapter:
+            
+            if adapter_ft and labels is not None:
+                for param in self.bert.encoder.parameters():
+                    param.requires_grad = False
+
+                for param in self.bert.encoder.layer[-1].parameters():
+                    param.requires_grad = True
+                
+                for param in self.bert.encoder.layer[-2].parameters():
+                    param.requires_grad = True
+                
+          
+
+        outputs = self.bert(input_ids, 
+                            attention_mask=attention_mask,
+                            token_type_ids=token_type_ids,
+                            position_ids=position_ids,
+                            head_mask=head_mask,
+                            inputs_embeds=inputs_embeds)
+
+        sequence_output = outputs[0]
+
+        hidden_states = outputs[-1]
+        # sequence_output = hidden_states[-1]
+
+        classifier = self.classifier_list[task_id]
+        num_labels = self.labels_list[task_id]
+        
+
+        if self.do_task_embedding:
+            task_embbedding = self.task_embedding(torch.tensor([task_id]).cuda()).view(-1)
+            hidden_states = hidden_states[1:]
+            hidden_states = torch.stack(hidden_states)
+            # alpha = w1*hidden_states + w2*task_embedding + bias 
+            out1 = self.w1(hidden_states) #[num_hidden_layers, batch_size, seq_len, 1]
+            task_embedding = task_embedding.expand(hidden_states.size(0), hidden_states.size(1), task_embedding.size(0)) # [num_hidden_layers, batch_size, hidden_size]
+            out2 = self.w2(task_embedding) # [num_hidden_layers, batch_size, 1]
+            alpha = out1.squeeze(-1) + out2 # [num_hidden_layers, batch_size, seq_len]
+            alpha = self.softmax(alpha).permute(1, 0, 2) #[batch_size, num_hidden_layers, seq_len]
+            alpha_vis = torch.mean(alpha, dim=0)
+            hidden_states = hidden_states.permute(1,0,2,3)  # [batch_size, num_hidden_layers, seq_len, hidden_size]
+            alpha = alpha.view(alpha.size() + (1,)).expand(alpha.size() + (hidden_states.size(3), )) #[batch_size, num_hidden_layers, seq_len, hidden_size]
+            sequence_output = torch.sum(alpha*hidden_states, dim=1) #[batch_size, seq_len, hidden_size]
+
+        elif self.do_alpha:
+            alpha = self.alpha_list[task_id]
+            alpha = self.softmax(alpha)
+            hidden_states = hidden_states[1:]
+            hidden_states = torch.stack(hidden_states)   # [num_hidden_layers, batch_size, seq_len, hidden_size]
+            hidden_states = hidden_states.permute(1,2,3,0)  # [batch_size, seq_len, hidden_size, num_hidden_layers]
+            sequence_output = torch.matmul(hidden_states, alpha).squeeze(-1) # [batch_size, seq_len, hidden_size]
+
+        sequence_output = self.dropout(sequence_output)
+        if type(classifier) == DeepBiAffineDecoderV2: # parsing task
+            logits_arc, logits_label = classifier(sequence_output)
+            outputs = (logits_arc, logits_label) + outputs[2:]
+
+            if labels is not None and heads is not None:
+                loss_fct = CrossEntropyLoss()
+                logits_arc = logits_arc.contiguous().view(-1, logits_arc.size(-1))
+                heads = heads.view(-1)
+                loss_arc = loss_fct(logits_arc, heads)
+
+                logits_label = logits_label.contiguous().view(-1, self.num_labels)
+                labels = labels.view(-1)
+
+                loss_labels = loss_fct(logits_label, labels)
+                loss = loss + loss_labels
+                outputs = (loss, ) + outputs
+        else:
+            logits = classifier(sequence_output)
+
+            outputs = (logits,) + outputs[2:]
+
+            if labels is not None:
+                loss_fct = CrossEntropyLoss()
+                if attention_mask is not None:
+                    active_loss = attention_mask.view(-1) == 1
+                    active_logits = logits.view(-1, num_labels)[active_loss]
+                    active_labels = labels.view(-1)[active_loss]
+                    loss = loss_fct(active_logits, active_labels)
+                else:
+                    logits = logits.view(-1, self.num_labels)
+                    loss = loss_fct(logits, labels.view(-1))
+                outputs = (loss,) + outputs
+
+        if self.do_task_embedding:
+            outputs = (alpha_vis, ) + outputs
+        elif self.do_alpha:
+            outputs = (alpha, ) + outputs
+        return outputs
+
+
 
 
 

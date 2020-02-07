@@ -14,6 +14,17 @@ import torch.distributed as dist
 
 logger = logging.getLogger(__name__)
 
+def las_score(true_label_list, true_heads_list, predict_label_list, predict_heads_list):
+    total_score = 0
+    cnt = len(true_label_list)
+    for true_labels, true_heads, predict_labels, predict_heads in zip(true_label_list, true_heads_list, predict_label_list, predict_heads_list):
+        hit = 0
+        for true_label, true_head, predict_label, predict_head in zip(true_labels, true_heads, predict_labels, predict_heads):
+            if true_label == predict_label and true_head == predict_head:
+                hit += 1
+        score = hit*1.000 / len(true_labels)
+        total_score += score
+    return total_score*1.000/cnt
 
 class RandomBatchSampler(Sampler):
     def __init__(self, data_source, batch_size):
@@ -116,7 +127,11 @@ class MegaDataSet(object):
                     words = left
                     labels = right
                     assert len(words) == len(labels) + 1
-                    examples.append([words, labels])    
+                    examples.append([words, labels])  
+                elif task.startswith("PARSING"):
+                    words = inputs[0].strip().split()
+                    left = inputs[0].strip().split()
+                    right = inputs[1].strip().split()  
                 else:
                     words = left
                     labels = right
@@ -134,10 +149,7 @@ class MegaDataSet(object):
         examples = self.load_examples_from_file(file_path, task_name)
         labels = self.labels_list[task_id]
 
-        if task.startswith("PARSING"):
-            pass
-        else:
-            label_map = {label:i for i, label in enumerate(labels)}
+        label_map = {label:i for i, label in enumerate(labels)}
 
         features = []
         cnt_counts = []
@@ -164,21 +176,31 @@ class MegaDataSet(object):
                 if task == "SRL":
                     verb = words[0]
                     words = words[1:]
-
+                elif task.startswith("PARSING"):
+                    words = example[0]
+                    heads = example[1]
+                    labels = example[2]
+                    assert len(words) == len(labels) == len(heads)
 
                 assert len(words) == len(labels)
-                for word, label in zip(words, labels):
-                    orig_to_tok_index.append(len(tokens))
-                    word_tokens = self.tokenizer.tokenize(word)
-                    tokens.extend(word_tokens)
-                    if task.startswith("PARSING"):
-                        if label == "_" or int(label) > (self.max_seq_length - 2):
-                            label = -100
-                        elif label == 0:
-                            label = 0
+                if task.startswith("PARSING"):
+                    head_ids = []
+                    for word, head, label in zip(words, heads, labels):
+                        orig_to_tok_index.append(len(tokens))
+                        word_tokens = tokenizer.tokenize(word)
+                        tokens.extend(word_tokens)
+                        if head == "_" or int(head) > (max_seq_length - 2):
+                            head = -100 #pad_token_label_id
                         
-                        label_ids.extend([int(label)] + [-100] * (len(word_tokens) - 1))
-                    else:
+                        head_ids.extend([int(head)] + [-100] * (len(word_tokens) - 1))
+                        label_ids.extend([label_map[label]] + [-100]*(len(word_tokens) - 1))
+    
+
+                else:    
+                    for word, label in zip(words, labels):
+                        orig_to_tok_index.append(len(tokens))
+                        word_tokens = self.tokenizer.tokenize(word)
+                        tokens.extend(word_tokens)
                         label_ids.extend([label_map[label]] + [-100]*(len(word_tokens) - 1))
 
                 if task in ["POS","NER", "ONTO_NER" , "ONTO_POS"]:
@@ -211,23 +233,28 @@ class MegaDataSet(object):
                 if task.startswith("PARSING"):
                     # parsing need new position
                     orig_to_tok_index = [x+1 for x in orig_to_tok_index] # +1 for the start [CLS]
-                    new_label_ids = []
-                    for x in label_ids:
+                    new_head_ids = []
+                    for x in head_ids:
                         if x == 0:
-                            new_label_ids += [0] # ROOT will be overlapped with [CLS]
+                            new_head_ids += [0] # ROOT will be overlapped with [CLS]
                         elif x == -100:
-                            new_label_ids += [-100] # PAD token keep same , will be igonred during CrossEntropy
+                            new_head_ids += [-100] # PAD token keep same , will be igonred during CrossEntropy
                         else:
-                            new_label_ids += [orig_to_tok_index[x-1]] # PTB and UD parsing starts with position 1 , need to be 0
-                    label_ids = new_label_ids # redirect 
-
+                            new_head_ids += [orig_to_tok_index[x-1]] # PTB and UD parsing starts with position 1 , need to be 0
+                    head_ids = new_head_ids # redirect 
+                    
                 tokens += ['[SEP]']
                 label_ids += [-100]
                 segment_ids = [0]*len(tokens)
+                if task.startswith("PARSING"):
+                    head_ids += [-100]
+                
 
                 tokens = ['[CLS]'] + tokens
                 label_ids = [-100] + label_ids
                 segment_ids = [0] + segment_ids
+                if task.startswith("PARSING"):
+                    head_ids = [-100] + head_ids
 
                 if task == "SRL":
                     tokens +=   verb_tokens + ['[SEP]']
@@ -243,11 +270,15 @@ class MegaDataSet(object):
                 input_mask += [0]*padding_length
                 segment_ids += [0]*padding_length
                 label_ids += [-100]*padding_length
+                if task.startswith("PARSING"):
+                    head_ids += [-100]*padding_length
 
                 assert len(input_ids) == self.max_seq_length
                 assert len(input_mask) == self.max_seq_length
                 assert len(segment_ids) == self.max_seq_length
                 assert len(label_ids) == self.max_seq_length
+                if task.startswith("PARSING"):
+                    head_ids += [-100]*padding_length
 
                 if ex_index < 5:
                     logger.info("*** {} Example ***".format(task))
@@ -256,7 +287,12 @@ class MegaDataSet(object):
                     logger.info("input_mask: %s", " ".join([str(x) for x in input_mask]))
                     logger.info("segment_ids: %s", " ".join([str(x) for x in segment_ids]))
                     logger.info("label_ids: %s", " ".join([str(x) for x in label_ids]))
-
+                    if task.startswith("PARSING"):
+                        logger.info("head_ids: %s", " ".join([str(x) for x in head_ids]))
+                
+                if task.startswith("PARSING"):
+                        features.append([input_ids, input_mask, segment_ids, label_ids, head_ids])
+                
                 features.append([
                     input_ids, input_mask, segment_ids, label_ids
                 ])
@@ -278,8 +314,13 @@ class MegaDataSet(object):
         all_segment_ids = torch.tensor([x[2] for x in features], dtype=torch.long)
         all_label_ids = torch.tensor([x[3] for x in features], dtype=torch.long)
         all_task_ids = torch.tensor([task_id for x in features], dtype=torch.long)
+        
+        if task.startswith("PARSING"):
+            all_head_ids = torch.tensor([x[4] for x in features], dtype=torch.long)    
+        else:
+            all_head_ids = torch.tensor([[0]*len(x[4]) for x in features], dtype=torch.long)
 
-        dataset = TensorDataset(all_input_ids, all_input_mask, all_segment_ids, all_label_ids, all_task_ids)
+        dataset = TensorDataset(all_input_ids, all_input_mask, all_segment_ids, all_label_ids, all_head_ids, all_task_ids)
         return features, dataset, task_id
     
     def load_MTDNN_dataset(self, batch_size, debug=False):
@@ -288,9 +329,9 @@ class MegaDataSet(object):
         all_input_mask = []
         all_segment_ids = []
         all_label_ids = []
+        all_head_ids = []
         all_task_ids = []
         for task in self.task_list:
-
             if debug:
                 features, dataset, task_id = self.load_single_dataset(task, batch_size, "debug")
             else:
@@ -299,14 +340,16 @@ class MegaDataSet(object):
             all_input_mask += [x[1] for x in features]
             all_segment_ids += [x[2] for x in features]
             all_label_ids += [x[3] for x in features]
+            all_head_ids +=[x[4] for x in features]
             all_task_ids += [task_id for x in features]
           
         all_input_ids = torch.tensor(all_input_ids, dtype=torch.long)
         all_input_mask = torch.tensor(all_input_mask, dtype=torch.long)
         all_segment_ids = torch.tensor(all_segment_ids, dtype=torch.long)
         all_label_ids = torch.tensor(all_label_ids, dtype=torch.long)
+        all_head_ids = torch.tensor(all_head_ids, dtype=torch.long)
         all_task_ids = torch.tensor(all_task_ids, dtype=torch.long)
-        all_dataset = TensorDataset(all_input_ids, all_input_mask, all_segment_ids, all_label_ids, all_task_ids)
+        all_dataset = TensorDataset(all_input_ids, all_input_mask, all_segment_ids, all_label_ids, all_head_ids, all_task_ids)
 
         all_dataset_sampler = RandomBatchSampler(all_dataset, batch_size)
         return all_dataset, all_dataset_sampler
@@ -318,7 +361,6 @@ class MegaDataSet(object):
                 features, _ = self.load_single_dataset(task, "debug")
             else:
                 features, _ = self.load_single_dataset(task, "train")
-
             cnt = 0
             features_batches = []
             while cnt + self.mini_batch_size < len(features):
@@ -339,23 +381,25 @@ class MegaDataSet(object):
         all_label_ids = []
         all_task_ids = []
         for task in self.task_list:
-
             if debug:
                 features, dataset, task_id = self.load_single_dataset(task, batch_size, "debug")
             else:
                 features, dataset, task_id = self.load_single_dataset(task, batch_size, "train")
+
             all_input_ids += [x[0] for x in features]
             all_input_mask += [x[1] for x in features]
             all_segment_ids += [x[2] for x in features]
             all_label_ids += [x[3] for x in features]
+            all_head_ids += [x[4] for x in features]
             all_task_ids += [task_id for x in features]
 
         all_input_ids = torch.tensor(all_input_ids, dtype=torch.long)
         all_input_mask = torch.tensor(all_input_mask, dtype=torch.long)
         all_segment_ids = torch.tensor(all_segment_ids, dtype=torch.long)
         all_label_ids = torch.tensor(all_label_ids, dtype=torch.long)
+        all_head_ids = torch.tensor(all_head_ids, dtype=torch.long)
         all_task_ids = torch.tensor(all_task_ids, dtype=torch.long)
-        all_dataset = TensorDataset(all_input_ids, all_input_mask, all_segment_ids, all_label_ids, all_task_ids)
+        all_dataset = TensorDataset(all_input_ids, all_input_mask, all_segment_ids, all_label_ids, all_head_ids, all_task_ids)
 
         all_dataset_sampler = DistributedRandomBatchSampler(all_dataset, batch_size)
         return all_dataset, all_dataset_sampler
