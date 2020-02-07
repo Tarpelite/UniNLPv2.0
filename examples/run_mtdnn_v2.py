@@ -284,11 +284,11 @@ def evaluate(args, model, UniDataSet, task):
                 preds_arc = np.append(preds_arc, logits_arc.detach().cpu().numpy(), axis=0)
                 preds_label = np.append(preds_label, logits_label.detach().cpu().numpy(), axis=0)
 
-                out_head_ids = np.append(out_head_ids, batch[3].detach().cpu().numpy(), axis=0)
-                out_label_ids = np.append(out_label_ids, batch[4].detach().cpu().numpy(), axis=0)
+                out_head_ids = np.append(out_head_ids, batch[4].detach().cpu().numpy(), axis=0)
+                out_label_ids = np.append(out_label_ids, batch[3].detach().cpu().numpy(), axis=0)
             else:
                 preds = np.append(preds, logits.detach().cpu().numpy(), axis=0)
-                out_label_ids = np.append(out_label_ids, batch[4].detach().cpu().numpy(), axis=0)
+                out_label_ids = np.append(out_label_ids, batch[3].detach().cpu().numpy(), axis=0)
     
     if type(model.classifier_list[task_id]) == DeepBiAffineDecoderV2:
         preds_arc = np.argmax(preds_arc, axis=2)
