@@ -290,12 +290,10 @@ class MegaDataSet(object):
                     if task.startswith("PARSING"):
                         logger.info("head_ids: %s", " ".join([str(x) for x in head_ids]))
                 
-                if task.startswith("PARSING"):
-                        features.append([input_ids, input_mask, segment_ids, label_ids, head_ids])
-                
-                features.append([
-                    input_ids, input_mask, segment_ids, label_ids
-                ])
+                if not task.startswith("PARSING"):
+                    head_ids = [0]*len(label_ids)
+                    
+                features.append([input_ids, input_mask, segment_ids,label_ids, head_ids])
 
             # instances = [[task_name, label_map, example] for example in examples]
             # with Pool(cpu_count()) as p:
