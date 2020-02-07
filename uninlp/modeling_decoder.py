@@ -65,11 +65,11 @@ class uninlp(object):
     def setup_model(self, model_path, config=None, label_file=None, no_cuda=False):
         self.device  =  torch.device("cuda" if torch.cuda.is_available() and not no_cuda else "cpu")
         # load labels
-        self.labels_list = []
-        with open(label_file, "r", encoding="utf-8") as f:
-            for line in f:
-                line = line.strip().split("\t")
-                self.labels_list.append(line)
+        self.labels_list = torch.load(label_file)
+        # with open(label_file, "r", encoding="utf-8") as f:
+        #     for line in f:
+        #         line = line.strip().split("\t")
+        #         self.labels_list.append(line)
 
         config = BertConfig.from_pretrained(config, 
                                             num_labels=2, 
