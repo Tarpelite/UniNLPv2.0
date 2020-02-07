@@ -304,11 +304,11 @@ if __name__ == "__main__":
     print("**** test PTB Parsing ****")
     print(tokens)
     print( ([token.head_ptb_ for token in tokens]))
-    print( ([token.label_ptb_ for token in tokens]))
+    print( ([token.dep_ptb_ for token in tokens]))
     print("**** test UD Parsing ****")
     print(tokens)
-    print([token.head_ud_ for token in tokens])
-    print([token.label_ud_ for token in tokens])
+    print([token.dep_ud_ for token in tokens])
+    print([token.dep_ud_ for token in tokens])
 
 
 
