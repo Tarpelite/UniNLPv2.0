@@ -297,7 +297,7 @@ def evaluate(args, model, UniDataSet, task):
         preds = np.argmax(preds, axis=2)
     
     label_map = {i: label for i, label in enumerate(label_list)}
-
+    print(label_map)
     if type(model.classifier_list[task_id]) == DeepBiAffineDecoderV2:
         pad_token_label_id = -100
         out_head_list = [[] for _ in range(out_head_ids.shape[0])]
