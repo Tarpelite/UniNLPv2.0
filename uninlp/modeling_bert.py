@@ -1342,12 +1342,12 @@ class DeepBiAffineDecoderV2(nn.Module):
         self.num_labels = num_labels
         self.hidden_size = hidden_size
         
-        self.mlp_head_arc = nn.Linear(config.hidden_size, mlp_dim)
-        self.mlp_dep_arc = nn.Linear(config.hidden_size, mlp_dim)
+        self.mlp_head_arc = nn.Linear(hidden_size, mlp_dim)
+        self.mlp_dep_arc = nn.Linear(hidden_size, mlp_dim)
         self.biaffine_arc = BiAffine(mlp_dim, 1)
 
-        self.mlp_head_label = nn.Linear(config.hidden_size, mlp_dim)
-        self.mlp_dep_label = nn.Linear(config.hidden_size, mlp_dim)
+        self.mlp_head_label = nn.Linear(hidden_size, mlp_dim)
+        self.mlp_dep_label = nn.Linear(hidden_size, mlp_dim)
         self.biaffine_label = BiAffine(mlp_dim, num_labels)
 
     
