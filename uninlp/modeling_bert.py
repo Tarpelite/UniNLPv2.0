@@ -1387,7 +1387,7 @@ class MTDNNModelV2(BertPreTrainedModel):
         decoder_modules = []
         for labels ,task in zip(labels_list, task_list):
             if task.startswith("PARSING"):
-                decoder_modules.append(DeepBiAffineDecoderV2(config.hidden_size, mlp_dim=300, num_labels))
+                decoder_modules.append(DeepBiAffineDecoderV2(config.hidden_size, mlp_dim=300, num_labels=len(labels)))
             else:
                 decoder_modules.append(nn.Linear(config.hidden_size, len(labels)))
         self.classifier_list =  nn.ModuleList(decoder_modules)
