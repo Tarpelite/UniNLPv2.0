@@ -172,7 +172,7 @@ class uninlp(object):
             orig_token_list = []
 
             for tk, pred_head, pred_label, orig_token in zip(tokens, preds_arc, preds_label, orig_tokens):
-                if tk.startswith("##") and len(r_list) > 0:
+                if tk.startswith("##") and len(token_list) > 0:
                     token_list[-1] = token_list[-1] + tk[2:]
                 else:
                     token_list.append(tk)
