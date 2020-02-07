@@ -19,7 +19,7 @@ import requests
 from tqdm import *
 
 import time
-from uninlp import WEIGHTS_NAME, BertConfig, MTDNNModel, BertTokenizer
+from uninlp import WEIGHTS_NAME, BertConfig, MTDNNModelV2, BertTokenizer
 
 
 
@@ -80,7 +80,7 @@ class uninlp(object):
                                                 cache_dir=None)
 
 
-        model = MTDNNModel.from_pretrained(model_path, 
+        model = MTDNNModelV2.from_pretrained(model_path, 
                                         from_tf=bool(".ckpt" in model_path),
                                         config = config,
                                         labels_list=self.labels_list,
