@@ -188,7 +188,7 @@ class MegaDataSet(object):
                     head_ids = []
                     for word, head, label in zip(words, heads, labels):
                         orig_to_tok_index.append(len(tokens))
-                        word_tokens = tokenizer.tokenize(word)
+                        word_tokens = self.tokenizer.tokenize(word)
                         tokens.extend(word_tokens)
                         if head == "_" or int(head) > (max_seq_length - 2):
                             head = -100 #pad_token_label_id
