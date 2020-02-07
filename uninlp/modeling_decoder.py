@@ -46,6 +46,7 @@ class Token(object):
         self.onto_ner_ = None
         self.chunking_ = None
         self.head_ = None
+        self.dep_ = None
 
     def __repr__(self):
         return self.text
@@ -154,6 +155,10 @@ class uninlp(object):
             }
             self.model.eval()
             outputs = self.model(**inputs)
+        
+        # if task.startswith("parsing"):
+        #     logits_arc, logits_label = outputs[:2]
+            
         
         logits = outputs[0]
         preds = logits.squeeze().detach().cpu().numpy()
