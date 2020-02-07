@@ -366,11 +366,11 @@ def evaluate(args, model, UniDataSet, task):
         print("predict_list", preds_list[0])
         print("out_label_list", out_label_list[0])
 
-    # write the results to text
-    with open("results-v2.txt", "w+", encoding="utf-8") as f:
-        for line in preds_list:
-            line = " ".join(line) + "\n"
-            f.write(line)
+    # # write the results to text
+    # with open("results-v2.txt", "w+", encoding="utf-8") as f:
+    #     for line in preds_list:
+    #         line = " ".join(line) + "\n"
+    #         f.write(line)
 
     return results
 
