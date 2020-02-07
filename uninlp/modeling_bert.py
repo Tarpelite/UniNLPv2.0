@@ -1481,7 +1481,7 @@ class MTDNNModelV2(BertPreTrainedModel):
                 heads = heads.view(-1)
                 loss_arc = loss_fct(logits_arc, heads)
 
-                logits_label = logits_label.contiguous().view(-1, self.num_labels)
+                logits_label = logits_label.contiguous().view(-1, num_labels)
                 labels = labels.view(-1)
 
                 loss_labels = loss_fct(logits_label, labels)
