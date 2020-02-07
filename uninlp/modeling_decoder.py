@@ -107,7 +107,7 @@ class uninlp(object):
         tokens, orig_tokens = self.tokenizer._tokenize_with_orig(input_text)
 
         if task == "srl":
-            verb_tokens = self.tokenizer.tokenize(input_text)
+            verb_tokens = self.tokenizer.tokenize(verb)
 
         if task == "srl":
             special_tokens_count = self.special_tokens_count + 1
