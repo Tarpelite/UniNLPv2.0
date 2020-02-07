@@ -170,6 +170,7 @@ class MegaDataSet(object):
                 label_ids = []
                 tok_to_orig_index = []
                 orig_to_tok_index = []
+                head_ids = []
                 skip_num = 0 # skip long sentences
                 
                 words = example[0]
@@ -185,7 +186,6 @@ class MegaDataSet(object):
 
                 assert len(words) == len(labels)
                 if task.startswith("PARSING"):
-                    head_ids = []
                     for word, head, label in zip(words, heads, labels):
                         orig_to_tok_index.append(len(tokens))
                         word_tokens = self.tokenizer.tokenize(word)
@@ -279,7 +279,7 @@ class MegaDataSet(object):
                 assert len(segment_ids) == self.max_seq_length
                 assert len(label_ids) == self.max_seq_length
                 if task.startswith("PARSING"):
-                    head_ids += [-100]*padding_length
+                    assert len(head_ids) == self.max_seq_length
 
                 if ex_index < 5:
                     logger.info("*** {} Example ***".format(task))
