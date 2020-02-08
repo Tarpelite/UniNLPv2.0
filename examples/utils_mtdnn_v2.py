@@ -327,7 +327,7 @@ class MegaDataSet(object):
         all_head_ids = []
         all_task_ids = []
         cache_path = os.path.join(self.datasets_dir, "joint_cache.pl")
-        if os.path.exisits(cache_path):
+        if os.path.exists(cache_path):
             print("Loading MTDNN datasets from cache {}".format(cache_path))
             all_dataset = torch.load(cache_path)
         else:
