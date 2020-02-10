@@ -1438,20 +1438,21 @@ class MTDNNModel(BertPreTrainedModel):
                 active_labels = soft_labels.view(-1, num_labels)[active_loss]
                 # active_labels = labels.view(-1)[active_loss]
                 # loss = loss_fct(active_logits, active_labels)
-                # loss = self.crit_label_dst(F.log_softmax(active_logits.float(), dim=-1),
-                #                   F.softmax(active_labels.float(), dim=-1))
+                kv_loss = self.crit_label_dst(F.log_softmax(active_logits.float(), dim=-1),
+                                  F.softmax(active_labels.float(), dim=-1))
                 
-                mse_loss = self.mse_loss(active_loits.float(), active_labels.float())
                 
-                # loss = self.crit_label_dst(F.log_softmax(active_logits.float(), dim=-1),
-                #                   F.log_softmax(active_labels.float(), dim=-1))
-
+                
+               
                 # if num_labels == 0: # do parsing, no labels, just heads
                 #     active_logits = logits.contiguous().view(-1, logits.size(-1))[active_loss]
                 # else:
                 #     active_logits = logits.view(-1, num_labels)[active_loss]
                 active_labels = labels.view(-1)[active_loss]
-                loss = loss_fct(active_logits, active_labels) + mse_loss
+                ce_loss = loss_fct(active_logits, active_labels)
+                loss = ce_loss + kv_loss
+                print("ce_loss", ce_loss)
+                print("kv_loss", kv_loss)
             else:
                 assert "Please use attention mask"
             # loss = loss.sum(dim=-1) * attention_mask.type_as(loss)
