@@ -142,7 +142,7 @@ def distill_train(args, model, teacher_model, datasets, all_dataset_sampler, tas
             else:
                 loss.backward()
             tr_loss += loss.item()
-            iter_bar.set_description('Iter (loss=%5.3f)' % (tr_loss/(step+1)))
+            iter_bar.set_description('Iter (loss=%5.3f)' % (loss.item())
 
             # print("loss", loss)
 

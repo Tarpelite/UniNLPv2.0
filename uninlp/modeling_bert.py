@@ -1456,7 +1456,7 @@ class MTDNNModel(BertPreTrainedModel):
             else:
                 assert "Please use attention mask"
             # loss = loss.sum(dim=-1) * attention_mask.type_as(loss)
-            loss = loss.sum(dim=-1).mean()
+            # loss = loss.sum(dim=-1).mean()
             outputs = (loss,) + outputs
 
         return outputs
