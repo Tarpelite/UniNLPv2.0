@@ -84,12 +84,12 @@ def distill_train(args, model, teacher_model, datasets, all_dataset_sampler, tas
     train_iterator = range(int(args.num_train_epochs))
 
     step = 0
-
+    model.train()
+    teacher_model.eval()
     for _ in train_iterator:
         train_dataloader = DataLoader(datasets, sampler=all_dataset_sampler)
         # epoch_iterator = tqdm(train_dataloader, desc="Iteration", disable=False)
-        model.train()
-        teacher_model.eval()
+        
 
         iter_bar = tqdm(train_dataloader, desc='Iter (loss=X.XXX)')
 
