@@ -1439,7 +1439,7 @@ class MTDNNModel(BertPreTrainedModel):
                 # active_labels = labels.view(-1)[active_loss]
                 # loss = loss_fct(active_logits, active_labels)
                 kv_loss = self.crit_label_dst(F.log_softmax(active_logits.float(), dim=-1),
-                                  F.softmax(active_labels.float(), dim=-1))
+                                  F.softmax(active_labels.float(), dim=-1)).sum(dim=-1).mean()
                 
                 
                 
