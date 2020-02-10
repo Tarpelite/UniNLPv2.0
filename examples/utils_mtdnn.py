@@ -168,7 +168,7 @@ class MegaDataSet(object):
                 assert len(words) == len(labels)
                 for word, label in zip(words, labels):
                     orig_to_tok_index.append(len(tokens))
-                    word_tokens = self.tokenizer._tokenize_with_orig(word)
+                    word_tokens, _ = self.tokenizer._tokenize_with_orig(word)
                     tokens.extend(word_tokens)
                     if task.startswith("PARSING"):
                         if label == "_" or int(label) > (self.max_seq_length - 2):
