@@ -1,7 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="a806d39e-2617-4124-b8cc-162f1d0d505e" name="Default Changelist" comment="" />
+    <list default="true" id="a806d39e-2617-4124-b8cc-162f1d0d505e" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/examples/run_distill.py" beforeDir="false" afterPath="$PROJECT_DIR$/examples/run_distill.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/examples/utils_mtdnn.py" beforeDir="false" afterPath="$PROJECT_DIR$/examples/utils_mtdnn.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/uninlp/modeling_bert.py" beforeDir="false" afterPath="$PROJECT_DIR$/uninlp/modeling_bert.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/uninlp/tokenization_bert.py" beforeDir="false" afterPath="$PROJECT_DIR$/uninlp/tokenization_bert.py" afterDir="false" />
+    </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -15,50 +21,39 @@
           <entry key="project.closed" value="1" />
           <entry key="project.open.time.0" value="2" />
           <entry key="project.open.time.3" value="1" />
-          <entry key="project.opened" value="3" />
+          <entry key="project.open.time.5" value="1" />
+          <entry key="project.opened" value="4" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.open">
         <counts>
           <entry key="md" value="1" />
-          <entry key="py" value="18" />
+          <entry key="py" value="24" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.open">
         <counts>
           <entry key="Markdown" value="1" />
-          <entry key="Python" value="18" />
+          <entry key="Python" value="24" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.edit">
         <counts>
           <entry key="md" value="60" />
-          <entry key="py" value="1235" />
+          <entry key="py" value="1846" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.edit">
         <counts>
           <entry key="BuildoutCfg" value="10" />
           <entry key="Markdown" value="50" />
-          <entry key="Python" value="1235" />
+          <entry key="Python" value="1846" />
         </counts>
       </usages-collector>
     </session>
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/uninlp/modeling_utils.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state>
-              <caret line="387" selection-start-line="387" selection-end-line="387" />
-              <folding>
-                <element signature="e#23121#23505#0" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/uninlp/file_utils.py">
           <provider selected="true" editor-type-id="text-editor">
@@ -80,8 +75,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/examples/utils_mtdnn.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="6675">
-              <caret line="279" selection-start-line="279" selection-end-line="279" />
+            <state relative-caret-position="91">
+              <caret line="170" selection-start-line="170" selection-end-line="170" />
               <folding>
                 <element signature="e#0#64#0" expanded="true" />
               </folding>
@@ -90,33 +85,88 @@
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/examples/run_distill.py">
+        <entry file="file://$PROJECT_DIR$/uninlp/tokenization_bert.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="100">
-              <caret line="288" column="110" selection-start-line="288" selection-start-column="104" selection-end-line="288" selection-end-column="110" />
+            <state relative-caret-position="91">
+              <caret line="182" column="40" selection-start-line="182" selection-start-column="8" selection-end-line="182" selection-end-column="27" />
               <folding>
-                <element signature="e#0#64#0" expanded="true" />
+                <element signature="e#674#756#0" expanded="true" />
+                <element signature="e#1035#3084#0" />
+                <element signature="e#3129#3754#0" />
+                <element signature="e#3788#4722#0" />
+                <element signature="e#6610#8861#0" />
+                <element signature="e#10042#10588#0" />
+                <element signature="e#10702#12005#0" />
+                <element signature="e#12098#12691#0" />
+                <element signature="e#12744#13536#0" />
+                <element signature="e#16248#16547#0" />
+                <element signature="e#16615#17242#0" />
+                <element signature="e#17297#17650#0" />
+                <element signature="e#17696#18787#0" />
+                <element signature="e#18830#19218#0" />
+                <element signature="e#19259#21112#0" />
+                <element signature="e#21910#22450#0" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/examples/utils_mtdnn_fix.py">
+        <entry file="file://$PROJECT_DIR$/../master/UniNLPv2.0/uninlp/tokenization_bert.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state>
+            <state relative-caret-position="256">
+              <caret line="529" selection-start-line="529" selection-end-line="529" />
               <folding>
-                <element signature="e#0#64#0" expanded="true" />
+                <element signature="e#674#756#0" expanded="true" />
+                <element signature="e#1035#3084#0" />
+                <element signature="e#3129#3754#0" />
+                <element signature="e#3788#4722#0" />
+                <element signature="e#6610#8861#0" />
+                <element signature="e#10673#11219#0" />
+                <element signature="e#11333#12636#0" />
+                <element signature="e#12729#13322#0" />
+                <element signature="e#13375#14167#0" />
+                <element signature="e#16248#16547#0" />
+                <element signature="e#16615#17242#0" />
+                <element signature="e#17297#17650#0" />
+                <element signature="e#17696#18787#0" />
+                <element signature="e#18830#19218#0" />
+                <element signature="e#19259#21112#0" />
+                <element signature="e#21910#22450#0" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/uninlp/tokenization_utils.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="-225">
+              <caret line="639" column="59" selection-start-line="639" selection-start-column="59" selection-end-line="639" selection-end-column="59" />
+              <folding>
+                <element signature="e#10045#11089#0" />
+                <element signature="e#11166#14206#0" />
+                <element signature="e#14320#21907#0" />
+                <element signature="e#21965#23956#0" />
+                <element signature="e#24014#24417#0" />
+                <element signature="e#24754#26663#0" />
+                <element signature="e#26717#27428#0" />
+                <element signature="e#27493#30276#0" />
+                <element signature="e#30649#31221#0" />
+                <element signature="e#32768#33270#0" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/examples/run_mtdnn_fix.py">
+        <entry file="file://$PROJECT_DIR$/examples/run_distill.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-1775">
-              <caret line="26" column="53" selection-start-line="26" selection-start-column="30" selection-end-line="26" selection-end-column="53" />
+            <state relative-caret-position="177">
+              <caret line="430" selection-start-line="430" selection-end-line="430" />
+              <folding>
+                <element signature="e#0#64#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -124,20 +174,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/uninlp/modeling_bert.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="32800">
-              <caret line="1330" column="16" selection-start-line="1330" selection-start-column="6" selection-end-line="1330" selection-end-column="16" />
-              <folding>
-                <element signature="e#737#819#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://C:/ProgramData/Anaconda3/Lib/site-packages/torch/nn/modules/module.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="12625">
-              <caret line="512" selection-start-line="512" selection-end-line="512" />
+            <state relative-caret-position="80">
+              <caret line="1429" column="38" selection-start-line="1429" selection-start-column="38" selection-end-line="1429" selection-end-column="38" />
             </state>
           </provider>
         </entry>
@@ -164,6 +202,12 @@
       <find>distri</find>
       <find>dist</find>
       <find>DistributedDataParallel</find>
+      <find>epoch</find>
+      <find>berttok</find>
+      <find>token</find>
+      <find>tokenize</find>
+      <find>tokenize(</find>
+      <find>tokenize_w</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -173,12 +217,15 @@
     <option name="CHANGED_PATHS">
       <list>
         <option value="$PROJECT_DIR$/examples/__init__.py" />
-        <option value="$PROJECT_DIR$/examples/utils_mtdnn.py" />
-        <option value="$PROJECT_DIR$/uninlp/modeling_bert.py" />
         <option value="$PROJECT_DIR$/uninlp/modeling_utils.py" />
         <option value="$PROJECT_DIR$/examples/run_mtdnn_fix.py" />
-        <option value="$PROJECT_DIR$/examples/run_distill.py" />
         <option value="$PROJECT_DIR$/README.md" />
+        <option value="$PROJECT_DIR$/uninlp/modeling_bert.py" />
+        <option value="$PROJECT_DIR$/examples/run_distill.py" />
+        <option value="$PROJECT_DIR$/uninlp/tokenization_bert.py" />
+        <option value="$PROJECT_DIR$/examples/utils_mtdnn.py" />
+        <option value="$PROJECT_DIR$/../master/UniNLPv2.0/uninlp/tokenization_bert.py" />
+        <option value="$PROJECT_DIR$/../master/UniNLPv2.0/uninlp/modeling_decoder.py" />
       </list>
     </option>
   </component>
@@ -190,7 +237,7 @@
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectView">
-    <navigator currentView="Scope" currentSubView="Scope 'Project Files'; set:Project Files; class com.intellij.psi.search.scope.ProjectFilesScope" proportions="" version="1">
+    <navigator proportions="" version="1">
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
@@ -204,7 +251,7 @@
             <path>
               <item name="UniNLPv2.0" type="b2602c69:ProjectViewProjectNode" />
               <item name="UniNLPv2.0" type="462c0819:PsiDirectoryNode" />
-              <item name="examples" type="462c0819:PsiDirectoryNode" />
+              <item name="uninlp" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
@@ -267,7 +314,7 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/examples/run_distill.py" />
-      <option name="PARAMETERS" value="--dataset_dir F:\shaohanh\2020\uninlp_data\UniNLP_datasets_v2_ontoner --model_type bert --tokenizer_name bert-base-uncased --model_name_or_path F:\shaohanh\2020\uninlp_data\model_release_v2\unilm_small_T6_e5\onto_ner-ft.bin --config_name F:\shaohanh\2020\uninlp_data\model_release\unilm_small_T6_e10\config.json --output_dir F:\shaohanh\2020\uninlp_data\on_ner_distill --do_train --do_eval --do_lower_case --teacher_model_name_or_path F:\shaohanh\2020\uninlp_data\model_release_v2\unilm_base_T6_e10\onto_ner-ft.bin --teacher_config_name F:\shaohanh\2020\uninlp_data\model_release_v2\unilm_base_T6_e10\config.json --mini_batch_size 32 --max_seq_length 128 --gradient_accumulation_steps 1 --learning_rate 5e-5 --weight_decay 0.01 --warmup_steps 500 --save_steps 500" />
+      <option name="PARAMETERS" value="--dataset_dir F:\shaohanh\2020\uninlp_data\UniNLP_datasets_v2_ontoner --model_type bert --tokenizer_name bert-base-uncased --model_name_or_path F:\shaohanh\2020\uninlp_data\model_release_v2\unilm_small_T6_e5\onto_ner-ft.bin --config_name F:\shaohanh\2020\uninlp_data\model_release\unilm_small_T6_e10\config.json --output_dir F:\shaohanh\2020\uninlp_data\on_ner_distill_v3 --do_eval --do_lower_case --teacher_model_name_or_path F:\shaohanh\2020\uninlp_data\model_release_v2\unilm_base_T6_e10\onto_ner-ft.bin --teacher_config_name F:\shaohanh\2020\uninlp_data\model_release_v2\unilm_base_T6_e10\config.json --mini_batch_size 32 --max_seq_length 128 --gradient_accumulation_steps 1 --learning_rate 5e-5 --weight_decay 0.01 --warmup_steps 500 --save_steps 500 --eval_all_checkpoints" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
@@ -321,11 +368,10 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="-8" y="-8" width="1292" height="663" extended-state="6" />
-    <editor active="true" />
+    <frame x="-8" y="-8" width="1932" height="942" extended-state="6" />
     <layout>
       <window_info id="Favorites" order="0" side_tool="true" />
-      <window_info content_ui="combo" id="Project" order="1" weight="0.20985691" />
+      <window_info active="true" content_ui="combo" id="Project" order="1" visible="true" weight="0.3152059" />
       <window_info id="Structure" order="2" side_tool="true" weight="0.25" />
       <window_info anchor="bottom" id="Terminal" order="0" />
       <window_info anchor="bottom" id="Event Log" order="1" side_tool="true" />
@@ -333,8 +379,8 @@
       <window_info anchor="bottom" id="Message" order="3" />
       <window_info anchor="bottom" id="Find" order="4" />
       <window_info anchor="bottom" id="Version Control" order="5" show_stripe_button="false" />
-      <window_info active="true" anchor="bottom" id="Run" order="6" visible="true" weight="0.2816635" />
-      <window_info anchor="bottom" id="Debug" order="7" weight="0.06805293" />
+      <window_info anchor="bottom" id="Run" order="6" weight="0.30373833" />
+      <window_info anchor="bottom" id="Debug" order="7" weight="0.2450495" />
       <window_info anchor="bottom" id="Cvs" order="8" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="9" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="10" />
@@ -344,7 +390,7 @@
     </layout>
     <layout-to-restore>
       <window_info id="Favorites" order="0" side_tool="true" />
-      <window_info content_ui="combo" id="Project" order="1" weight="0.20985691" />
+      <window_info content_ui="combo" id="Project" order="1" weight="0.31558028" />
       <window_info id="Structure" order="2" side_tool="true" weight="0.25" />
       <window_info anchor="bottom" id="Terminal" order="0" />
       <window_info anchor="bottom" id="Event Log" order="1" side_tool="true" />
@@ -352,8 +398,8 @@
       <window_info anchor="bottom" id="Message" order="3" />
       <window_info anchor="bottom" id="Find" order="4" />
       <window_info anchor="bottom" id="Version Control" order="5" show_stripe_button="false" />
-      <window_info active="true" anchor="bottom" id="Run" order="6" visible="true" weight="0.5046729" />
-      <window_info anchor="bottom" id="Debug" order="7" weight="0.06805293" />
+      <window_info anchor="bottom" id="Run" order="6" weight="0.30373833" />
+      <window_info active="true" anchor="bottom" id="Debug" order="7" visible="true" weight="0.2450495" />
       <window_info anchor="bottom" id="Cvs" order="8" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="9" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="10" />
@@ -370,12 +416,12 @@
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/examples/utils_mtdnn.py</url>
-          <line>291</line>
+          <line>292</line>
           <option name="timeStamp" value="7" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/examples/utils_mtdnn.py</url>
-          <line>306</line>
+          <line>307</line>
           <option name="timeStamp" value="11" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
@@ -385,13 +431,8 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/uninlp/modeling_bert.py</url>
-          <line>1446</line>
+          <line>1454</line>
           <option name="timeStamp" value="22" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/uninlp/modeling_utils.py</url>
-          <line>450</line>
-          <option name="timeStamp" value="30" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/uninlp/modeling_bert.py</url>
@@ -399,15 +440,46 @@
           <option name="timeStamp" value="34" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/uninlp/modeling_utils.py</url>
-          <line>431</line>
-          <option name="timeStamp" value="36" />
+          <url>file://$PROJECT_DIR$/uninlp/modeling_bert.py</url>
+          <line>1450</line>
+          <option name="timeStamp" value="38" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/uninlp/tokenization_bert.py</url>
+          <line>173</line>
+          <option name="timeStamp" value="41" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/uninlp/tokenization_bert.py</url>
+          <line>180</line>
+          <option name="timeStamp" value="45" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/uninlp/tokenization_utils.py</url>
+          <line>642</line>
+          <option name="timeStamp" value="46" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/uninlp/tokenization_utils.py</url>
+          <line>644</line>
+          <option name="timeStamp" value="47" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/uninlp/tokenization_bert.py</url>
+          <line>183</line>
+          <option name="timeStamp" value="49" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/uninlp/tokenization_bert.py</url>
+          <line>187</line>
+          <option name="timeStamp" value="50" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
     <watches-manager>
       <configuration name="PythonConfigurationType">
-        <watch expression="teacher_model" language="Python" />
+        <watch expression="self._run_split_on_punc(token)" language="Python" />
+        <watch expression="token.find(self._run_split_on_punc(token)[0])" language="Python" />
         <watch expression="missing_keys" language="Python" />
         <watch expression="loss.sum(dim=-1).sum(-1).size()" language="Python" />
         <watch expression="len(attention_mask)" language="Python" />
@@ -421,11 +493,53 @@
         <watch expression="torch.load(resolved_archive_file, map_location='cpu')" language="Python" />
         <watch expression="teacher_logits.size()" language="Python" />
         <watch expression="self.crit_label_dst(F.log_softmax(logits.float(), dim=-1),                                   F.softmax(soft_labels.float(), dim=-1))" language="Python" />
+        <watch expression="tokenized_text" language="Python" />
+        <watch expression="text" language="Python" />
       </configuration>
     </watches-manager>
   </component>
   <component name="debuggerHistoryManager">
     <expressions id="watch">
+      <expression>
+        <expression-string>text</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>tokenized_text</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>token.find(self._run_split_on_punc(token)[0])</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>token.find(self._run_split_on_punc(token)[0], 2)</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>token.index(self._run_split_on_punc(token)[0], 2)</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>token.index(self._run_split_on_punc(token)[0])</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>token.indexof(self._run_split_on_punc(token)[0])</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>self._run_split_on_punc(token)</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
       <expression>
         <expression-string>teacher_model</expression-string>
         <language-id>Python</language-id>
@@ -433,46 +547,6 @@
       </expression>
       <expression>
         <expression-string>missing_keys</expression-string>
-        <language-id>Python</language-id>
-        <evaluation-mode>EXPRESSION</evaluation-mode>
-      </expression>
-      <expression>
-        <expression-string>(loss.sum(dim=-1) * attention_mask.type_as(loss)).sum(dim=-1).mean()</expression-string>
-        <language-id>Python</language-id>
-        <evaluation-mode>EXPRESSION</evaluation-mode>
-      </expression>
-      <expression>
-        <expression-string>(loss.sum(dim=-1) * attention_mask.type_as(loss)).sum(dim=-1).mean().size()</expression-string>
-        <language-id>Python</language-id>
-        <evaluation-mode>EXPRESSION</evaluation-mode>
-      </expression>
-      <expression>
-        <expression-string>(loss.sum(dim=-1) * attention_mask.type_as(loss)).sum(dim=-1).eam().size()</expression-string>
-        <language-id>Python</language-id>
-        <evaluation-mode>EXPRESSION</evaluation-mode>
-      </expression>
-      <expression>
-        <expression-string>(loss.sum(dim=-1) * attention_mask.type_as(loss)).sum(dim=-1).size()</expression-string>
-        <language-id>Python</language-id>
-        <evaluation-mode>EXPRESSION</evaluation-mode>
-      </expression>
-      <expression>
-        <expression-string>(loss.sum(dim=-1) * attention_mask.type_as(loss)).size()</expression-string>
-        <language-id>Python</language-id>
-        <evaluation-mode>EXPRESSION</evaluation-mode>
-      </expression>
-      <expression>
-        <expression-string>loss</expression-string>
-        <language-id>Python</language-id>
-        <evaluation-mode>EXPRESSION</evaluation-mode>
-      </expression>
-      <expression>
-        <expression-string>len(attention_mask)</expression-string>
-        <language-id>Python</language-id>
-        <evaluation-mode>EXPRESSION</evaluation-mode>
-      </expression>
-      <expression>
-        <expression-string>loss.sum(dim=-1).sum(-1).size()</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
@@ -484,13 +558,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="4">
           <caret line="171" column="31" selection-start-line="171" selection-start-column="24" selection-end-line="171" selection-end-column="31" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://C:/ProgramData/Anaconda3/Lib/site-packages/torch/utils/data/dataloader.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="86">
-          <caret line="558" selection-start-line="558" selection-end-line="558" />
         </state>
       </provider>
     </entry>
@@ -529,13 +596,23 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/uninlp/modeling_utils.py">
+    <entry file="file://$PROJECT_DIR$/examples/utils_mtdnn_fix.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/README.md">
+      <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
+        <state split_layout="SPLIT">
+          <first_editor relative-caret-position="280">
+            <caret line="62" column="1" selection-start-line="62" selection-start-column="1" selection-end-line="62" selection-end-column="1" />
+          </first_editor>
+          <second_editor />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/examples/run_mtdnn_fix.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state>
-          <caret line="387" selection-start-line="387" selection-end-line="387" />
-          <folding>
-            <element signature="e#23121#23505#0" />
-          </folding>
+        <state relative-caret-position="-1775">
+          <caret line="26" column="53" selection-start-line="26" selection-start-column="30" selection-end-line="26" selection-end-column="53" />
         </state>
       </provider>
     </entry>
@@ -553,32 +630,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/examples/utils_mtdnn.py">
+    <entry file="file://C:/ProgramData/Anaconda3/Lib/runpy.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="6675">
-          <caret line="279" selection-start-line="279" selection-end-line="279" />
-          <folding>
-            <element signature="e#0#64#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/examples/utils_mtdnn_fix.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state>
-          <folding>
-            <element signature="e#0#64#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/uninlp/modeling_bert.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="32800">
-          <caret line="1330" column="16" selection-start-line="1330" selection-start-column="6" selection-end-line="1330" selection-end-column="16" />
-          <folding>
-            <element signature="e#737#819#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="4700">
+          <caret line="192" selection-start-line="192" selection-end-line="192" />
         </state>
       </provider>
     </entry>
@@ -589,30 +644,127 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/README.md">
-      <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
-        <state split_layout="SPLIT">
-          <first_editor relative-caret-position="280">
-            <caret line="62" column="1" selection-start-line="62" selection-start-column="1" selection-end-line="62" selection-end-column="1" />
-          </first_editor>
-          <second_editor />
+    <entry file="file://C:/ProgramData/Anaconda3/Lib/site-packages/torch/utils/data/dataloader.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="86">
+          <caret line="140" column="8" selection-start-line="140" selection-start-column="8" selection-end-line="140" selection-end-column="8" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/examples/run_distill.py">
+    <entry file="file://$PROJECT_DIR$/uninlp/modeling_bert.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="100">
-          <caret line="288" column="110" selection-start-line="288" selection-start-column="104" selection-end-line="288" selection-end-column="110" />
+        <state relative-caret-position="80">
+          <caret line="1429" column="38" selection-start-line="1429" selection-start-column="38" selection-end-line="1429" selection-end-column="38" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/uninlp/modeling_utils.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="389">
+          <caret line="450" selection-start-line="450" selection-end-line="450" />
+          <folding>
+            <element signature="e#23121#23505#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/uninlp/tokenization_utils.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-225">
+          <caret line="639" column="59" selection-start-line="639" selection-start-column="59" selection-end-line="639" selection-end-column="59" />
+          <folding>
+            <element signature="e#10045#11089#0" />
+            <element signature="e#11166#14206#0" />
+            <element signature="e#14320#21907#0" />
+            <element signature="e#21965#23956#0" />
+            <element signature="e#24014#24417#0" />
+            <element signature="e#24754#26663#0" />
+            <element signature="e#26717#27428#0" />
+            <element signature="e#27493#30276#0" />
+            <element signature="e#30649#31221#0" />
+            <element signature="e#32768#33270#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/examples/utils_mtdnn.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="91">
+          <caret line="170" selection-start-line="170" selection-end-line="170" />
           <folding>
             <element signature="e#0#64#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/examples/run_mtdnn_fix.py">
+    <entry file="file://$PROJECT_DIR$/../master/UniNLPv2.0/uninlp/tokenization_bert.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-1775">
-          <caret line="26" column="53" selection-start-line="26" selection-start-column="30" selection-end-line="26" selection-end-column="53" />
+        <state relative-caret-position="256">
+          <caret line="529" selection-start-line="529" selection-end-line="529" />
+          <folding>
+            <element signature="e#674#756#0" expanded="true" />
+            <element signature="e#1035#3084#0" />
+            <element signature="e#3129#3754#0" />
+            <element signature="e#3788#4722#0" />
+            <element signature="e#6610#8861#0" />
+            <element signature="e#10673#11219#0" />
+            <element signature="e#11333#12636#0" />
+            <element signature="e#12729#13322#0" />
+            <element signature="e#13375#14167#0" />
+            <element signature="e#16248#16547#0" />
+            <element signature="e#16615#17242#0" />
+            <element signature="e#17297#17650#0" />
+            <element signature="e#17696#18787#0" />
+            <element signature="e#18830#19218#0" />
+            <element signature="e#19259#21112#0" />
+            <element signature="e#21910#22450#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../master/UniNLPv2.0/uninlp/modeling_decoder.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="132">
+          <caret line="184" column="9" lean-forward="true" selection-start-line="184" selection-start-column="9" selection-end-line="184" selection-end-column="9" />
+          <folding>
+            <element signature="e#3092#3411#0" />
+            <element signature="e#3927#5217#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/uninlp/tokenization_bert.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="91">
+          <caret line="182" column="40" selection-start-line="182" selection-start-column="8" selection-end-line="182" selection-end-column="27" />
+          <folding>
+            <element signature="e#674#756#0" expanded="true" />
+            <element signature="e#1035#3084#0" />
+            <element signature="e#3129#3754#0" />
+            <element signature="e#3788#4722#0" />
+            <element signature="e#6610#8861#0" />
+            <element signature="e#10042#10588#0" />
+            <element signature="e#10702#12005#0" />
+            <element signature="e#12098#12691#0" />
+            <element signature="e#12744#13536#0" />
+            <element signature="e#16248#16547#0" />
+            <element signature="e#16615#17242#0" />
+            <element signature="e#17297#17650#0" />
+            <element signature="e#17696#18787#0" />
+            <element signature="e#18830#19218#0" />
+            <element signature="e#19259#21112#0" />
+            <element signature="e#21910#22450#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/examples/run_distill.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="177">
+          <caret line="430" selection-start-line="430" selection-end-line="430" />
+          <folding>
+            <element signature="e#0#64#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>

@@ -1410,37 +1410,45 @@ class MTDNNModel(BertPreTrainedModel):
 
         outputs = (logits,) + outputs[2:]
 
-        if labels is not None:
+        # if labels is not None:
+        #     loss_fct = CrossEntropyLoss()
+        #     if attention_mask is not None:
+        #         active_loss = attention_mask.view(-1) == 1
+        #
+        #         if num_labels == 0: # do parsing, no labels, just heads
+        #             active_logits = logits.contiguous().view(-1, logits.size(-1))[active_loss]
+        #         else:
+        #             active_logits = logits.view(-1, num_labels)[active_loss]
+        #         active_labels = labels.view(-1)[active_loss]
+        #         loss = loss_fct(active_logits, active_labels)
+        #     else:
+        #         if num_labels == 0: # do parsing, no labels, just heads
+        #             logits = logits.contiguous().view(-1, logits.size(-1)) # do Parsing
+        #         else:
+        #             logits = logits.view(-1, self.num_labels)
+        #         loss = loss_fct(logits.view(-1, self.num_labels), labels.view(-1))
+        #     outputs = (loss,) + outputs
+
+        if soft_labels is not None:
             loss_fct = CrossEntropyLoss()
             if attention_mask is not None:
                 active_loss = attention_mask.view(-1) == 1
-                
+                active_logits = logits.view(-1, num_labels)[active_loss]
+                active_labels = soft_labels.view(-1, num_labels)[active_loss]
+                # active_labels = labels.view(-1)[active_loss]
+                # loss = loss_fct(active_logits, active_labels)
+                loss = self.crit_label_dst(F.log_softmax(active_logits.float(), dim=-1),
+                                  F.softmax(active_labels.float(), dim=-1))
+
                 if num_labels == 0: # do parsing, no labels, just heads
                     active_logits = logits.contiguous().view(-1, logits.size(-1))[active_loss]
                 else:
                     active_logits = logits.view(-1, num_labels)[active_loss]
                 active_labels = labels.view(-1)[active_loss]
-                loss = loss_fct(active_logits, active_labels)
-            else:
-                if num_labels == 0: # do parsing, no labels, just heads
-                    logits = logits.contiguous().view(-1, logits.size(-1)) # do Parsing
-                else:
-                    logits = logits.view(-1, self.num_labels)
-                loss = loss_fct(logits.view(-1, self.num_labels), labels.view(-1))
-            outputs = (loss,) + outputs
-
-        if soft_labels is not None:
-            loss_fct = CrossEntropyLoss()
-            if attention_mask is not None:
-                # active_loss = attention_mask.view(-1) == 1
-                # active_logits = logits.view(-1, num_labels)[active_loss]
-                # active_labels = labels.view(-1)[active_loss]
-                # loss = loss_fct(active_logits, active_labels)
-                loss = self.crit_label_dst(F.log_softmax(logits.float(), dim=-1),
-                                  F.softmax(soft_labels.float(), dim=-1))
+                loss = loss_fct(active_logits, active_labels) + loss
             else:
                 assert "Please use attention mask"
-            loss = loss.sum(dim=-1) * attention_mask.type_as(loss)
+            # loss = loss.sum(dim=-1) * attention_mask.type_as(loss)
             loss = loss.sum(dim=-1).mean()
             outputs = (loss,) + outputs
 

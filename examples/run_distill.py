@@ -81,7 +81,7 @@ def distill_train(args, model, teacher_model, datasets, all_dataset_sampler, tas
     tr_loss, logging_loss = 0.0, 0.0
     model.zero_grad()
     set_seed(args)
-    train_iterator = trange(int(args.num_train_epochs), desc="Epoch", disable=False)
+    train_iterator = range(int(args.num_train_epochs))
 
     step = 0
 
@@ -119,7 +119,8 @@ def distill_train(args, model, teacher_model, datasets, all_dataset_sampler, tas
                       "attention_mask": input_mask,
                       "token_type_ids": segment_ids,
                       "soft_labels": teacher_logits,
-                      "task_id": task_id}
+                      "task_id": task_id,
+                      "labels": label_ids}
 
             outputs = model(**inputs)
             loss = outputs[0]
@@ -141,7 +142,7 @@ def distill_train(args, model, teacher_model, datasets, all_dataset_sampler, tas
             else:
                 loss.backward()
             tr_loss += loss.item()
-            iter_bar.set_description('Iter (loss=%5.3f)' % loss.item())
+            iter_bar.set_description('Iter (loss=%5.3f)' % (tr_loss/(step+1)))
 
             # print("loss", loss)
 
@@ -180,143 +181,7 @@ def distill_train(args, model, teacher_model, datasets, all_dataset_sampler, tas
     return model
 
 
-def train(args, model, datasets, all_dataset_sampler, task_id=-1):
-
-    args.train_batch_size = args.mini_batch_size * max(1, args.n_gpu)
-
-    no_decay = ["bias", "LayerNorm.weight"]
-    alpha_sets = ["alpha_list"]
-
-    t_total = sum(len(x) for x in datasets) //args.gradient_accumulation_steps
-
-    optimizer_grouped_parameters = [
-        {'params': [p for n, p in model.named_parameters() if not any(nd in n for nd in (no_decay + alpha_sets))], 'weight_decay': args.weight_decay},
-        {'params': [p for n, p in model.named_parameters() if any(nd in n for nd in no_decay)], 'weight_decay': 0.0},
-        {'params': [p for n, p in model.named_parameters() if any(nd in n for nd in alpha_sets)], 'lr':1e-1}
-    ]
-
-    optimizer = AdamW(optimizer_grouped_parameters, lr=args.learning_rate, eps=args.adam_epsilon)
-    scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps=args.warmup_steps, num_training_steps=t_total)
-    
-    if args.fp16:
-        try:
-            from apex import amp
-        except ImportError:
-            raise ImportError("Please install apex from https://www.github.com/nvidia/apex to use fp16 training.")
-        model, optimizer = amp.initialize(model, optimizer, opt_level=args.fp16_opt_level)
-
-    if args.n_gpu > 1:
-        model = torch.nn.DataParallel(model)
-
-
-    logger.info("***** Running training *****")
-    logger.info(" Num Epochs = %d", args.num_train_epochs)
-    logger.info(" Gradient Accumulation steps = %d", args.gradient_accumulation_steps)
-
-    global_step = 0
-    tr_loss, logging_loss = 0.0, 0.0
-    model.zero_grad()
-    set_seed(args)
-    train_iterator = trange(int(args.num_train_epochs), desc="Epoch", disable=False)
-
-    step = 0
-    for _ in train_iterator:
-        train_dataloader = DataLoader(datasets, sampler=all_dataset_sampler) 
-        epoch_iterator = tqdm(train_dataloader, desc="Iteration", disable=False)
-        model.train()
-        for step, batch in enumerate(epoch_iterator):
-            input_ids = batch[0].squeeze().long().to(args.device)
-            input_mask = batch[1].squeeze().long().to(args.device)
-            segment_ids = batch[2].squeeze().long().to(args.device)
-            label_ids = batch[3].squeeze().long().to(args.device)
-            # task_id = batch[4].max()
-            # if args.n_gpu > 1:
-            #     # avoid 0-dim problems
-            #     task_id = batch[4].max().unsqueeze(0)
-            task_id = batch[4].squeeze().long().to(args.device)
-
-            assert batch[4].max() == batch[4].min()
-
-            # print("task_id", task_id.max())
-            inputs = {"input_ids":input_ids, 
-                      "attention_mask":input_mask,
-                      "token_type_ids":segment_ids,
-                      "labels":label_ids,
-                      "task_id":task_id}
-
-            outputs = model(**inputs)
-            loss = outputs[0]
-            if args.do_task_embedding:
-                alpha = outputs[0]
-                loss = outputs[1]
-
-            elif args.do_alpha:
-                loss = outputs[1]
-            
-            if args.n_gpu > 1:
-                loss = loss.mean()
-            if args.gradient_accumulation_steps > 1:
-                loss = loss / args.gradient_accumulation_steps
-
-            if args.fp16:
-                with amp.scale_loss(loss, optimizer) as scaled_loss:
-                    scaled_loss.backward()
-            else:
-                loss.backward()
-            tr_loss += loss.item()
-
-            print("loss", loss)
-            
-            if (step + 1) % 100 == 0:
-                print("loss", loss.item())
-            
-            if (step + 1) % args.gradient_accumulation_steps == 0:
-                if args.fp16:
-                    torch.nn.utils.clip_grad_norm_(amp.master_params(optimizer), args.max_grad_norm)
-                else:
-                    torch.nn.utils.clip_grad_norm_(model.parameters(), args.max_grad_norm)
-                
-                scheduler.step()
-                optimizer.step()
-                model.zero_grad()
-                global_step += 1
-
-                if args.save_steps > 0 and global_step % args.save_steps == 0:
-                    # Save model checkpoint
-                    output_dir = os.path.join(args.output_dir, "checkpoint-{}".format(global_step))
-                    if not os.path.exists(output_dir):
-                        os.makedirs(output_dir)
-                    model_to_save = model.module if hasattr(model, "module") else model  # Take care of distributed/parallel training
-                    model_to_save.save_pretrained(output_dir)
-                    torch.save(args, os.path.join(output_dir, "training_args.bin"))
-                    logger.info("Saving model checkpoint to %s", output_dir)
-
-            if args.max_steps > 0 and global_step > args.max_steps:
-                epoch_iterator.close()
-                break
-        if args.max_steps > 0 and global_step > args.max_steps:
-            train_iterator.close()
-            break
-    
-    return model
-
-
-def evaluate(args, model, UniDataSet, task):
-    
-    _, dataset, _ = UniDataSet.load_single_dataset(task, batch_size=max(1, args.n_gpu)*args.mini_batch_size, mode="dev")
-    task_id = UniDataSet.task_map[task]
-    label_list = UniDataSet.labels_list[task_id]
-
-    if torch.cuda.device_count() > 0: 
-        eval_batch_size = torch.cuda.device_count() * args.mini_batch_size
-    else:
-        eval_batch_size = args.mini_batch_size
-    eval_sampler = SequentialSampler(dataset)
-    eval_dataloader = DataLoader(dataset, sampler=eval_sampler, batch_size=eval_batch_size)
-
-    logger.info(" *** Runing {} evaluation ***".format(task)) 
-    logger.info("  Num examples = %d", len(dataset))
-    logger.info("  Batch size = %d", eval_batch_size)
+def evaluate(args, model, eval_dataloader, task, task_id, label_list):
     nb_eval_steps = 0
     preds = None
     out_label_ids = None
@@ -422,7 +287,7 @@ def main():
                         help="Epsilon for Adam optimizer.")
     parser.add_argument("--max_grad_norm", default=1.0, type=float,
                         help="Max gradient norm.")
-    parser.add_argument("--num_train_epochs", default=3.0, type=float,
+    parser.add_argument("--num_train_epochs", default=10.0, type=float,
                         help="Total number of training epochs to perform.")
     
     parser.add_argument("--max_steps", default=-1, type=int,
@@ -445,6 +310,12 @@ def main():
     parser.add_argument("--fp16", action="store_true")
     parser.add_argument("--fp16_opt_level", type=str, default="O1")
     parser.add_argument("--debug", action="store_true")
+
+    parser.add_argument(
+        "--eval_all_checkpoints",
+        action="store_true",
+        help="Evaluate all checkpoints starting with the same prefix as model_name ending and ending with step number",
+    )
     args = parser.parse_args()
 
 
@@ -555,42 +426,69 @@ def main():
         torch.save(args, os.path.join(args.output_dir, "training_args.bin"))
     
     if args.do_eval:
-        
+        task = UniDataSet.task_list[0]
+        _, dataset, _ = UniDataSet.load_single_dataset(task, batch_size=max(1, args.n_gpu) * args.mini_batch_size,
+                                                       mode="dev")
+        task_id = UniDataSet.task_map[task]
+        label_list = UniDataSet.labels_list[task_id]
+
+        if torch.cuda.device_count() > 0:
+            eval_batch_size = torch.cuda.device_count() * args.mini_batch_size
+        else:
+            eval_batch_size = args.mini_batch_size
+        eval_sampler = SequentialSampler(dataset)
+        eval_dataloader = DataLoader(dataset, sampler=eval_sampler, batch_size=eval_batch_size)
+
+        logger.info(" *** Runing {} evaluation ***".format(task))
+        logger.info("  Num examples = %d", len(dataset))
+        logger.info("  Batch size = %d", eval_batch_size)
+
         tokenizer = tokenizer_class.from_pretrained(args.output_dir, 
                                                     do_lower_case=args.do_lower_case)
-        checkpoint = os.path.join(args.output_dir, "pytorch_model.bin")
+        checkpoints = [args.output_dir]
+        if args.eval_all_checkpoints:
+            checkpoints = list(
+                os.path.dirname(c) for c in sorted(glob.glob(args.output_dir + "/**/" + WEIGHTS_NAME, recursive=True))
+            )
+            logging.getLogger("transformers.modeling_utils").setLevel(logging.WARN)  # Reduce logging
+        logger.info("Evaluate the following checkpoints: %s", checkpoints)
+        for checkpoint in checkpoints:
+            global_step = checkpoint.split("-")[-1] if len(checkpoints) > 1 else ""
+            prefix = checkpoint.split("/")[-1] if checkpoint.find("checkpoint") != -1 else ""
 
-        model = model_class.from_pretrained(checkpoint,
-                                            from_tf=bool(".ckpt" in args.model_name_or_path),
-                                            config=config,
-                                            labels_list=UniDataSet.labels_list,
-                                            task_list=UniDataSet.task_list,
-                                            do_task_embedding=args.do_task_embedding,
-                                            do_alpha=args.do_alpha,
-                                            do_adapter=args.do_adapter,
-                                            num_adapter_layers=args.num_adapter_layers)
-        
+        # checkpoint = os.path.join(args.output_dir, "pytorch_model.bin")
 
-        model.to(args.device)
-        total_results = {}
-        for task in UniDataSet.task_list:
-            # dataset = UniDataSet.load_single_dataset(task, "dev")
-            # task_id = UniDataSet.task_map[task]
-            # label_list = UniDataSet.labels_list[task_id]
-            results = evaluate(args, model, UniDataSet, task)
-            if task == "POS":
-                total_results["POS_ACC"] = results["a"]
-            elif task == "NER":
-                total_results["NER_F1"] = results["f"]
-            elif task == "CHUNKING":
-                total_results["CHUNKING_F1"] = results["f"]
-            elif task == "SRL":
-                total_results["SRL_F1"] = results["f"]
-            elif task == "ONTO_POS":
-                total_results["ONTO_POS_ACC"] = results["a"]
-            elif task == "ONTO_NER":
-                total_results["ONTO_NER_F1"] = results["f"]
-        print(total_results)
+            model = model_class.from_pretrained(checkpoint,
+                                                from_tf=bool(".ckpt" in args.model_name_or_path),
+                                                config=config,
+                                                labels_list=UniDataSet.labels_list,
+                                                task_list=UniDataSet.task_list,
+                                                do_task_embedding=args.do_task_embedding,
+                                                do_alpha=args.do_alpha,
+                                                do_adapter=args.do_adapter,
+                                                num_adapter_layers=args.num_adapter_layers)
+
+
+            model.to(args.device)
+            total_results = {}
+            for task in UniDataSet.task_list:
+                # dataset = UniDataSet.load_single_dataset(task, "dev")
+                # task_id = UniDataSet.task_map[task]
+                # label_list = UniDataSet.labels_list[task_id]
+                results = evaluate(args, model, eval_dataloader, task, task_id, label_list)
+                if task == "POS":
+                    total_results["POS_ACC"] = results["a"]
+                elif task == "NER":
+                    total_results["NER_F1"] = results["f"]
+                elif task == "CHUNKING":
+                    total_results["CHUNKING_F1"] = results["f"]
+                elif task == "SRL":
+                    total_results["SRL_F1"] = results["f"]
+                elif task == "ONTO_POS":
+                    total_results["ONTO_POS_ACC"] = results["a"]
+                elif task == "ONTO_NER":
+                    total_results["ONTO_NER_F1"] = results["f"]
+            print(total_results)
 
 if __name__ == "__main__":
     main()

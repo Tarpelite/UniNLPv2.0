@@ -75,7 +75,8 @@ class MegaDataSet(object):
                  tokenizer,
                  mini_batch_size):
         with open(os.path.join(datasets_dir, "config.yaml"), "r", encoding="utf-8") as f:
-            data = yaml.load(f, Loader=yaml.FullLoader)
+            # data = yaml.load(f, Loader=yaml.FullLoader)
+            data = yaml.load(f)
 
         task_list = data["tasks"]
         task_list = [x.upper() for x in task_list]
@@ -167,7 +168,7 @@ class MegaDataSet(object):
                 assert len(words) == len(labels)
                 for word, label in zip(words, labels):
                     orig_to_tok_index.append(len(tokens))
-                    word_tokens = self.tokenizer.tokenize(word)
+                    word_tokens = self.tokenizer._tokenize_with_orig(word)
                     tokens.extend(word_tokens)
                     if task.startswith("PARSING"):
                         if label == "_" or int(label) > (self.max_seq_length - 2):
