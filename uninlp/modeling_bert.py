@@ -1438,10 +1438,10 @@ class MTDNNModel(BertPreTrainedModel):
                 active_labels = soft_labels.view(-1, num_labels)[active_loss]
                 # active_labels = labels.view(-1)[active_loss]
                 # loss = loss_fct(active_logits, active_labels)
-                loss = self.crit_label_dst(F.log_softmax(active_logits.float(), dim=-1),
-                                  F.softmax(active_labels.float(), dim=-1))
+                # loss = self.crit_label_dst(F.log_softmax(active_logits.float(), dim=-1),
+                #                   F.softmax(active_labels.float(), dim=-1))
                 
-                loss = self.loss_mse(active_loits.float(), active_labels.float())
+                mse_loss = self.mse_loss(active_loits.float(), active_labels.float())
                 
                 # loss = self.crit_label_dst(F.log_softmax(active_logits.float(), dim=-1),
                 #                   F.log_softmax(active_labels.float(), dim=-1))
@@ -1451,7 +1451,7 @@ class MTDNNModel(BertPreTrainedModel):
                 # else:
                 #     active_logits = logits.view(-1, num_labels)[active_loss]
                 active_labels = labels.view(-1)[active_loss]
-                loss = loss_fct(active_logits, active_labels) + loss
+                loss = loss_fct(active_logits, active_labels) + mse_loss
             else:
                 assert "Please use attention mask"
             # loss = loss.sum(dim=-1) * attention_mask.type_as(loss)
