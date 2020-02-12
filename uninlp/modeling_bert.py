@@ -1483,9 +1483,9 @@ class MTDNNModelV2(BertPreTrainedModel):
                 loss_fct = CrossEntropyLoss()
                 if attention_mask is not None:
                     active_loss = attention_mask.view(-1) == 1
-                    active_logits_arc = logits_arc.view(-1, num_labels)[active_loss]
+                    active_logits_arc = logits_arc.view(-1, logits_arc.size(-1))[active_loss]
                     active_heads = heads.view(-1)
-                    active_logits_label = logits_label.view(-1)[active_loss]
+                    active_logits_label = logits_label.view(-1, num_labels)[active_loss]
                     active_labels = labels.view(-1)[active_loss]
                     loss_arc = loss_fct(active_logits_arc, active_heads)
                     loss_labels = loss_fct(active_logits_label, active_labels)
@@ -1493,7 +1493,7 @@ class MTDNNModelV2(BertPreTrainedModel):
 
                     if soft_labels is not None and soft_heads is not None:
                         active_soft_labels = soft_labels.view(-1, num_labels)[active_loss]
-                        active_soft_heads = soft_heads.view(-1, soft_heads.size(1))[active_loss]
+                        active_soft_heads = soft_heads.view(-1, soft_heads.size(-1))[active_loss]
 
                         kv_loss_arc = self.crit_label_dst(F.log_softmax(active_logits_arc.float(), dim=-1),
                                                           F.log_softmax(active_soft_heads.float(), dim=-1)).sum(dim=-1).mean()
@@ -1515,7 +1515,7 @@ class MTDNNModelV2(BertPreTrainedModel):
                     loss = loss_arc + loss_labels
                     if soft_labels is not None and soft_heads is not None:
                         soft_labels = soft_labels.view(-1, num_labels)
-                        soft_heads = soft_heads.view(-1, soft_heads.size(1))
+                        soft_heads = soft_heads.view(-1, soft_heads.size(-1))
 
                         kv_loss_arc = self.crit_label_dst(F.log_softmax(logits_arc.float(), dim=-1),
                                                           F.softmax(soft_heads.float(), dim=-1)).sum(dim=-1).mean()
