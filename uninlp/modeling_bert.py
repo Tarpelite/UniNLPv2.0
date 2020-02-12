@@ -1487,7 +1487,7 @@ class MTDNNModelV2(BertPreTrainedModel):
                     active_heads = heads.view(-1)[active_loss]
                     active_logits_label = logits_label.contiguous().view(-1, num_labels)[active_loss]
                     active_labels = labels.view(-1)[active_loss]
-                    
+
                     loss_arc = loss_fct(active_logits_arc, active_heads)
                     loss_labels = loss_fct(active_logits_label, active_labels)
                     loss = loss_arc + loss_labels
@@ -1497,9 +1497,9 @@ class MTDNNModelV2(BertPreTrainedModel):
                         active_soft_heads = soft_heads.contiguous().view(-1, soft_heads.size(-1))[active_loss]
 
                         kv_loss_arc = self.crit_label_dst(F.log_softmax(active_logits_arc.float(), dim=-1),
-                                                          F.log_softmax(active_soft_heads.float(), dim=-1)).sum(dim=-1).mean()
+                                                          F.softmax(active_soft_heads.float(), dim=-1)).sum(dim=-1).mean()
                         kv_loss_label = self.crit_label_dst(F.log_softmax(active_logits_label.float(), dim=-1),
-                                                            F.log_softmax(active_soft_labels.float(), dim=-1)).sum(dim=-1).mean()
+                                                            F.softmax(active_soft_labels.float(), dim=-1)).sum(dim=-1).mean()
                         kv_loss = kv_loss_arc + kv_loss_label
                         print("ce loss", loss)
                         print("kv loss", kv_loss)

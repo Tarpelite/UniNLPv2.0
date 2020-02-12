@@ -27,8 +27,8 @@ import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel as DDP
 # from parallel import DataParallelModel
 
-# from pudb import set_trace
-# set_trace()
+from pudb import set_trace
+set_trace()
 
 logger = logging.getLogger(__name__)
 
