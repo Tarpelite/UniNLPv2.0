@@ -112,8 +112,8 @@ def distill_train(args, model, teacher_model, datasets, all_dataset_sampler, tas
                       "attention_mask": input_mask,
                       "token_type_ids": segment_ids,
                       "task_id": task_id}
-
-            teacher_logits, _ = teacher_model(**teacher_inputs)
+            with torch.no_grad():
+                teacher_logits, _ = teacher_model(**teacher_inputs)
 
             inputs = {"input_ids": input_ids,
                       "attention_mask": input_mask,
