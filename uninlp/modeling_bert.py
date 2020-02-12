@@ -1501,8 +1501,8 @@ class MTDNNModelV2(BertPreTrainedModel):
                         kv_loss_label = self.crit_label_dst(F.log_softmax(active_logits_label.float(), dim=-1),
                                                             F.softmax(active_soft_labels.float(), dim=-1)).sum(dim=-1).mean()
                         kv_loss = kv_loss_arc + kv_loss_label
-                        print("ce loss", loss)
-                        print("kv loss", kv_loss)
+                        # print("ce loss", loss)
+                        # print("kv loss", kv_loss)
                         loss = loss + kv_loss
                 else:
                     logits_arc = logits_arc.contiguous().view(-1, logits_arc.size(-1))
@@ -1526,8 +1526,8 @@ class MTDNNModelV2(BertPreTrainedModel):
                                                             F.softmax(soft_labels.float(), dim=-1)).sum(dim=-1).mean()
                         
                         kv_loss = kv_loss_arc + kv_loss_label
-                        print("ce loss", loss)
-                        print("kv loss", kv_loss)
+                        # print("ce loss", loss)
+                        # print("kv loss", kv_loss)
                         loss = loss + kv_loss
                 outputs = (loss, ) + outputs
         else:
@@ -1546,8 +1546,8 @@ class MTDNNModelV2(BertPreTrainedModel):
                         soft_labels = soft_labels.view(-1, num_labels)[active_loss]
                         kv_loss = self.crit_label_dst(F.log_softmax(active_logits.float(), dim=-1),
                                                      F.softmax(soft_labels.float(), dim=-1)).sum(dim=-1).mean()
-                        print("ce loss", loss)
-                        print("kv loss", kv_loss)
+                        # print("ce loss", loss)
+                        # print("kv loss", kv_loss)
                         loss = loss + kv_loss
                 else:
                     logits = logits.view(-1, self.num_labels)
@@ -1555,8 +1555,8 @@ class MTDNNModelV2(BertPreTrainedModel):
                         soft_labels = soft_labels.view(-1, num_labels)
                         kv_loss = self.crit_label_dst(F.log_softmax(active_logits.float(), dim=-1),
                                                       F.softmax(soft_labels.float(), dim=-1)).sum(dim=-1).mean()
-                        print("ce loss", loss)
-                        print("kv loss", kv_loss)
+                        # print("ce loss", loss)
+                        # print("kv loss", kv_loss)
                         loss = loss + kv_loss
                     loss = loss_fct(logits, labels.view(-1))
                 outputs = (loss,) + outputs
