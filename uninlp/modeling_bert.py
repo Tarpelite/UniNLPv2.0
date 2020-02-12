@@ -1529,7 +1529,7 @@ class MTDNNModelV2(BertPreTrainedModel):
                         print("ce loss", loss)
                         print("kv loss", kv_loss)
                         loss = loss + kv_loss
-                    outputs = (loss, ) + outputs
+                outputs = (loss, ) + outputs
         else:
             logits = classifier(sequence_output)
 
