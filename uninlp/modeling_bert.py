@@ -25,6 +25,7 @@ import sys
 import torch
 from torch import nn
 from torch.nn import CrossEntropyLoss, MSELoss
+import torch.nn.functional as F
 import copy
 import pickle
 
@@ -1410,13 +1411,16 @@ class MTDNNModelV2(BertPreTrainedModel):
         self.do_adapter = do_adapter
         self.softmax = nn.Softmax(dim=0)
 
+        self.crit_label_dst = nn.KLDivLoss(reduction="none")
+ 
+
         self.init_weights()
 
         
 
     def forward(self, input_ids=None, attention_mask=None, token_type_ids=None,
                 position_ids=None, head_mask=None, inputs_embeds=None, heads=None, labels=None,
-                task_id=0, adapter_ft=False):
+                task_id=0, adapter_ft=False, soft_labels=None, soft_heads=None):
         if self.do_adapter:
             
             if adapter_ft and labels is not None:
@@ -1477,16 +1481,54 @@ class MTDNNModelV2(BertPreTrainedModel):
 
             if labels is not None and heads is not None:
                 loss_fct = CrossEntropyLoss()
-                logits_arc = logits_arc.contiguous().view(-1, logits_arc.size(-1))
-                heads = heads.view(-1)
-                loss_arc = loss_fct(logits_arc, heads)
+                if attention_mask is not None:
+                    active_loss = attention_mask.view(-1) == 1
+                    active_logits_arc = logits_arc.view(-1, num_labels)[active_loss]
+                    active_heads = heads.view(-1)
+                    active_logits_label = logits_label.view(-1)[active_loss]
+                    active_labels = labels.view(-1)[active_loss]
+                    loss_arc = loss_fct(active_logits_arc, active_heads)
+                    loss_labels = loss_fct(active_logits_label, active_labels)
+                    loss = loss_arc + loss_labels
 
-                logits_label = logits_label.contiguous().view(-1, num_labels)
-                labels = labels.view(-1)
+                    if soft_labels is not None and soft_heads is not None:
+                        active_soft_labels = soft_labels.view(-1, num_labels)[active_loss]
+                        active_soft_heads = soft_heads.view(-1, soft_heads.size(1))[active_loss]
 
-                loss_labels = loss_fct(logits_label, labels)
-                loss = loss_arc + loss_labels
-                outputs = (loss, ) + outputs
+                        kv_loss_arc = self.crit_label_dst(F.log_softmax(active_logits_arc.float(), dim=-1),
+                                                          F.log_softmax(active_soft_heads.float(), dim=-1)).sum(dim=-1).mean()
+                        kv_loss_label = self.crit_label_dst(F.log_softmax(active_logits_label.float(), dim=-1),
+                                                            F.log_softmax(active_soft_labels.float(), dim=-1)).sum(dim=-1).mean()
+                        kv_loss = kv_loss_arc + kv_loss_label
+                        print("ce loss", loss)
+                        print("kv loss", kv_loss)
+                        loss = loss + kv_loss
+                else:
+                    logits_arc = logits_arc.contiguous().view(-1, logits_arc.size(-1))
+                    heads = heads.view(-1)
+                    loss_arc = loss_fct(logits_arc, heads)
+
+                    logits_label = logits_label.contiguous().view(-1, num_labels)
+                    labels = labels.view(-1)
+
+                    loss_labels = loss_fct(logits_label, labels)
+                    loss = loss_arc + loss_labels
+                    if soft_labels is not None and soft_heads is not None:
+                        soft_labels = soft_labels.view(-1, num_labels)
+                        soft_heads = soft_heads.view(-1, soft_heads.size(1))
+
+                        kv_loss_arc = self.crit_label_dst(F.log_softmax(logits_arc.float(), dim=-1),
+                                                          F.softmax(soft_heads.float(), dim=-1)).sum(dim=-1).mean()
+                    
+
+                        kv_loss_label = self.crit_label_dst(F.log_softmax(logits_label.float(), dim=-1),
+                                                            F.softmax(soft_labels.float(), dim=-1)).sum(dim=-1).mean()
+                        
+                        kv_loss = kv_loss_arc + kv_loss_label
+                        print("ce loss", loss)
+                        print("kv loss", kv_loss)
+                        loss = loss + kv_loss
+                    outputs = (loss, ) + outputs
         else:
             logits = classifier(sequence_output)
 
@@ -1499,8 +1541,22 @@ class MTDNNModelV2(BertPreTrainedModel):
                     active_logits = logits.view(-1, num_labels)[active_loss]
                     active_labels = labels.view(-1)[active_loss]
                     loss = loss_fct(active_logits, active_labels)
+                    if soft_labels is not None:
+                        soft_labels = soft_labels.view(-1, num_labels)[active_loss]
+                        kv_loss = self.crit_label_dst(F.log_softmax(active_logits.float(), dim=-1),
+                                                     F.softmax(soft_labels.float(), dim=-1)).sum(dim=-1).mean()
+                        print("ce loss", loss)
+                        print("kv loss", kv_loss)
+                        loss = loss + kv_loss
                 else:
                     logits = logits.view(-1, self.num_labels)
+                    if soft_labels is not None:
+                        soft_labels = soft_labels.view(-1, num_labels)
+                        kv_loss = self.crit_label_dst(F.log_softmax(active_logits.float(), dim=-1),
+                                                      F.softmax(soft_labels.float(), dim=-1)).sum(dim=-1).mean()
+                        print("ce loss", loss)
+                        print("kv loss", kv_loss)
+                        loss = loss + kv_loss
                     loss = loss_fct(logits, labels.view(-1))
                 outputs = (loss,) + outputs
 

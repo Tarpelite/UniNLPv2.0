@@ -40,6 +40,11 @@ MODEL_CLASSES = {
     "bert":(BertConfig, MTDNNModelV2, BertTokenizer)
 }
 
+TASK_LIST = ["POS", "NER", "CHUNKING", "SRL",
+            "ONTO_POS", "ONTO_NER", "PARSING_UD", "PARSING_PTB"]
+
+TASK_MAP = {name:i for i,name in enumerate(task) in TASK_LIST}
+
 def set_seed(args):
     random.seed(args.seed)
     np.random.seed(args.seed)
@@ -86,7 +91,7 @@ def data_parallel(module, input, device_ids, output_device=None):
     return nn.parallel.gather(outputs, output_device)
 
 
-def train(args, model, datasets, all_dataset_sampler, task_id=-1):
+def train(args, teacher_model, model, datasets, all_dataset_sampler, task_id=-1):
 
     args.train_batch_size = args.mini_batch_size * max(1, args.n_gpu)
     # train_sampler = all_dataset_sampler
@@ -132,11 +137,14 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
 
     global_step = 0
     tr_loss, logging_loss = 0.0, 0.0
+    teacher_model.zero_grad()
     model.zero_grad()
     set_seed(args)
     train_iterator = trange(int(args.num_train_epochs), desc="Epoch", disable=False)
 
     step = 0
+    teacher_model.eval()
+    model.train()
 
     for _ in train_iterator:
         if all_dataset_sampler == None:
@@ -145,7 +153,7 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
         else:
             train_dataloader = DataLoader(datasets, sampler=all_dataset_sampler)
         epoch_iterator = tqdm(train_dataloader, desc="Iteration", disable=False)
-        model.train()
+        
         iter_bar = tqdm(train_dataloader, desc="Iter(loss=X.XXX)")
         for step, batch in enumerate(iter_bar):
             input_ids = batch[0].squeeze().long().to(args.device)
@@ -158,12 +166,33 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
 
             assert batch[5].max() == batch[5].min()
             task_id = batch[5].max().unsqueeze(0)
-            inputs = {"input_ids":input_ids, 
+            teacher_inputs = {"input_ids":input_ids, 
                       "attention_mask":input_mask,
                       "token_type_ids":segment_ids,
                       "labels":label_ids,
                       "heads":head_ids,
                       "task_id":task_id}
+
+            teacher_outputs = model(**inputs)
+
+            student_inputs = {
+                "input_ids":input_ids, 
+                "attention_mask":input_mask,
+                "token_type_ids":segment_ids,
+                "labels":label_ids,
+                "heads":head_ids,
+                "task_id":task_id
+            }
+            if type(model.classifier_list[task_id]) == DeepBiAffineDecoderV2: # do parsing
+                soft_heads = outputs[0]
+                soft_labels = outputs[1]
+                student_inputs["soft_labels"] = soft_labels
+                student_inputs["soft_heads"] = soft_heads                
+            else:
+                soft_labels = outputs[0]
+                student_inputs["soft_labels"] = soft_labels
+            
+            
             
             # if args.n_gpu>1:
             #     device_ids = list(range(args.n_gpu))
@@ -392,6 +421,10 @@ def main():
                         help="Pretrained config name or path if not the same as model_name")
     parser.add_argument("--tokenizer_name", default="", type=str,
                         help="Pretrained tokenizer name or path if not the same as model_name")
+    parser.add_arguemnt("--teacher_model_path", default="",, type=str)
+    parser.add_argument("--teacher_config_name", default="", type=str)
+    parser.add_argument("--teacher_tokenizer_name", default="", type=str)
+
     parser.add_argument("--max_seq_length", default=128, type=int,
                         help="The maximum total input sequence length after tokenization. Sequences longer "
                              "than this will be truncated, sequences shorter will be padded.")
@@ -438,6 +471,7 @@ def main():
     parser.add_argument("--local_rank", type=int, default=-1,
                         help="For distributed training: local_rank")
     parser.add_argument("--fp16_opt_level", type=str, default="O1")
+    parser.add_argument("--distill_task", type=str, default="")
     parser.add_argument("--debug", action="store_true")
     args = parser.parse_args()
 
@@ -476,6 +510,8 @@ def main():
     if args.local_rank not in [-1, 0]:
         torch.distributed.barrier()  # Make sure only the first process in distributed training will download model & vocab
 
+    
+
     # Setup tokenizer
     args.model_type = args.model_type.lower()
     config_class, model_class, tokenizer_class = MODEL_CLASSES[args.model_type]
@@ -505,6 +541,8 @@ def main():
                                         do_adapter = args.do_adapter,
                                         num_adapter_layers = args.num_adapter_layers
                                         )
+    
+   
 
     if args.local_rank == 0:
         torch.distributed.barrier()  # Make sure only the first process in distributed training will download model & vocab
@@ -519,6 +557,27 @@ def main():
                 assert "Not implement in distributed environment"
             logger.info("Recover model from %s", args.output_dir)
             checkpoint = os.path.join(args.output_dir, "pytorch_model.bin")
+             # Setup Teacher Model
+            teacher_config = config_class.from_pretrained(args.teacher_config_name if args.teacher_config_name else args.teacher_model_path,
+                                                num_labels=2,
+                                                cache_dir=None,
+                                                output_hidden_states=True)
+            
+            teacher_tokenizer = tokenizer_class.from_pretrained(args.tokenizer_name if args.teacher_tokenizer_name else args.tacher_model_path,
+                                                                do_lower_case = args.do_lower_case,
+                                                                cache_dir=None)
+            
+            teacher_model = model_class.from_pretrained(args.teahcer_model_path, 
+                                                from_tf=bool(".ckpt" in args.model_name_or_path),
+                                                config = config,
+                                                labels_list=UniDataSet.labels_list,
+                                                task_list = UniDataSet.task_list,
+                                                do_task_embedding=args.do_task_embedding,
+                                                do_alpha=args.do_alpha,
+                                                do_adapter = args.do_adapter,
+                                                num_adapter_layers = args.num_adapter_layers
+                                                )
+
             model = model_class.from_pretrained(checkpoint,
                                             from_tf=bool(".ckpt" in args.model_name_or_path),
                                             config = config,
@@ -531,7 +590,7 @@ def main():
             model.to(args.device)
         
         all_train_datasets, all_dataset_sampler = UniDataSet.load_MTDNN_dataset((args.mini_batch_size * max(1, args.n_gpu)), debug=args.debug)
-        model = train(args, model, all_train_datasets, all_dataset_sampler=all_dataset_sampler)
+        model = train(args, teacher_model, model, all_train_datasets, all_dataset_sampler=all_dataset_sampler)
     
         if not os.path.exists(args.output_dir):
             os.makedirs(args.output_dir)
