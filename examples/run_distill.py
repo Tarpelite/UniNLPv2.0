@@ -43,7 +43,7 @@ MODEL_CLASSES = {
 TASK_LIST = ["POS", "NER", "CHUNKING", "SRL",
             "ONTO_POS", "ONTO_NER", "PARSING_UD", "PARSING_PTB"]
 
-TASK_MAP = {name:i for i,name in enumerate(task) in TASK_LIST}
+TASK_MAP = {name:i for i,name in enumerate(TASK_LIST)}
 
 def set_seed(args):
     random.seed(args.seed)
