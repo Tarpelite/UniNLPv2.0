@@ -566,7 +566,7 @@ def main():
                                                             do_lower_case = args.do_lower_case,
                                                             cache_dir=None)
         
-        teacher_model = model_class.from_pretrained(args.teahcer_model_path, 
+        teacher_model = model_class.from_pretrained(args.teacher_model_path, 
                                             from_tf=bool(".ckpt" in args.model_name_or_path),
                                             config = teacher_config,
                                             labels_list=UniDataSet.labels_list,
