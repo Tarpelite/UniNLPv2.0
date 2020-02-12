@@ -165,10 +165,11 @@ def train(args, teacher_model, model, datasets, all_dataset_sampler, task_id=-1)
             
             task_id = batch[5].squeeze().long().to(args.device)
 
-            if distill_task_id !=-1 and task_id != distill_task_id:
-                continue
+            
 
             assert batch[5].max() == batch[5].min()
+            if distill_task_id !=-1 and task_id.max() != distill_task_id:
+                continue
             task_id = batch[5].max().unsqueeze(0)
             teacher_inputs = {"input_ids":input_ids, 
                       "attention_mask":input_mask,
