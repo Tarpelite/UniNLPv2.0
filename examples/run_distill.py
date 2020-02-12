@@ -556,31 +556,32 @@ def main():
     logger.info("Training/evaluation parameters %s", args)
 
     if args.do_train:
+        # Setup Teacher Model
+        teacher_config = config_class.from_pretrained(args.teacher_config_name if args.teacher_config_name else args.teacher_model_path,
+                                            num_labels=2,
+                                            cache_dir=None,
+                                            output_hidden_states=True)
+        
+        teacher_tokenizer = tokenizer_class.from_pretrained(args.tokenizer_name if args.teacher_tokenizer_name else args.tacher_model_path,
+                                                            do_lower_case = args.do_lower_case,
+                                                            cache_dir=None)
+        
+        teacher_model = model_class.from_pretrained(args.teahcer_model_path, 
+                                            from_tf=bool(".ckpt" in args.model_name_or_path),
+                                            config = teacher_config,
+                                            labels_list=UniDataSet.labels_list,
+                                            task_list = UniDataSet.task_list,
+                                            do_task_embedding=args.do_task_embedding,
+                                            do_alpha=args.do_alpha,
+                                            do_adapter = args.do_adapter,
+                                            num_adapter_layers = args.num_adapter_layers
+                                            )
         if os.path.exists(args.recover_path) and len(args.recover_path) > 0:
             if args.local_rank != -1:
                 assert "Not implement in distributed environment"
             logger.info("Recover model from %s", args.output_dir)
             checkpoint = os.path.join(args.output_dir, "pytorch_model.bin")
-             # Setup Teacher Model
-            teacher_config = config_class.from_pretrained(args.teacher_config_name if args.teacher_config_name else args.teacher_model_path,
-                                                num_labels=2,
-                                                cache_dir=None,
-                                                output_hidden_states=True)
             
-            teacher_tokenizer = tokenizer_class.from_pretrained(args.tokenizer_name if args.teacher_tokenizer_name else args.tacher_model_path,
-                                                                do_lower_case = args.do_lower_case,
-                                                                cache_dir=None)
-            
-            teacher_model = model_class.from_pretrained(args.teahcer_model_path, 
-                                                from_tf=bool(".ckpt" in args.model_name_or_path),
-                                                config = teacher_config,
-                                                labels_list=UniDataSet.labels_list,
-                                                task_list = UniDataSet.task_list,
-                                                do_task_embedding=args.do_task_embedding,
-                                                do_alpha=args.do_alpha,
-                                                do_adapter = args.do_adapter,
-                                                num_adapter_layers = args.num_adapter_layers
-                                                )
 
             model = model_class.from_pretrained(checkpoint,
                                             from_tf=bool(".ckpt" in args.model_name_or_path),
