@@ -98,6 +98,7 @@ def train(args, teacher_model, model, datasets, all_dataset_sampler, task_id=-1)
     # train_dataloader  = DataLoader(datasets, sampler=train_sampler)
     no_decay = ["bias", "LayerNorm.weight"]
     alpha_sets = ["alpha_list"]
+    distill_task_id = task_id
 
     t_total = sum(len(x) for x in datasets) //args.gradient_accumulation_steps
 
@@ -164,6 +165,9 @@ def train(args, teacher_model, model, datasets, all_dataset_sampler, task_id=-1)
             
             task_id = batch[5].squeeze().long().to(args.device)
 
+            if distill_task_id !=-1 and task_id != distill_task_id:
+                continue
+
             assert batch[5].max() == batch[5].min()
             task_id = batch[5].max().unsqueeze(0)
             teacher_inputs = {"input_ids":input_ids, 
@@ -173,7 +177,7 @@ def train(args, teacher_model, model, datasets, all_dataset_sampler, task_id=-1)
                       "heads":head_ids,
                       "task_id":task_id}
 
-            teacher_outputs = model(**inputs)
+            teacher_outputs = model(**teacher_inputs)
 
             student_inputs = {
                 "input_ids":input_ids, 
@@ -184,12 +188,12 @@ def train(args, teacher_model, model, datasets, all_dataset_sampler, task_id=-1)
                 "task_id":task_id
             }
             if type(model.classifier_list[task_id]) == DeepBiAffineDecoderV2: # do parsing
-                soft_heads = outputs[0]
-                soft_labels = outputs[1]
+                soft_heads = teacher_outputs[0]
+                soft_labels = teacher_outputs[1]
                 student_inputs["soft_labels"] = soft_labels
                 student_inputs["soft_heads"] = soft_heads                
             else:
-                soft_labels = outputs[0]
+                soft_labels = teacher_outputs[0]
                 student_inputs["soft_labels"] = soft_labels
             
             
@@ -198,7 +202,7 @@ def train(args, teacher_model, model, datasets, all_dataset_sampler, task_id=-1)
             #     device_ids = list(range(args.n_gpu))
             #     outputs = data_parallel(model,inputs, device_ids)
             # else:
-            outputs = model(**inputs)
+            outputs = model(**student_inputs)
             loss = outputs[0]
 
             if args.do_task_embedding:
@@ -569,7 +573,7 @@ def main():
             
             teacher_model = model_class.from_pretrained(args.teahcer_model_path, 
                                                 from_tf=bool(".ckpt" in args.model_name_or_path),
-                                                config = config,
+                                                config = teacher_config,
                                                 labels_list=UniDataSet.labels_list,
                                                 task_list = UniDataSet.task_list,
                                                 do_task_embedding=args.do_task_embedding,
@@ -588,9 +592,12 @@ def main():
                                             do_adapter = args.do_adapter,
                                             num_adapter_layers = args.num_adapter_layers)
             model.to(args.device)
-        
+        if args.distill_task:
+            task_id = TASK_MAP[args.distill_task.upper()]
+        else:
+            task_id = -1
         all_train_datasets, all_dataset_sampler = UniDataSet.load_MTDNN_dataset((args.mini_batch_size * max(1, args.n_gpu)), debug=args.debug)
-        model = train(args, teacher_model, model, all_train_datasets, all_dataset_sampler=all_dataset_sampler)
+        model = train(args, teacher_model, model, all_train_datasets, all_dataset_sampler=all_dataset_sampler, task_id = task_id)
     
         if not os.path.exists(args.output_dir):
             os.makedirs(args.output_dir)
