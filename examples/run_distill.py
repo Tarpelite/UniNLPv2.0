@@ -173,10 +173,8 @@ def train(args, teacher_model, model, datasets, all_dataset_sampler, task_id=-1)
             teacher_inputs = {"input_ids":input_ids, 
                       "attention_mask":input_mask,
                       "token_type_ids":segment_ids,
-                      "labels":label_ids,
-                      "heads":head_ids,
                       "task_id":task_id}
-
+            
             teacher_outputs = model(**teacher_inputs)
 
             student_inputs = {
