@@ -1484,9 +1484,10 @@ class MTDNNModelV2(BertPreTrainedModel):
                 if attention_mask is not None:
                     active_loss = attention_mask.view(-1) == 1
                     active_logits_arc = logits_arc.contiguous().view(-1, logits_arc.size(-1))[active_loss]
-                    active_heads = heads.view(-1)
+                    active_heads = heads.view(-1)[active_loss]
                     active_logits_label = logits_label.contiguous().view(-1, num_labels)[active_loss]
                     active_labels = labels.view(-1)[active_loss]
+                    
                     loss_arc = loss_fct(active_logits_arc, active_heads)
                     loss_labels = loss_fct(active_logits_label, active_labels)
                     loss = loss_arc + loss_labels
