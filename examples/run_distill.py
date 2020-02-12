@@ -421,7 +421,7 @@ def main():
                         help="Pretrained config name or path if not the same as model_name")
     parser.add_argument("--tokenizer_name", default="", type=str,
                         help="Pretrained tokenizer name or path if not the same as model_name")
-    parser.add_arguemnt("--teacher_model_path", default="", type=str)
+    parser.add_argument("--teacher_model_path", default="", type=str)
     parser.add_argument("--teacher_config_name", default="", type=str)
     parser.add_argument("--teacher_tokenizer_name", default="", type=str)
 
