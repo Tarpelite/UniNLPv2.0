@@ -184,7 +184,7 @@ def train(args, teacher_model, model, datasets, all_dataset_sampler, task_id=-1)
                 "token_type_ids":segment_ids,
                 "labels":label_ids,
                 "heads":head_ids,
-                "task_id":task_id
+                "task_id":task_id,
                 "gamma":args.gamma
             }
             if type(model.classifier_list[task_id]) == DeepBiAffineDecoderV2: # do parsing
