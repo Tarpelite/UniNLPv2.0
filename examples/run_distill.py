@@ -185,6 +185,7 @@ def train(args, teacher_model, model, datasets, all_dataset_sampler, task_id=-1)
                 "labels":label_ids,
                 "heads":head_ids,
                 "task_id":task_id
+                "gamma":args.gamma
             }
             if type(model.classifier_list[task_id]) == DeepBiAffineDecoderV2: # do parsing
                 soft_heads = teacher_outputs[0]
@@ -476,6 +477,7 @@ def main():
     parser.add_argument("--fp16_opt_level", type=str, default="O1")
     parser.add_argument("--distill_task", type=str, default="")
     parser.add_argument("--debug", action="store_true")
+    parser.add_argument("--gamma", type=float, default=0.5)
     args = parser.parse_args()
 
 

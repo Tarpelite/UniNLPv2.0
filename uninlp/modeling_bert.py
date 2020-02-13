@@ -1420,7 +1420,7 @@ class MTDNNModelV2(BertPreTrainedModel):
 
     def forward(self, input_ids=None, attention_mask=None, token_type_ids=None,
                 position_ids=None, head_mask=None, inputs_embeds=None, heads=None, labels=None,
-                task_id=0, adapter_ft=False, soft_labels=None, soft_heads=None):
+                task_id=0, adapter_ft=False, soft_labels=None, soft_heads=None, gamma=0.5):
         if self.do_adapter:
             
             if adapter_ft and labels is not None:
@@ -1503,7 +1503,7 @@ class MTDNNModelV2(BertPreTrainedModel):
                         kv_loss = kv_loss_arc + kv_loss_label
                         # print("ce loss", loss)
                         # print("kv loss", kv_loss)
-                        loss = loss + kv_loss
+                        loss = gamma*loss + (1-gamma)*kv_loss
                 else:
                     logits_arc = logits_arc.contiguous().view(-1, logits_arc.size(-1))
                     heads = heads.view(-1)
@@ -1528,7 +1528,7 @@ class MTDNNModelV2(BertPreTrainedModel):
                         kv_loss = kv_loss_arc + kv_loss_label
                         # print("ce loss", loss)
                         # print("kv loss", kv_loss)
-                        loss = loss + kv_loss
+                        loss = gamma*loss + (1-gamma)*kv_loss
                 outputs = (loss, ) + outputs
         else:
             logits = classifier(sequence_output)
@@ -1548,7 +1548,7 @@ class MTDNNModelV2(BertPreTrainedModel):
                                                      F.softmax(soft_labels.float(), dim=-1)).sum(dim=-1).mean()
                         # print("ce loss", loss)
                         # print("kv loss", kv_loss)
-                        loss = loss + kv_loss
+                        loss = gamma*loss + (1-gamma)*kv_loss
                 else:
                     logits = logits.view(-1, self.num_labels)
                     if soft_labels is not None:
@@ -1557,7 +1557,7 @@ class MTDNNModelV2(BertPreTrainedModel):
                                                       F.softmax(soft_labels.float(), dim=-1)).sum(dim=-1).mean()
                         # print("ce loss", loss)
                         # print("kv loss", kv_loss)
-                        loss = loss + kv_loss
+                        loss = gamma*loss + (1-gamma)*kv_loss
                     loss = loss_fct(logits, labels.view(-1))
                 outputs = (loss,) + outputs
 
