@@ -483,7 +483,7 @@ if __name__ == "__main__":
 
     test_text = test_text * 12
     print("batchfy_test")
-    print(nlp.batchfy_predict(input_text, task="pos"))
+    print(nlp.batchfy_predict(test_text, task="pos"))
 
 
 
