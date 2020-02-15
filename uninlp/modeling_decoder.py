@@ -231,10 +231,10 @@ class uninlp(object):
         
         return result_dict
     
-    def batchfy_predict(self, input_text, task, max_seq_length=128, batch_size=32):
+    def batchfy_predict(self, input_text, task, verb=None, max_seq_length=128, batch_size=32):
         sentences = self.sent_tokenizer.tokenize(input_text)
         max_len = max([len(sent.split()) for sent in sentences])
-        max_seq_length = max_seq_length * int((max_lem+1)/ 32))
+        max_seq_length = max_seq_length * int((max_len+1)/ 32)
         all_input_ids = []
         all_input_mask = []
         all_segment_ids = []
@@ -306,94 +306,93 @@ class uninlp(object):
                 }
                 outputs = self.model(**inputs)
             if task.startswith("parsing"):
-            logits_arc, logits_label = outputs[:2]
-            preds_arc = logits_arc.squeeze().detach().cpu().numpy()
-            preds_label = logits_label.squeeze().detach().cpu().numpy()
-            preds_arc = np.argmax(preds_arc, axis=1)[1:valid_length + 1]
-            preds_label = np.argmax(preds_label, axis=1)[1:valid_length+1]
-            tokens = tokens[1:valid_length + 1]
+                logits_arc, logits_label = outputs[:2]
+                preds_arc = logits_arc.squeeze().detach().cpu().numpy()
+                preds_label = logits_label.squeeze().detach().cpu().numpy()
+                preds_arc = np.argmax(preds_arc, axis=1)[1:valid_length + 1]
+                preds_label = np.argmax(preds_label, axis=1)[1:valid_length+1]
+                tokens = tokens[1:valid_length + 1]
 
-            results_head = []
-            results = []
-            token_list = []
-            orig_tokens = orig_tokens[:len(tokens)]
-            orig_token_list = []
+                results_head = []
+                results = []
+                token_list = []
+                orig_tokens = orig_tokens[:len(tokens)]
+                orig_token_list = []
 
-            for tk, pred_head, pred_label, orig_token in zip(tokens, preds_arc, preds_label, orig_tokens):
-                if tk.startswith("##") and len(token_list) > 0:
-                    token_list[-1] = token_list[-1] + tk[2:]
-                else:
-                    token_list.append(tk)
-                    results_head.append(pred_head)
-                    results.append(pred_label)
-                    orig_token_list.append(orig_token)
+                for tk, pred_head, pred_label, orig_token in zip(tokens, preds_arc, preds_label, orig_tokens):
+                    if tk.startswith("##") and len(token_list) > 0:
+                        token_list[-1] = token_list[-1] + tk[2:]
+                    else:
+                        token_list.append(tk)
+                        results_head.append(pred_head)
+                        results.append(pred_label)
+                        orig_token_list.append(orig_token)
+                
+                label_list = self.labels_list[task_id]
+                results_head = [x for x in results_head]
+                results = [label_list[x] for x in results]
+                all_token_list.extend(token_list)
+                all_preds_list.extend(results)
+                all_heads.extend(results_head)
+                result_dict = {
+                    "task":task,
+                    "token_list":token_list,
+                    "orig_token_list": orig_token_list,
+                    "heads":results_head,
+                    "preds":results
+                }
+  
             
-            label_list = self.labels_list[task_id]
-            results_head = [x for x in results_head]
-            results = [label_list[x] for x in results]
-            all_token_list.extend(token_list)
-            all_preds_list.extend(results)
-            all_heads.extend(results_head)
+            else:
+                logits = outputs[0]
+                preds = logits.squeeze().detach().cpu().numpy()
+                preds = np.argmax(preds, axis=1)[1:valid_length + 1]
+                tokens = tokens[1:valid_length + 1]
+
+                results = []
+                r_list = []
+                orig_tokens = orig_tokens[:len(tokens)]
+                orig_token_list = []
+
+                for tk, pred, orig_token in zip(tokens, preds, orig_tokens):
+                    if tk.startswith("##") and len(r_list) > 0:
+                        r_list[-1] = r_list[-1] + tk[2:]
+                    else:
+                        r_list.append(tk)
+                        results.append(pred)
+                        orig_token_list.append(orig_token)
+
+                
+                label_list = self.labels_list[task_id]
+                results = [label_list[x] for x in results]
+
+                result_dict = {
+                    "task":task,
+                    "token_list":r_list,
+                    "orig_token_list": orig_token_list,
+                    "preds":results
+                }
+                all_token_list.extend(token_list)
+                all_preds_list.extend(results)
+            
+        if task.startswith("parsing"):
             result_dict = {
                 "task":task,
-                "token_list":token_list,
-                "orig_token_list": orig_token_list,
-                "heads":results_head,
-                "preds":results
+                "token_list":all_token_list,
+                "orig_token_list":all_orig_tokens,
+                "heads":all_heads,
+                "preds":all_preds_list
             }
-
-            
-            
         else:
-            logits = outputs[0]
-            preds = logits.squeeze().detach().cpu().numpy()
-            preds = np.argmax(preds, axis=1)[1:valid_length + 1]
-            tokens = tokens[1:valid_length + 1]
-
-            results = []
-            r_list = []
-            orig_tokens = orig_tokens[:len(tokens)]
-            orig_token_list = []
-
-            for tk, pred, orig_token in zip(tokens, preds, orig_tokens):
-                if tk.startswith("##") and len(r_list) > 0:
-                    r_list[-1] = r_list[-1] + tk[2:]
-                else:
-                    r_list.append(tk)
-                    results.append(pred)
-                    orig_token_list.append(orig_token)
-
-            
-            label_list = self.labels_list[task_id]
-            results = [label_list[x] for x in results]
-
             result_dict = {
                 "task":task,
-                "token_list":r_list,
-                "orig_token_list": orig_token_list,
-                "preds":results
+                "token_list":all_token_list,
+                "orig_token_list":all_orig_tokens,
+                "preds":all_preds_list
             }
-            all_token_list.extend(token_list)
-            all_preds_list.extend(results)
-        
-    if task.startswith("parsing"):
-        result_dict = {
-            "task":task,
-            "token_list":all_token_list,
-            "orig_token_list":all_orig_tokens,
-            "heads":all_heads,
-            "preds":all_preds_list
-        }
-    else:
-        result_dict = {
-            "task":task,
-            "token_list":all_token_list,
-            "orig_token_list":all_orig_tokens,
-            "preds":all_preds_list
-        }
-    e = time.time()
-    print("time cost:", e-s)
-    return result_dict
+        e = time.time()
+        print("time cost:", e-s)
+        return result_dict
 
             
 
@@ -481,7 +480,7 @@ if __name__ == "__main__":
     print(tokens)
     print([token.head_ud_ for token in tokens])
     print([token.dep_ud_ for token in tokens])
-    
+
 
 
 
