@@ -18,6 +18,8 @@ import copy
 import requests
 from tqdm import *
 
+from nltk.tokenize.punkt import PunktSentenceTokenizer
+
 import time
 from uninlp import WEIGHTS_NAME, BertConfig, MTDNNModelV2, BertTokenizer
 # from pudb import set_trace
@@ -95,6 +97,7 @@ class uninlp(object):
         
         self.model_config = config
         self.tokenizer = tokenizer
+        self.sent_tokenizer = PunktSentenceTokenizer()
         self.model = model
         self.model.to(self.device)
 
@@ -228,6 +231,175 @@ class uninlp(object):
         
         return result_dict
     
+    def batchfy_predict(self, input_text, task, max_seq_length=128, batch_size=32):
+        sentences = self.sent_tokenizer.tokenize(input_text)
+        max_len = max([len(sent.split()) for sent in sentences])
+        max_seq_length = max_seq_length * int((max_lem+1)/ 32))
+        all_input_ids = []
+        all_input_mask = []
+        all_segment_ids = []
+        task_id = TASK_MAP[task.upper()]
+        all_orig_tokens = []
+        for sentence in sentences:
+            input_text = sentence
+            tokens, orig_tokens = self.tokenizer._tokenize_with_orig(input_text)
+            all_orig_tokens.extend(orig_tokens)
+            if task == "srl":
+                verb_tokens = self.tokenizer.tokenize(verb)
+
+            if task == "srl":
+                special_tokens_count = self.special_tokens_count + 1
+            else:
+                special_tokens_count = self.special_tokens_count
+            
+            if task == "srl":
+                if len(tokens) > max_seq_length - special_tokens_count - len(verb_tokens):
+                    tokens = tokens[:(max_seq_length - special_tokens_count - len(verb_tokens))]
+            else:
+                if len(tokens) > max_seq_length - special_tokens_count:
+                    tokens = tokens[:(max_seq_length - special_tokens_count)]
+            
+            valid_length = len(tokens)
+            tokens += [self.sep_token]
+            segment_ids = [self.sequence_a_segment_id]*len(tokens)
+            
+            tokens = [self.cls_token] + tokens
+            segment_ids = [self.cls_token_segment_id] + segment_ids
+
+            if task == "srl":
+                tokens += verb_tokens + [self.sep_token]
+                segment_ids += [self.sequence_b_segment_id]*len(verb_tokens) + [self.sequence_b_segment_id]
+            
+            input_ids = self.tokenizer.convert_tokens_to_ids(tokens)
+            input_mask = [1 if self.mask_padding_with_zero else 0]*len(input_ids)
+            
+            padding_length = max_seq_length - len(input_ids)
+
+            input_ids += ([self.pad_token] * padding_length)
+            input_mask += ([0 if self.mask_padding_with_zero else 1] * padding_length)
+            segment_ids += ([self.pad_token_segment_id]*padding_length)
+
+            all_input_ids.append(input_ids)
+            all_input_mask.append(input_mask)
+            all_segment_ids.append(segment_ids)
+            
+        dataset = torch.TensorDataset(all_input_ids, all_input_mask, all_segment_ids)
+        sampler = SequentialSampler(dataset)
+        dataloader = DataLoader(dataset, sampler=sampler, batch_size=batch_size)
+        s = time.time()
+        all_token_list = [] 
+        all_preds_list = []
+        all_heads = []
+
+        for batch in tqdm(dataloader):
+            self.model.eval()
+            batch = tuple(t.to(args.device) for t in batch)
+            input_ids = batch[0]
+            input_mask = batch[1]
+            segment_ids = batch[2]
+            with torch.no_grad():
+                inputs = {
+                    "input_ids":input_ids,
+                    "attention_mask":input_mask,
+                    "task_id":task_id,
+                    "token_type_ids":segment_ids
+                }
+                outputs = self.model(**inputs)
+            if task.startswith("parsing"):
+            logits_arc, logits_label = outputs[:2]
+            preds_arc = logits_arc.squeeze().detach().cpu().numpy()
+            preds_label = logits_label.squeeze().detach().cpu().numpy()
+            preds_arc = np.argmax(preds_arc, axis=1)[1:valid_length + 1]
+            preds_label = np.argmax(preds_label, axis=1)[1:valid_length+1]
+            tokens = tokens[1:valid_length + 1]
+
+            results_head = []
+            results = []
+            token_list = []
+            orig_tokens = orig_tokens[:len(tokens)]
+            orig_token_list = []
+
+            for tk, pred_head, pred_label, orig_token in zip(tokens, preds_arc, preds_label, orig_tokens):
+                if tk.startswith("##") and len(token_list) > 0:
+                    token_list[-1] = token_list[-1] + tk[2:]
+                else:
+                    token_list.append(tk)
+                    results_head.append(pred_head)
+                    results.append(pred_label)
+                    orig_token_list.append(orig_token)
+            
+            label_list = self.labels_list[task_id]
+            results_head = [x for x in results_head]
+            results = [label_list[x] for x in results]
+            all_token_list.extend(token_list)
+            all_preds_list.extend(results)
+            all_heads.extend(results_head)
+            result_dict = {
+                "task":task,
+                "token_list":token_list,
+                "orig_token_list": orig_token_list,
+                "heads":results_head,
+                "preds":results
+            }
+
+            
+            
+        else:
+            logits = outputs[0]
+            preds = logits.squeeze().detach().cpu().numpy()
+            preds = np.argmax(preds, axis=1)[1:valid_length + 1]
+            tokens = tokens[1:valid_length + 1]
+
+            results = []
+            r_list = []
+            orig_tokens = orig_tokens[:len(tokens)]
+            orig_token_list = []
+
+            for tk, pred, orig_token in zip(tokens, preds, orig_tokens):
+                if tk.startswith("##") and len(r_list) > 0:
+                    r_list[-1] = r_list[-1] + tk[2:]
+                else:
+                    r_list.append(tk)
+                    results.append(pred)
+                    orig_token_list.append(orig_token)
+
+            
+            label_list = self.labels_list[task_id]
+            results = [label_list[x] for x in results]
+
+            result_dict = {
+                "task":task,
+                "token_list":r_list,
+                "orig_token_list": orig_token_list,
+                "preds":results
+            }
+            all_token_list.extend(token_list)
+            all_preds_list.extend(results)
+        
+    if task.startswith("parsing"):
+        result_dict = {
+            "task":task,
+            "token_list":all_token_list,
+            "orig_token_list":all_orig_tokens,
+            "heads":all_heads,
+            "preds":all_preds_list
+        }
+    else:
+        result_dict = {
+            "task":task,
+            "token_list":all_token_list,
+            "orig_token_list":all_orig_tokens,
+            "preds":all_preds_list
+        }
+    e = time.time()
+    print("time cost:", e-s)
+    return result_dict
+
+            
+
+
+
+    
     def analyze(self, input_text):
            
         pos_tag = self.do_predict(input_text, "pos")
@@ -309,6 +481,7 @@ if __name__ == "__main__":
     print(tokens)
     print([token.head_ud_ for token in tokens])
     print([token.dep_ud_ for token in tokens])
+    
 
 
 
