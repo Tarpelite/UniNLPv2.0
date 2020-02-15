@@ -427,7 +427,7 @@ class uninlp(object):
             if head == 0:
                 token.head_ptb_ = (0, '[ROOT]')
                 token.dep_ptb_ = dep
-            elif head > len(self.token):
+            elif head > len(self.tokens):
                 token.head_ud_ = (0, '[ROOT]')
                 token.dep_ptb_ = dep
             else:
@@ -439,7 +439,7 @@ class uninlp(object):
             if head == 0:
                 token.head_ud_ = (0, '[ROOT]')
                 token.dep_ud_ = dep
-            elif head > len(self.token):
+            elif head > len(self.tokens):
                 token.head_ud_ = (0, '[ROOT]')
                 token.dep_ud_ = dep
             else:
