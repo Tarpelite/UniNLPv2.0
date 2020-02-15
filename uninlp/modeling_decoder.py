@@ -283,7 +283,9 @@ class uninlp(object):
             all_input_mask.append(input_mask)
             all_segment_ids.append(segment_ids)
             
-        dataset = TensorDataset(all_input_ids, all_input_mask, all_segment_ids)
+        dataset = TensorDataset(torch.tensor(all_input_ids, dtype=torch.long), 
+                                torch.tensor(all_input_mask, dtype=torch.long),
+                                torch.tensor(all_segment_ids, dtype=torch.long))
         sampler = SequentialSampler(dataset)
         dataloader = DataLoader(dataset, sampler=sampler, batch_size=batch_size)
         s = time.time()
