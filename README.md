@@ -61,6 +61,7 @@ python -m torch.distributed.launch --nproc_per_node=4 run_mtdnn_ddp.py --dataset
 |Penn Treebank (Part-of-speech)      |Acc |97.96  | [Meta BiLSTM (Bohnet et al., 2018)](https://arxiv.org/abs/1805.08237)              |
 |CoNLL 2003(Named Entity Recognition)|F1  |93.50  | [CNN Large + fine-tune (Baevski et al., 2019)](https://arxiv.org/pdf/1903.07785.pdf)|
 |OntoNotes v5(Named Entity Recognition)|F1|89.71  | [Flair embeddings(Akbik et al., 2018)](http://aclweb.org/anthology/C18-1139)|
+|Penn Treebank (Chunking)|F1|96.72|[Flair embeddings(Akbik et al., 2018)](http://aclweb.org/anthology/C18-1139)|
 |OntoNotes v5(Semantic Role Labelling)|F1 |85.50  | [He et al., (2018) + ELMO](http://aclweb.org/anthology/P18-2058)|
 |Penn Treebank (Dependency Parsing)  |UAS |97.33  | [Label Attention Layer + HPSG + XLNet (Mrini et al., 2019)](https://khalilmrini.github.io/Label_Attention_Layer.pdf)|
 |Universal Dependencies (Dependency Parsing) | UAS |95.80| [Stack-only RNNG (Kuncoro et al., 2017)](https://arxiv.org/abs/1611.05774) |
