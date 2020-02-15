@@ -427,6 +427,9 @@ class uninlp(object):
             if head == 0:
                 token.head_ptb_ = (0, '[ROOT]')
                 token.dep_ptb_ = dep
+            elif head > len(self.token):
+                token.head_ud_ = (0, '[ROOT]')
+                token.dep_ptb_ = dep
             else:
                 token.head_ptb_ = (head-1, self.tokens[head-1].text)
                 token.dep_ptb_ = dep
@@ -434,6 +437,9 @@ class uninlp(object):
         heads = self.do_predict(input_text, "parsing_ud")
         for token, head, dep in zip(self.tokens, heads["heads"], heads["preds"]):
             if head == 0:
+                token.head_ud_ = (0, '[ROOT]')
+                token.dep_ud_ = dep
+            elif head > len(self.token):
                 token.head_ud_ = (0, '[ROOT]')
                 token.dep_ud_ = dep
             else:
