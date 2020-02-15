@@ -295,7 +295,7 @@ class uninlp(object):
 
         for batch in tqdm(dataloader):
             self.model.eval()
-            batch = tuple(t.to(args.device) for t in batch)
+            batch = tuple(t.to(self.device) for t in batch)
             input_ids = batch[0]
             input_mask = batch[1]
             segment_ids = batch[2]
