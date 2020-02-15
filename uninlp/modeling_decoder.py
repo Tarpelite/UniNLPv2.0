@@ -336,14 +336,6 @@ class uninlp(object):
                 all_token_list.extend(token_list)
                 all_preds_list.extend(results)
                 all_heads.extend(results_head)
-                result_dict = {
-                    "task":task,
-                    "token_list":token_list,
-                    "orig_token_list": orig_token_list,
-                    "heads":results_head,
-                    "preds":results
-                }
-  
             
             else:
                 logits = outputs[0]
@@ -368,13 +360,7 @@ class uninlp(object):
                 label_list = self.labels_list[task_id]
                 results = [label_list[x] for x in results]
 
-                result_dict = {
-                    "task":task,
-                    "token_list":r_list,
-                    "orig_token_list": orig_token_list,
-                    "preds":results
-                }
-                all_token_list.extend(token_list)
+                all_token_list.extend(r_list)
                 all_preds_list.extend(results)
             
         if task.startswith("parsing"):
