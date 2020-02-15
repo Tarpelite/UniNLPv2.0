@@ -481,6 +481,10 @@ if __name__ == "__main__":
     print([token.head_ud_ for token in tokens])
     print([token.dep_ud_ for token in tokens])
 
+    test_text = test_text * 12
+    print("batchfy_test")
+    print(nlp.batchfy_predict(test_text))
+
 
 
 
