@@ -235,7 +235,7 @@ class uninlp(object):
         sentences = self.sent_tokenizer.tokenize(input_text)
         print(sentences)
         max_len = max([len(sent.split()) for sent in sentences])
-        max_seq_length = max_seq_length * min(1, int((max_len+1)/ 32))
+        max_seq_length = max_seq_length * max(1, int((max_len+1)/ 32))
         all_input_ids = []
         all_input_mask = []
         all_segment_ids = []
