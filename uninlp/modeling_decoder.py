@@ -311,8 +311,8 @@ class uninlp(object):
 
             if task.startswith("parsing"):
                 logits_arc, logits_label = outputs[:2]
-                logits_arc = logits_arc.view(-1, max_seq_length, batch_size)
-                logits_label = logits_label.view(-1, max_seq_length, batch_size)
+                logits_arc = logits_arc.view(-1, max_seq_length, logits_arc.size(-1))
+                logits_label = logits_label.view(-1, max_seq_length, logits_label.size(-1))
 
 
                 
@@ -348,9 +348,9 @@ class uninlp(object):
             
             else:
                 logits = outputs[0]
-                logits = logits.view(-1, max_seq_length, batch_size)
+                logits = logits.view(-1, max_seq_length, logits.size(-1))
                 for logit in logits:
-                    preds = logits.squeeze().detach().cpu().numpy()
+                    preds = logit.squeeze().detach().cpu().numpy()
                     preds = np.argmax(preds, axis=1)[1:valid_length + 1]
                     tokens = tokens[1:valid_length + 1]
 
