@@ -117,6 +117,19 @@ python -m torch.distributed.launch --nproc_per_node=4 run_mtdnn_ddp.py --dataset
 |CoreNLP_java_vm| 18404           |
 |CoreNLP_python_interface|412     |
 
+### Acceleration Rate
+
+#### cpu
+|Model | POS | NER | PARSING |
+|base  |  1x | 1x  | 1x      |
+|small | 5.5x| 5.2x| 3.7x    |
+|tiny  |14.9x|13.5x|6.6x     |
+
+#### gpu
+|Model | POS | NER | PARSING |
+|base  |  1x | 1x  | 1x      |
+|small | 5.2x| 5.1x| 3.9x    |
+|tiny  |5.9x |6.2x | 4.0x    |
 
 
 
