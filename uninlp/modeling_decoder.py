@@ -476,7 +476,7 @@ if __name__ == "__main__":
     print([token.head_ud_ for token in tokens])
     print([token.dep_ud_ for token in tokens])
 
-    test_text = test_text * 12
+    test_text = "Microsoft Corporation is an American multinational technology company with headquarters in Redmond Washington. It was founded by Bill Gates and Paul Allen on April 4, 1975."
     print("batchfy_test")
     print(nlp.batchfy_predict(test_text, task="pos"))
     print(nlp.batchfy_predict(test_text, task="onto_pos"))
