@@ -308,61 +308,71 @@ class uninlp(object):
                     "token_type_ids":segment_ids
                 }
                 outputs = self.model(**inputs)
+
             if task.startswith("parsing"):
                 logits_arc, logits_label = outputs[:2]
-                preds_arc = logits_arc.squeeze().detach().cpu().numpy()
-                preds_label = logits_label.squeeze().detach().cpu().numpy()
-                preds_arc = np.argmax(preds_arc, axis=1)[1:valid_length + 1]
-                preds_label = np.argmax(preds_label, axis=1)[1:valid_length+1]
-                tokens = tokens[1:valid_length + 1]
+                logits_arc = logits_arc.view(-1, max_seq_length, batch_size)
+                logits_label = logits_label.view(-1, max_seq_length, batch_size)
 
-                results_head = []
-                results = []
-                token_list = []
-                orig_tokens = orig_tokens[:len(tokens)]
-                orig_token_list = []
 
-                for tk, pred_head, pred_label, orig_token in zip(tokens, preds_arc, preds_label, orig_tokens):
-                    if tk.startswith("##") and len(token_list) > 0:
-                        token_list[-1] = token_list[-1] + tk[2:]
-                    else:
-                        token_list.append(tk)
-                        results_head.append(pred_head)
-                        results.append(pred_label)
-                        orig_token_list.append(orig_token)
                 
-                label_list = self.labels_list[task_id]
-                results_head = [x for x in results_head]
-                results = [label_list[x] for x in results]
-                all_token_list.extend(token_list)
-                all_preds_list.extend(results)
-                all_heads.extend(results_head)
+                for logit_arc, logit_label in zip(logits_arc, logits_label):
+                    preds_arc = logit_arc.squeeze().detach().cpu().numpy()
+                    preds_label = logit_label.squeeze().detach().cpu().numpy()
+                    preds_arc = np.argmax(preds_arc, axis=1)[1:valid_length + 1]
+                    preds_label = np.argmax(preds_label, axis=1)[1:valid_length+1]
+                    tokens = tokens[1:valid_length + 1]
+
+                    results_head = []
+                    results = []
+                    token_list = []
+                    orig_tokens = orig_tokens[:len(tokens)]
+                    orig_token_list = []
+
+                    for tk, pred_head, pred_label, orig_token in zip(tokens, preds_arc, preds_label, orig_tokens):
+                        if tk.startswith("##") and len(token_list) > 0:
+                            token_list[-1] = token_list[-1] + tk[2:]
+                        else:
+                            token_list.append(tk)
+                            results_head.append(pred_head)
+                            results.append(pred_label)
+                            orig_token_list.append(orig_token)
+                
+                    label_list = self.labels_list[task_id]
+                    results_head = [x for x in results_head]
+                    results = [label_list[x] for x in results]
+
+                    all_token_list.extend(token_list)
+                    all_preds_list.extend(results)
+                    all_heads.extend(results_head)
             
             else:
                 logits = outputs[0]
-                preds = logits.squeeze().detach().cpu().numpy()
-                preds = np.argmax(preds, axis=1)[1:valid_length + 1]
-                tokens = tokens[1:valid_length + 1]
+                logits = logits.view(-1, max_seq_length, batch_size)
+                for logit in logits:
+                    preds = logits.squeeze().detach().cpu().numpy()
+                    preds = np.argmax(preds, axis=1)[1:valid_length + 1]
+                    tokens = tokens[1:valid_length + 1]
 
-                results = []
-                r_list = []
-                orig_tokens = orig_tokens[:len(tokens)]
-                orig_token_list = []
+                    results = []
+                    r_list = []
+                    orig_tokens = orig_tokens[:len(tokens)]
+                    orig_token_list = []
 
-                for tk, pred, orig_token in zip(tokens, preds, orig_tokens):
-                    if tk.startswith("##") and len(r_list) > 0:
-                        r_list[-1] = r_list[-1] + tk[2:]
-                    else:
-                        r_list.append(tk)
-                        results.append(pred)
-                        orig_token_list.append(orig_token)
+                    for tk, pred, orig_token in zip(tokens, preds, orig_tokens):
+                        if tk.startswith("##") and len(r_list) > 0:
+                            r_list[-1] = r_list[-1] + tk[2:]
+                        else:
+                            r_list.append(tk)
+                            results.append(pred)
+                            orig_token_list.append(orig_token)
 
-                
-                label_list = self.labels_list[task_id]
-                results = [label_list[x] for x in results]
+                    
+                    label_list = self.labels_list[task_id]
+                    results = [label_list[x] for x in results]
 
-                all_token_list.extend(r_list)
-                all_preds_list.extend(results)
+                    all_token_list.extend(r_list)
+                    all_preds_list.extend(results)
             
         if task.startswith("parsing"):
             result_dict = {
