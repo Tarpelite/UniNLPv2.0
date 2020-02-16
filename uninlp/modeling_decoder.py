@@ -233,6 +233,7 @@ class uninlp(object):
     
     def batchfy_predict(self, input_text, task, verb=None, max_seq_length=128, batch_size=32):
         sentences = self.sent_tokenizer.tokenize(input_text)
+        print(sentences)
         max_len = max([len(sent.split()) for sent in sentences])
         max_seq_length = max_seq_length * min(1, int((max_len+1)/ 32))
         all_input_ids = []
