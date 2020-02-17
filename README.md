@@ -67,12 +67,12 @@ python -m torch.distributed.launch --nproc_per_node=4 run_mtdnn_ddp.py --dataset
 |Universal Dependencies (Dependency Parsing) | UAS |95.80| [Stack-only RNNG (Kuncoro et al., 2017)](https://arxiv.org/abs/1611.05774) |
 
 ### Toolkits
-|                |POS_UD|POS_ONTO|NER_CONLL|NER_ONTO|Chunking|SRL  |PARSING_PTB|PARSING_UD|    
-|----------------|------|--------|---------|--------|--------|-----|-----------|----------|
-|stanford_corenlp|94.94 |-       |89.38    |-       |-       |-    |-          |84.53     | 
-|spacy_en_sm     |88.23 |96.76   |-        |84.19   |-       |-    |91.62      |-         |  
-|spacy_en_md     |88.53 |96.87   |-        |83.30   |-       |-    |91.93      |-         |
-|spacy_en_lg     |88.83 |96.93   |-        |83.38   |-       |-    |92.01      |-         |
+|                |POS_UD|POS_ONTO|NER_CONLL|NER_ONTO|Chunking|SRL  |PARSING_PTB|PARSING_UD |    
+|----------------|------|--------|---------|--------|--------|-----|-----------|-----------|
+|stanford_corenlp|94.94 |-       |89.38    |-       |-       |-    |-          |84.53/79.45| 
+|spacy_en_sm     |88.23 |96.76   |-        |84.19   |-       |-    |91.62/89.71|-          |  
+|spacy_en_md     |88.53 |96.87   |-        |83.30   |-       |-    |91.93/90.09|-          |
+|spacy_en_lg     |88.83 |96.93   |-        |83.38   |-       |-    |92.01/90.17|-          |
 
 
 
