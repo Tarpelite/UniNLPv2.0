@@ -25,12 +25,14 @@ from uninlp import WEIGHTS_NAME, BertConfig, MTDNNModel, BertTokenizer, DeepBiAf
 
 import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel as DDP
+from torch.utils.tensorboard import SummaryWriter
 # from parallel import DataParallelModel
 
 # from pudb import set_trace
 # set_trace()
 
 logger = logging.getLogger(__name__)
+writer = SummaryWriter()
 
 ALL_MODELS = sum(
     (tuple(conf.pretrained_config_archive_map.keys()) for conf in (BertConfig, )),
@@ -191,6 +193,8 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
                 loss.backward()
             
             tr_loss += loss.item()
+            writer.add_scalar("Loss/train", loss.item().data, global_step)
+            global_step += 1
 
             if args.local_rank in [-1, 0]:
                 iter_bar.set_description("Iter (loss=%5.3f)" % loss.item())
