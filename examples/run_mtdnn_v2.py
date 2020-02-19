@@ -193,8 +193,8 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
                 loss.backward()
             
             tr_loss += loss.item()
-            writer.add_scalar("Loss/train", loss.item().data, global_step)
-            global_step += 1
+            # writer.add_scalar("Loss/train", loss.item().data, global_step)
+            # global_step += 1
 
             if args.local_rank in [-1, 0]:
                 iter_bar.set_description("Iter (loss=%5.3f)" % loss.item())
