@@ -33,7 +33,7 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 
 logger = logging.getLogger(__name__)
 
-writer = SummaryWriter()
+# writer = SummaryWriter()
 ALL_MODELS = sum(
     (tuple(conf.pretrained_config_archive_map.keys()) for conf in (BertConfig, )),
     ())
