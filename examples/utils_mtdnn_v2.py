@@ -14,6 +14,79 @@ import torch.distributed as dist
 
 logger = logging.getLogger(__name__)
 
+def tensor2cuda(tensor):
+    if torch.cuda.is_available():
+        tensor = tensor.cuda()
+    return tensor
+
+def project(x, original_x, epsilon, _type="linf"):
+    if _type == "linf":
+        max_x = original_x + epsilon
+        min_x = original_x - epsilon
+
+        x = torch.max(torch.min(x, max_x), min_x)
+    elif _type == 'l2':
+        dist = (x - original_x)
+        dist = dist.view(x.shape[0], -1)
+        dist_norm = torch.norm(dist, dim=1, keepdim=True)
+        mask = (dist_norm > epsilon).unsqueeze(2).expand_as(x.shape)
+        dist = dist / dist_norm
+        dist *= epsilon
+        dist = dist.view(x.shape)
+        x = (original_x + dist)*mask.float() + x*(1-mask.float())
+    else:
+        raise NotImplementedError
+    return x
+
+class AdversarialAttack():
+    def __init__(self, model, epsilon, alpha, min_val, max_val, max_iters, _type='linf'):
+        self.model = model
+
+        self.epsilon = epsilon
+        self.alpha = alpha
+        self.min_val = min_val
+        self.max_val = max_val
+        self.max_iters = max_iters
+        self._type = _type
+    
+    def perturb(self, inputs, reduction4loss='mean', random_stat=False):
+        original_text = inputs["input_ids"]
+        if random_stat:
+            rand_perturb = torch.FloatTensor(original_text.shape).uniform_(
+                -self.epsilon, self.epsilon
+            )
+            rand_perturb = tensor2cuda(rand_perturb)
+            x = original_text + rand_perturb
+        else:
+            x = original_text.clone()
+        
+        x.requires_grad = True
+        with torch.enable_grad():
+            for _iter in range(self.max_iters):
+                with torch.no_grad():
+                    self.model.eval()
+                    inputs["input_ids"] = x
+                    outputs = self.model(inputs)
+                loss = outputs[0]
+                if reduction4loss == 'none':
+                    grad_outputs = tensor2cuda(torch.ones(loss.shape))
+                else:
+                    grad_outputs = None
+
+                grads = torch.autograd.grad(loss, x, grad_outputs=grad_outputs, only_inputs=True)[0]
+                x.data += self.alpha *torch.sign(grads.data)
+
+                x = project(x, original_text, self.epsilon, self._type)
+        return x
+
+
+
+    
+
+
+
+
+
 def las_score(true_label_list, true_heads_list, predict_label_list, predict_heads_list):
     total_score = 0
     cnt = len(true_label_list)
