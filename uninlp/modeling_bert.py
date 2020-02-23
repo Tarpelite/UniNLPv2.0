@@ -18,7 +18,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import logging
-import math
+import mat h
 import os
 import sys
 
@@ -1416,11 +1416,12 @@ class MTDNNModelV2(BertPreTrainedModel):
 
         self.init_weights()
 
+
         
 
     def forward(self, input_ids=None, attention_mask=None, token_type_ids=None,
                 position_ids=None, head_mask=None, inputs_embeds=None, heads=None, labels=None,
-                task_id=0, adapter_ft=False, soft_labels=None, soft_heads=None, gamma=0.5):
+                task_id=0, adapter_ft=False, soft_labels=None, soft_heads=None, gamma=0.5, attack=False):
         if self.do_adapter:
             
             if adapter_ft and labels is not None:
@@ -1709,5 +1710,200 @@ class MTDNNModel(BertPreTrainedModel):
         return outputs
 
 
+class MTDNNModelAttack(BertPreTrainedModel):
+    def __init__(self, config, labels_list, task_list,
+                 do_task_embedding=False, do_alpha=False,
+                 do_adapter=False, num_adapter_layers=2):
+        super(MTDNNModelAttack, self).__init__(config)
+
+        self.bert = BertModel(config)
+        self.dropout = nn.Dropout(config.hidden_dropout_prob)
+
+        self.num_fixed_layers = config.num_hidden_layers - num_adapter_layers
+
+        decoder_modules = []
+        for labels ,task in zip(labels_list, task_list):
+            if task.startswith("PARSING"):
+                decoder_modules.append(DeepBiAffineDecoderV2(config.hidden_size, mlp_dim=300, num_labels=len(labels)))
+            else:
+                decoder_modules.append(nn.Linear(config.hidden_size, len(labels)))
+        self.classifier_list =  nn.ModuleList(decoder_modules)
+
+        if do_alpha:
+            init_value = torch.zeros(config.num_hidden_layers, 1)
+            self.alpha_list = nn.ModuleList([nn.Parameter(init_value, requires_grad=True)])
+
+            self.softmax = nn.Softmax(dim=0)
+            self.labels_list = labels_list
+
+        if do_task_embedding:
+            self.task_embedding = nn.Embedding(len(labels_list), config.hidden_size)
+            self.w1 = nn.Linear(config.hidden_size, 1)
+            self.w2 = nn.Linear(config.hidden_size, 1)
+
+        self.labels_list = [len(x) for x in labels_list]
+        self.do_task_embedding = do_task_embedding
+        self.do_alpha = do_alpha
+        self.do_adapter = do_adapter
+        self.softmax = nn.Softmax(dim=0)
+
+        self.crit_label_dst = nn.KLDivLoss(reduction="none")
+ 
+
+        self.init_weights()
+
+
+        
+
+    def forward(self, input_ids=None, attention_mask=None, token_type_ids=None,
+                position_ids=None, head_mask=None, inputs_embeds=None, heads=None, labels=None,
+                task_id=0, adapter_ft=False, soft_labels=None, soft_heads=None, gamma=0.5, sequence_output=None):
+        
+        if self.do_adapter:
+            
+            if adapter_ft and labels is not None:
+                for param in self.bert.encoder.parameters():
+                    param.requires_grad = False
+
+                for param in self.bert.encoder.layer[-1].parameters():
+                    param.requires_grad = True
+                
+                for param in self.bert.encoder.layer[-2].parameters():
+                    param.requires_grad = True
+                
+          
+        if sequence_output is None:
+            outputs = self.bert(input_ids, 
+                                attention_mask=attention_mask,
+                                token_type_ids=token_type_ids,
+                                position_ids=position_ids,
+                                head_mask=head_mask,
+                                inputs_embeds=inputs_embeds)
+            hidden_states = outputs[-1]
+            sequence_output = outputs[0]
+            
+
+        
+        # sequence_output = hidden_states[-1]
+
+        classifier = self.classifier_list[task_id]
+        num_labels = self.labels_list[task_id]
+        
+
+        if self.do_task_embedding:
+            task_embbedding = self.task_embedding(torch.tensor([task_id]).cuda()).view(-1)
+            hidden_states = hidden_states[1:]
+            hidden_states = torch.stack(hidden_states)
+            # alpha = w1*hidden_states + w2*task_embedding + bias 
+            out1 = self.w1(hidden_states) #[num_hidden_layers, batch_size, seq_len, 1]
+            task_embedding = task_embedding.expand(hidden_states.size(0), hidden_states.size(1), task_embedding.size(0)) # [num_hidden_layers, batch_size, hidden_size]
+            out2 = self.w2(task_embedding) # [num_hidden_layers, batch_size, 1]
+            alpha = out1.squeeze(-1) + out2 # [num_hidden_layers, batch_size, seq_len]
+            alpha = self.softmax(alpha).permute(1, 0, 2) #[batch_size, num_hidden_layers, seq_len]
+            alpha_vis = torch.mean(alpha, dim=0)
+            hidden_states = hidden_states.permute(1,0,2,3)  # [batch_size, num_hidden_layers, seq_len, hidden_size]
+            alpha = alpha.view(alpha.size() + (1,)).expand(alpha.size() + (hidden_states.size(3), )) #[batch_size, num_hidden_layers, seq_len, hidden_size]
+            sequence_output = torch.sum(alpha*hidden_states, dim=1) #[batch_size, seq_len, hidden_size]
+
+        elif self.do_alpha:
+            alpha = self.alpha_list[task_id]
+            alpha = self.softmax(alpha)
+            hidden_states = hidden_states[1:]
+            hidden_states = torch.stack(hidden_states)   # [num_hidden_layers, batch_size, seq_len, hidden_size]
+            hidden_states = hidden_states.permute(1,2,3,0)  # [batch_size, seq_len, hidden_size, num_hidden_layers]
+            sequence_output = torch.matmul(hidden_states, alpha).squeeze(-1) # [batch_size, seq_len, hidden_size]
+        raw_sequence_output = sequence_output
+        sequence_output = self.dropout(sequence_output)
+        if type(classifier) == DeepBiAffineDecoderV2: # parsing task
+            logits_arc, logits_label = classifier(sequence_output)
+            outputs = (logits_arc, logits_label, raw_sequence_output) + outputs[2:]
+
+            if labels is not None and heads is not None:
+                loss_fct = CrossEntropyLoss()
+                if attention_mask is not None:
+                    active_loss = attention_mask.view(-1) == 1
+                    active_logits_arc = logits_arc.contiguous().view(-1, logits_arc.size(-1))[active_loss]
+                    active_heads = heads.view(-1)[active_loss]
+                    active_logits_label = logits_label.contiguous().view(-1, num_labels)[active_loss]
+                    active_labels = labels.view(-1)[active_loss]
+
+                    loss_arc = loss_fct(active_logits_arc, active_heads)
+                    loss_labels = loss_fct(active_logits_label, active_labels)
+                    loss = loss_arc + loss_labels
+
+                    if soft_labels is not None and soft_heads is not None:
+                        active_soft_labels = soft_labels.contiguous().view(-1, num_labels)[active_loss]
+                        active_soft_heads = soft_heads.contiguous().view(-1, soft_heads.size(-1))[active_loss]
+
+                        kv_loss_arc = self.crit_label_dst(F.log_softmax(active_logits_arc.float(), dim=-1),
+                                                          F.softmax(active_soft_heads.float(), dim=-1)).sum(dim=-1).mean()
+                        kv_loss_label = self.crit_label_dst(F.log_softmax(active_logits_label.float(), dim=-1),
+                                                            F.softmax(active_soft_labels.float(), dim=-1)).sum(dim=-1).mean()
+                        kv_loss = kv_loss_arc + kv_loss_label
+                        # print("ce loss", loss)
+                        # print("kv loss", kv_loss)
+                        loss = gamma*loss + (1-gamma)*kv_loss
+                else:
+                    logits_arc = logits_arc.contiguous().view(-1, logits_arc.size(-1))
+                    heads = heads.view(-1)
+                    loss_arc = loss_fct(logits_arc, heads)
+
+                    logits_label = logits_label.contiguous().view(-1, num_labels)
+                    labels = labels.view(-1)
+
+                    loss_labels = loss_fct(logits_label, labels)
+                    loss = loss_arc + loss_labels
+                    if soft_labels is not None and soft_heads is not None:
+                        soft_labels = soft_labels.contiguous().view(-1, num_labels)
+                        soft_heads = soft_heads.contiguous().view(-1, soft_heads.size(-1))
+
+                        kv_loss_arc = self.crit_label_dst(F.log_softmax(logits_arc.float(), dim=-1),
+                                                          F.softmax(soft_heads.float(), dim=-1)).sum(dim=-1).mean()
+                    
+
+                        kv_loss_label = self.crit_label_dst(F.log_softmax(logits_label.float(), dim=-1),
+                                                            F.softmax(soft_labels.float(), dim=-1)).sum(dim=-1).mean()
+                        
+                        kv_loss = kv_loss_arc + kv_loss_label
+                        # print("ce loss", loss)
+                        # print("kv loss", kv_loss)
+                        loss = gamma*loss + (1-gamma)*kv_loss
+                outputs = (loss, ) + outputs
+        else:
+            logits = classifier(sequence_output)
+
+            outputs = (logits,raw_sequence_output) + outputs[2:]
+
+            if labels is not None:
+                loss_fct = CrossEntropyLoss()
+                if attention_mask is not None:
+                    active_loss = attention_mask.view(-1) == 1
+                    active_logits = logits.view(-1, num_labels)[active_loss]
+                    active_labels = labels.view(-1)[active_loss]
+                    loss = loss_fct(active_logits, active_labels)
+                    if soft_labels is not None:
+                        soft_labels = soft_labels.view(-1, num_labels)[active_loss]
+                        kv_loss = self.crit_label_dst(F.log_softmax(active_logits.float(), dim=-1),
+                                                     F.softmax(soft_labels.float(), dim=-1)).sum(dim=-1).mean()
+                        # print("ce loss", loss)
+                        # print("kv loss", kv_loss)
+                        loss = gamma*loss + (1-gamma)*kv_loss
+                else:
+                    logits = logits.view(-1, self.num_labels)
+                    if soft_labels is not None:
+                        soft_labels = soft_labels.view(-1, num_labels)
+                        kv_loss = self.crit_label_dst(F.log_softmax(active_logits.float(), dim=-1),
+                                                      F.softmax(soft_labels.float(), dim=-1)).sum(dim=-1).mean()
+                        # print("ce loss", loss)
+                        # print("kv loss", kv_loss)
+                        loss = gamma*loss + (1-gamma)*kv_loss
+                    loss = loss_fct(logits, labels.view(-1))
+                outputs = (loss,) + outputs
+
+        if self.do_task_embedding:
+            outputs = (alpha_vis, ) + outputs
+        elif self.do_alpha:
+            outputs = (alpha, ) + outputs
+        return outputs
 
     

@@ -38,7 +38,7 @@ def project(x, original_x, epsilon, _type="linf"):
         raise NotImplementedError
     return x
 
-class AdversarialAttack():
+class AdversarialAttack:
     def __init__(self, model, epsilon, alpha, min_val, max_val, max_iters, _type='linf'):
         self.model = model
 
@@ -50,7 +50,7 @@ class AdversarialAttack():
         self._type = _type
     
     def perturb(self, inputs, reduction4loss='mean', random_stat=False):
-        original_text = inputs["input_ids"]
+        original_text = inputs["sequence_output"]
         if random_stat:
             rand_perturb = torch.FloatTensor(original_text.shape).uniform_(
                 -self.epsilon, self.epsilon
@@ -65,8 +65,8 @@ class AdversarialAttack():
             for _iter in range(self.max_iters):
                 with torch.no_grad():
                     self.model.eval()
-                    inputs["input_ids"] = x
-                    outputs = self.model(inputs)
+                    inputs["sequence_output"] = x
+                    outputs = self.model(**inputs)
                 loss = outputs[0]
                 if reduction4loss == 'none':
                     grad_outputs = tensor2cuda(torch.ones(loss.shape))

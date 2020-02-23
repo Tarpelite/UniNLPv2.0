@@ -19,9 +19,9 @@ import requests
 from seqeval.metrics import accuracy_score, precision_score, recall_score, f1_score
 from tqdm import *
 
-from utils_mtdnn_v2 import MegaDataSet, las_score
+from utils_mtdnn_v2 import MegaDataSet, las_score, AdversarialAttack
 from uninlp import AdamW, get_linear_schedule_with_warmup
-from uninlp import WEIGHTS_NAME, BertConfig, MTDNNModel, BertTokenizer, DeepBiAffineDecoderV2, MTDNNModelV2
+from uninlp import WEIGHTS_NAME, BertConfig, MTDNNModel, BertTokenizer, DeepBiAffineDecoderV2, MTDNNModelAttack
 
 import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel as DDP
@@ -39,7 +39,7 @@ ALL_MODELS = sum(
     ())
 
 MODEL_CLASSES = {
-    "bert":(BertConfig, MTDNNModelV2, BertTokenizer)
+    "bert":(BertConfig, MTDNNModelAttack, BertTokenizer)
 }
 
 def set_seed(args):
@@ -168,10 +168,27 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
                       "task_id":task_id}
             
             
+            
+
+            if args.adv_train:
+                model.eval()
+                with torch.no_grad():
+                    outputs = model.bert(**inputs)
+                if type(model.classifier_list[task_id]) == DeepBiAffineDecoderV2:
+                    sequence_output = outputs[3] #(loss, logits_arc, logits_label, sequence_output, ...)
+                else:
+                    sequence_output = outputs[2] #(loss, logits, raw_sequence_output)
+
+                inputs["sequence_output"] = sequence_output
+                adv_data = args.attack.perturb(inputs, 'mean', True)
+                inputs["sequence_output"] = adv_data
+
+
             # if args.n_gpu>1:
             #     device_ids = list(range(args.n_gpu))
             #     outputs = data_parallel(model,inputs, device_ids)
             # else:
+            model.train()
             outputs = model(**inputs)
             loss = outputs[0]
 
@@ -444,6 +461,10 @@ def main():
                         help="For distributed training: local_rank")
     parser.add_argument("--fp16_opt_level", type=str, default="O1")
     parser.add_argument("--debug", action="store_true")
+
+    parser.add_argument("--adv_train", action="store_true")
+    parser.add_argument("--adv_epsilon", type=float, default=0.0157)
+    parser.add_argument("--adv_alpha", type=float, default=0.00784)
     args = parser.parse_args()
 
 
@@ -514,11 +535,18 @@ def main():
     if args.local_rank == 0:
         torch.distributed.barrier()  # Make sure only the first process in distributed training will download model & vocab
 
+
     model.to(args.device)
 
     logger.info("Training/evaluation parameters %s", args)
-
+    
     if args.do_train:
+        if args.adv_train:
+            args.attack = AdversarialAttack(model=model,
+                                            epsilon=args.adv_epsilon,
+                                            alpha=args.adv_alpha,
+                                            _type="l2")
+
         if os.path.exists(args.recover_path) and len(args.recover_path) > 0:
             if args.local_rank != -1:
                 assert "Not implement in distributed environment"
