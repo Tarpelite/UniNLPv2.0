@@ -25,12 +25,12 @@ from uninlp import WEIGHTS_NAME, BertConfig, MTDNNModel, BertTokenizer, DeepBiAf
 
 import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel as DDP
-from pudb import set_trace
+
 # from torch.utils.tensorboard import SummaryWriter
 # from parallel import DataParallelModel
 
-# from pudb import set_trace
-# set_trace()
+from pudb import set_trace
+set_trace()
 
 logger = logging.getLogger(__name__)
 # writer = SummaryWriter()
