@@ -1816,7 +1816,7 @@ class MTDNNModelAttack(BertPreTrainedModel):
         sequence_output = self.dropout(sequence_output)
         if type(classifier) == DeepBiAffineDecoderV2: # parsing task
             logits_arc, logits_label = classifier(sequence_output)
-            outputs = (logits_arc, logits_label, raw_sequence_output) + outputs[2:]
+            outputs = (logits_arc, logits_label, raw_sequence_output)
 
             if labels is not None and heads is not None:
                 loss_fct = CrossEntropyLoss()
@@ -1872,7 +1872,7 @@ class MTDNNModelAttack(BertPreTrainedModel):
         else:
             logits = classifier(sequence_output)
 
-            outputs = (logits,raw_sequence_output) + outputs[2:]
+            outputs = (logits,raw_sequence_output)
 
             if labels is not None:
                 loss_fct = CrossEntropyLoss()
