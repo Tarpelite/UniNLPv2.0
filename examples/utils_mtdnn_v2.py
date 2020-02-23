@@ -29,7 +29,7 @@ def project(x, original_x, epsilon, _type="linf"):
         dist = (x - original_x)
         dist = dist.view(x.shape[0], -1)
         dist_norm = torch.norm(dist, dim=1, keepdim=True)
-        mask = (dist_norm > epsilon).unsqueeze(2).expand_as(x.shape)
+        mask = (dist_norm > epsilon).unsqueeze(2).expand_as(x)
         dist = dist / dist_norm
         dist *= epsilon
         dist = dist.view(x.shape)
