@@ -1710,6 +1710,11 @@ class MTDNNModel(BertPreTrainedModel):
         return outputs
 
 
+def tensor2cuda(tensor):
+    if torch.cuda.is_available():
+        tensor = tensor.cuda()
+    return tensor
+
 class MTDNNModelAttack(BertPreTrainedModel):
     def __init__(self, config, labels_list, task_list,
                  do_task_embedding=False, do_alpha=False,
@@ -1757,7 +1762,7 @@ class MTDNNModelAttack(BertPreTrainedModel):
 
     def forward(self, input_ids=None, attention_mask=None, token_type_ids=None,
                 position_ids=None, head_mask=None, inputs_embeds=None, heads=None, labels=None,
-                task_id=0, adapter_ft=False, soft_labels=None, soft_heads=None, gamma=0.5, sequence_output=None, bias=None):
+                task_id=0, adapter_ft=False, soft_labels=None, soft_heads=None, gamma=0.5, sequence_output=None, epsilon=None):
         
         if self.do_adapter:
             
@@ -1782,7 +1787,12 @@ class MTDNNModelAttack(BertPreTrainedModel):
             hidden_states = outputs[-1]
             sequence_output = outputs[0]
         
-        if bias is not None:
+        if epsilon is not None:
+
+            bias = torch.FloatTensor(sequence_output.shape).uniform_(
+                -self.epsilon, self.epsilon
+            )
+            bias = tensor2cuda(bias)
             sequence_output = sequence_output + bias
 
         

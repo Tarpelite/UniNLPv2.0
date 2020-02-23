@@ -166,21 +166,22 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
                       "token_type_ids":segment_ids,
                       "labels":label_ids,
                       "heads":head_ids,
-                      "task_id":task_id}
+                      "task_id":task_id,
+                      "epsilon":args.adv_epsilon}
             
-            if args.adv_train:
-                model.eval()
-                with torch.no_grad():
-                    outputs = model(**inputs)
-                if type(model.classifier_list[task_id]) == DeepBiAffineDecoderV2:
-                    sequence_output = outputs[3] #(loss, logits_arc, logits_label, sequence_output, ...)
-                else:
-                    sequence_output = outputs[2] #(loss, logits, raw_sequence_output)
+            # if args.adv_train:
+            #     model.eval()
+            #     with torch.no_grad():
+            #         outputs = model(**inputs)
+            #     if type(model.classifier_list[task_id]) == DeepBiAffineDecoderV2:
+            #         sequence_output = outputs[3] #(loss, logits_arc, logits_label, sequence_output, ...)
+            #     else:
+            #         sequence_output = outputs[2] #(loss, logits, raw_sequence_output)
 
-                inputs["sequence_output"] = sequence_output
-                adv_data = args.attack.perturb(inputs, 'mean', True)
-                inputs["sequence_output"] = sequence_output
-                inputs["bias"] = adv_data
+            #     inputs["sequence_output"] = sequence_output
+            #     adv_data = args.attack.perturb(inputs, 'mean', True)
+            #     inputs["sequence_output"] = sequence_output
+            #     inputs["bias"] = adv_data
 
 
             # if args.n_gpu>1:
