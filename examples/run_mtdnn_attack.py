@@ -464,6 +464,7 @@ def main():
     parser.add_argument("--adv_train", action="store_true")
     parser.add_argument("--adv_epsilon", type=float, default=0.0157)
     parser.add_argument("--adv_alpha", type=float, default=0.00784)
+    parser.add_argument("--adv_iters", type=int, default=10)
     args = parser.parse_args()
 
 
@@ -546,7 +547,7 @@ def main():
                                             alpha=args.adv_alpha,
                                             min_val=0,
                                             max_val=0,
-                                            max_iters=10,
+                                            max_iters=args.adv_iters,
                                             _type="l2")
 
         if os.path.exists(args.recover_path) and len(args.recover_path) > 0:
