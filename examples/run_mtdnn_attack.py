@@ -170,7 +170,7 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
             if args.adv_train:
                 model.eval()
                 with torch.no_grad():
-                    outputs = model.bert(**inputs)
+                    outputs = model(**inputs)
                 if type(model.classifier_list[task_id]) == DeepBiAffineDecoderV2:
                     sequence_output = outputs[3] #(loss, logits_arc, logits_label, sequence_output, ...)
                 else:
