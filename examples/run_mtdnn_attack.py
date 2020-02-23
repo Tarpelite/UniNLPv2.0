@@ -146,7 +146,7 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
             train_dataloader = DataLoader(datasets, sampler=train_sampler, batch_size=args.train_batch_size)
         else:
             train_dataloader = DataLoader(datasets, sampler=all_dataset_sampler)
-        epoch_iterator = tqdm(train_dataloader, desc="Iteration", disable=False)
+        # epoch_iterator = tqdm(train_dataloader, desc="Iteration", disable=False)
         model.train()
         iter_bar = tqdm(train_dataloader, desc="Iter(loss=X.XXX)")
         for step, batch in enumerate(iter_bar):
