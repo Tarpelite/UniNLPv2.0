@@ -72,8 +72,10 @@ class AdversarialAttack:
                     grad_outputs = tensor2cuda(torch.ones(loss.shape))
                 else:
                     grad_outputs = None
+                
+                grads = torch.autograd.grad(loss, x, grad_outputs=grad_outputs, only_inputs=True)
 
-                grads = torch.autograd.grad(loss, x, grad_outputs=grad_outputs, only_inputs=True)[0]
+                grads = grads[0]
                 x.data += self.alpha *torch.sign(grads.data)
 
                 x = project(x, original_text, self.epsilon, self._type)
