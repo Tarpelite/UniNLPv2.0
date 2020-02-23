@@ -63,10 +63,9 @@ class AdversarialAttack:
         x.requires_grad = True
         with torch.enable_grad():
             for _iter in range(self.max_iters):
-                with torch.no_grad():
-                    self.model.eval()
-                    inputs["sequence_output"] = x
-                    outputs = self.model(**inputs)
+                self.model.eval()
+                inputs["sequence_output"] = x
+                outputs = self.model(**inputs)
                 loss = outputs[0]
                 if reduction4loss == 'none':
                     grad_outputs = tensor2cuda(torch.ones(loss.shape))
