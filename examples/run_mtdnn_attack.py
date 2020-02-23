@@ -167,9 +167,6 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
                       "heads":head_ids,
                       "task_id":task_id}
             
-            
-            
-
             if args.adv_train:
                 model.eval()
                 with torch.no_grad():
@@ -545,6 +542,9 @@ def main():
             args.attack = AdversarialAttack(model=model,
                                             epsilon=args.adv_epsilon,
                                             alpha=args.adv_alpha,
+                                            min_val=0,
+                                            max_val=0,
+                                            max_iters=10,
                                             _type="l2")
 
         if os.path.exists(args.recover_path) and len(args.recover_path) > 0:
