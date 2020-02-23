@@ -179,7 +179,8 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
 
                 inputs["sequence_output"] = sequence_output
                 adv_data = args.attack.perturb(inputs, 'mean', True)
-                inputs["sequence_output"] = adv_data
+                inputs["sequence_output"] = sequence_output
+                inputs["bias"] = adv_data
 
 
             # if args.n_gpu>1:
