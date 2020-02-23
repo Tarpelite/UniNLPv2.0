@@ -1790,7 +1790,7 @@ class MTDNNModelAttack(BertPreTrainedModel):
         if epsilon is not None:
 
             bias = torch.FloatTensor(sequence_output.shape).uniform_(
-                -self.epsilon, self.epsilon
+                -epsilon, epsilon
             )
             bias = tensor2cuda(bias)
             sequence_output = sequence_output + bias
