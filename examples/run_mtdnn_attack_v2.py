@@ -170,9 +170,9 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
             # ======================= Code for adversarial training ====================
 
             if isinstance(model, torch.nn.DataParallel):
-                embeds_init = model.module.bert.encoder.embeddings.word_embeddings(input_ids)
+                embeds_init = model.module.bert.embeddings.word_embeddings(input_ids)
             else:
-                embeds_init = model.bert.encoder.embeddings.word_embeddings(input_ids)
+                embeds_init = model.bert.embeddings.word_embeddings(input_ids)
             
             if args.adv_init_mag > 0:
                 input_mask = input_mask.to(embeds_init)
@@ -238,9 +238,9 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
                     exit()
                 
                 if isinstance(model, torch.nn.DataParallel):
-                    embeds_init = model.module.bert.encoder.embeddings.word_embeddings(input_ids)
+                    embeds_init = model.module.bert.embeddings.word_embeddings(input_ids)
                 else:
-                    embeds_init = model.bert.encoder.embeddings.word_embeddings(input_ids)
+                    embeds_init = model.bert.embeddings.word_embeddings(input_ids)
                 
             # ====================== End(2)  ===============================================
                     
