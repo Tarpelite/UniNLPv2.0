@@ -166,22 +166,21 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
                       "token_type_ids":segment_ids,
                       "labels":label_ids,
                       "heads":head_ids,
-                      "task_id":task_id,
-                      "epsilon":args.adv_epsilon}
+                      "task_id":task_id}
             
-            # if args.adv_train:
-            #     model.eval()
-            #     with torch.no_grad():
-            #         outputs = model(**inputs)
-            #     if type(model.classifier_list[task_id]) == DeepBiAffineDecoderV2:
-            #         sequence_output = outputs[3] #(loss, logits_arc, logits_label, sequence_output, ...)
-            #     else:
-            #         sequence_output = outputs[2] #(loss, logits, raw_sequence_output)
+            if args.adv_train:
+                model.eval()
+                with torch.no_grad():
+                    outputs = model(**inputs)
+                if type(model.classifier_list[task_id]) == DeepBiAffineDecoderV2:
+                    sequence_output = outputs[3] #(loss, logits_arc, logits_label, sequence_output, ...)
+                else:
+                    sequence_output = outputs[2] #(loss, logits, raw_sequence_output)
 
-            #     inputs["sequence_output"] = sequence_output
-            #     adv_data = args.attack.perturb(inputs, 'mean', True)
-            #     inputs["sequence_output"] = sequence_output
-            #     inputs["bias"] = adv_data
+                inputs["sequence_output"] = sequence_output
+                adv_data = args.attack.perturb(inputs, 'mean', True)
+                inputs["sequence_output"] = sequence_output
+                inputs["bias"] = adv_data
 
 
             # if args.n_gpu>1:
@@ -240,7 +239,7 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
                     logger.info("Saving model checkpoint to %s", output_dir)
 
             if args.max_steps > 0 and global_step > args.max_steps:
-                epoch_iterator.close()
+                iter_bar.close()
                 break
         if args.max_steps > 0 and global_step > args.max_steps:
             train_iterator.close()
@@ -466,6 +465,8 @@ def main():
     parser.add_argument("--adv_epsilon", type=float, default=0.0157)
     parser.add_argument("--adv_alpha", type=float, default=0.00784)
     parser.add_argument("--adv_iters", type=int, default=10)
+    parser.add_argument("--adv_min_val", type=float, default=-2.0)
+    parser.add_argument("--adv_max_val", type=float, default=2.0)
     args = parser.parse_args()
 
 
@@ -546,8 +547,8 @@ def main():
             args.attack = AdversarialAttack(model=model,
                                             epsilon=args.adv_epsilon,
                                             alpha=args.adv_alpha,
-                                            min_val=0,
-                                            max_val=0,
+                                            min_val=args.adv_min_val,
+                                            max_val=args.adv_max_val,
                                             max_iters=args.adv_iters,
                                             _type="l2")
 

@@ -57,6 +57,7 @@ class AdversarialAttack:
             )
             rand_perturb = tensor2cuda(rand_perturb)
             x = original_text + rand_perturb
+            x.clamp_(self.min_val, self.max_val)
         else:
             x = original_text.clone()
         
