@@ -252,8 +252,8 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
             #     device_ids = list(range(args.n_gpu))
             #     outputs = data_parallel(model,inputs, device_ids)
             # else:
-            outputs = model(**inputs)
-            loss = outputs[0]
+            # outputs = model(**inputs)
+            # loss = outputs[0]
 
             if args.do_task_embedding:
                 alpha = outputs[0]
@@ -262,18 +262,18 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
             elif args.do_alpha:
                 loss = outputs[1]
             
-            if args.n_gpu > 1:
-                loss = loss.mean()
-            if args.gradient_accumulation_steps > 1:
-                loss = loss / args.gradient_accumulation_steps
+            # if args.n_gpu > 1:
+            #     loss = loss.mean()
+            # if args.gradient_accumulation_steps > 1:
+            #     loss = loss / args.gradient_accumulation_steps
 
-            if args.fp16:
-                with amp.scale_loss(loss, optimizer) as scaled_loss:
-                    scaled_loss.backward()
-            else:
-                loss.backward()
+            # if args.fp16:
+            #     with amp.scale_loss(loss, optimizer) as scaled_loss:
+            #         scaled_loss.backward()
+            # else:
+            #     loss.backward()
             
-            tr_loss += loss.item()
+            # tr_loss += loss.item()
             # writer.add_scalar("Loss/train", loss.item().data, global_step)
             # global_step += 1
 
@@ -303,7 +303,7 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
                     logger.info("Saving model checkpoint to %s", output_dir)
 
             if args.max_steps > 0 and global_step > args.max_steps:
-                iert_bar.close()
+                iter_bar.close()
                 break
         if args.max_steps > 0 and global_step > args.max_steps:
             train_iterator.close()
