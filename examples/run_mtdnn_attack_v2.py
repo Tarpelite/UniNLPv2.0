@@ -192,6 +192,7 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
                 # (0) forward
                 delta.requires_grad_()
                 inputs["inputs_embeds"] = delta + embeds_init
+                inputs["input_ids"] = None
                 
                 outputs = model(**inputs)
                 loss = outputs[0]
