@@ -1762,7 +1762,8 @@ class MTDNNModelAttack(BertPreTrainedModel):
 
     def forward(self, input_ids=None, attention_mask=None, token_type_ids=None,
                 position_ids=None, head_mask=None, inputs_embeds=None, heads=None, labels=None,
-                task_id=0, adapter_ft=False, soft_labels=None, soft_heads=None, gamma=0.5, sequence_output=None):
+                task_id=0, adapter_ft=False, soft_labels=None, soft_heads=None, gamma=0.5, 
+                sequence_output=None, bias=None):
         
         if self.do_adapter:
             
@@ -1787,7 +1788,8 @@ class MTDNNModelAttack(BertPreTrainedModel):
             hidden_states = outputs[-1]
             sequence_output = outputs[0]
         
-
+        if bias is not None:
+            sequence_output = sequence_output + bias
         
         # sequence_output = hidden_states[-1]
 
