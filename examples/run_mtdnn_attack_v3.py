@@ -498,6 +498,9 @@ def main():
     parser.add_argument("--seed", type=int, default=42,
                         help="random seed for initialization")
     
+    parser.add_argument("--gamma", type=float, default=0.5)
+    parser.add_argument("--adv_init_mag", type=float, default=0.0)
+    
     parser.add_argument("--do_alpha", action="store_true")
     parser.add_argument("--do_adapter", action="store_true")
     parser.add_argument("--do_ft", action="store_true")
