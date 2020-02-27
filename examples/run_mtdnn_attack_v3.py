@@ -236,8 +236,10 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
                 r_loss = r_loss_func(F.log_softmax(adv_logits.float(), dim=-1), F.softmax(logits.float(), dim=-1)).sum(dim=-1).mean()
 
             
+            
             ## step 4: maximize the divergence and minimize the normal loss
-            loss = loss - args.gamma*r_loss 
+            r_loss = torch.reciporacal(r_loss)
+            loss = loss + args.gamma*r_loss 
             
 
             if args.do_task_embedding:
