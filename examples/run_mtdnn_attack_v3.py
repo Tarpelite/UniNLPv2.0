@@ -180,7 +180,7 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
             r_loss_func = nn.KLDivLoss(reduction="mean")
 
             ## step 1: add random bias to inputs embeds
-            if isinstance(model, torch.nn.DataParellel):
+            if isinstance(model, torch.nn.DataParallel):
                 embeds_init = model.module.bert.embeddings.word_embeddings(input_ids)
             else:
                 embeds_init = model.bert.embeddings.word_embeddings(input_ids)
@@ -204,12 +204,12 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
             adv_inputs["input_ids"] = None
             adv_outputs = model(**adv_inputs)
             if type(model.classifier_list[task_id]) == DeepBiAffineDecoderV2: # do parsing
-                adv_loss = outputs[0]
-                adv_logits_arc = outputs[1]
-                adv_logits_label = outputs[2]
+                adv_loss = adv_outputs[0]
+                adv_logits_arc = adv_outputs[1]
+                adv_logits_label = adv_outputs[2]
             else:
-                adv_loss = outputs[0]
-                adv_logits = outputs[1]
+                adv_loss = adv_outputs[0]
+                adv_logits = adv_outputs[1]
             
             
             ## step 3: forward raw sample and caculate divergence
