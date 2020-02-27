@@ -513,11 +513,11 @@ def main():
     parser.add_argument("--seed", type=int, default=42,
                         help="random seed for initialization")
     
-    parser.add_argument('--adv-lr', type=float, default=0)
-    parser.add_argument('--adv-steps', type=int, default=1, help="should be at least 1")
-    parser.add_argument('--adv-init-mag', type=float, default=0)
-    parser.add_argument('--norm-type', type=str, default="l2", choices=["l2", "linf"])
-    parser.add_argument('--adv-max-norm', type=float, default=0, help="set to 0 to be unlimited")
+    parser.add_argument('--adv_lr', type=float, default=0)
+    parser.add_argument('--adv_steps', type=int, default=1, help="should be at least 1")
+    parser.add_argument('--adv_init_mag', type=float, default=0)
+    parser.add_argument('--norm_type', type=str, default="l2", choices=["l2", "linf"])
+    parser.add_argument('--adv_max_norm', type=float, default=0, help="set to 0 to be unlimited")
 
     parser.add_argument("--do_alpha", action="store_true")
     parser.add_argument("--do_adapter", action="store_true")
