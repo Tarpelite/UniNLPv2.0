@@ -151,7 +151,7 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
         model.train()
         iter_bar = tqdm(train_dataloader, desc="Iter(loss=X.XXX)")
         for step, batch in enumerate(iter_bar):
-            input_ids = batch[0].squeeze().long().to(args.device)q
+            input_ids = batch[0].squeeze().long().to(args.device)
             input_mask = batch[1].squeeze().long().to(args.device)
             segment_ids = batch[2].squeeze().long().to(args.device)
             label_ids = batch[3].squeeze().long().to(args.device)
