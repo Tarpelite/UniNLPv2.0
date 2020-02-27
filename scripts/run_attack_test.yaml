@@ -1,0 +1,64 @@
+description: unilm_T8_L12_las_warm_20000
+
+auth:
+  vc: resrchvc
+  cluster: wu2
+  docker:
+    image: pytorch/pytorch:1.1.0-cuda10.0-cudnn7.5-devel
+
+code:
+  local_dir: $CONFIG_DIR/../UniNLPv2.0
+
+storage:
+  _default: 
+    storage_account_name: readindl
+    container_name: tianyu
+    mount_path: /mnt/inp
+  _output:
+    storage_account_name: readindl
+    container_name: tianyu
+    mount_path: /mnt/exp
+
+search:
+  job_template:
+    name: unilm-T8-L12-las-search-adv-lr{adv-lr}
+    sku: G1
+    sku_count: 1
+    command: 
+      - pip install . --user
+      - pip install seqeval --user
+      - pip install tensorboardX --user
+      - pip install pudb --user
+      - pip install nltk --user
+      - export data_dir=/mnt/inp/data/UniNLP_datasets_POS
+      - export model_path=/mnt/inp/models/unilm_base_v1.2/unilm_v1.2-base-uncased.bin
+      - export output_dir=/mnt/exp/tianyu4philly/models/unilm_base_T8_las_lr{lr}_epoch{epoch}_batch{batch_size}_warm{warmup_steps}
+      - export results_path=/mnt/exp/tianyu4philly/results/base_T8_lr{lr}_e{epoch}_b{batch_size}_{warmup_steps}
+      - python examples/run_mtdnn_attack_v2.py --model_type bert --model_name_or_path $$model_path --output_dir $$output_dir --dataset_dir $$data_dir --config_name bert-base-uncased --tokenizer_name bert-base-uncased --max_seq_length 128 --do_train --do_eval --mini_batch_size {batch_size} --warmup_steps {warmup_steps} --num_train_epochs {epoch} --save_steps 5000 --learning_rate {lr} --adv-lr {adv-lr} --adv-steps {adv-steps} --adv-init-mag {adv-init-mag} --adv-max-norm {adv-max-norm} 
+  max_trials: 1700
+  type: grid
+  params:
+    - name: lr
+      spec: discrete
+      values: ['5e-5']
+    - name: epoch
+      spec: discrete
+      values: [4.0]
+    - name: batch_size
+      spec: discrete
+      values: [32]
+    - name: warmup_steps
+      spec: discrete
+      values: [1000]
+    - name: adv-lr
+      spec: discrete
+      values: [1e-1]
+    - name: adv-steps
+      spec: discrete
+      values: [3]
+    - name: adv-init-mag
+      spec: discrete
+      values: [1.0]
+    - name: adv-max-norm
+      spec: discrete
+      values: [0]
