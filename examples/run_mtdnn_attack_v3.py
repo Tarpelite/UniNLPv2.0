@@ -11,6 +11,7 @@ import torch
 
 import torch.nn as nn
 from torch.optim import Adam
+import torch.nn.functional as F
 
 from torch.utils.data import DataLoader, RandomSampler, SequentialSampler, TensorDataset
 
@@ -177,7 +178,7 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
             
             ## step 0: set the regularization loss_function
 
-            r_loss_func = nn.KLDivLoss(reduction="mean")
+            r_loss_func = nn.KLDivLoss(reduction="none")
 
             ## step 1: add random bias to inputs embeds
             if isinstance(model, torch.nn.DataParallel):
@@ -222,9 +223,9 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
                 logits_arc = outputs[1]
                 logits_label = outputs[2]
 
-                r_loss_arc = r_loss_func(adv_logits_arc.float(), logits_arc.float()).sum(dim=-1).mean()
+                r_loss_arc = r_loss_func(F.log_softmax(adv_logits_arc.float(), dim=-1), F.softmax(logits_arc.float(), dim=-1)).sum(dim=-1).mean()
 
-                r_loss_label = r_loss_func(adv_logits_label.float(), logits_label.float()).sum(dim=-1).mean()
+                r_loss_label = r_loss_func(F.log_softmax(adv_logits_label.float(), dim=-1),F.softmax( logits_label.float(), dim=-1)).sum(dim=-1).mean()
 
                 r_loss = r_loss_arc + r_loss_label
 
@@ -232,7 +233,7 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
                 loss = outputs[0]
                 logits = outputs[1]
 
-                r_loss = r_loss_func(adv_logits.float(), logits.float()).sum(dim=-1).mean()
+                r_loss = r_loss_func(F.log_softmax(adv_logits.float(), dim=-1), F.softmax(logits.float(), dim=-1)).sum(dim=-1).mean()
 
             
             ## step 4: maximize the divergence and minimize the normal loss
