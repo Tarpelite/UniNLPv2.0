@@ -96,7 +96,7 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
     no_decay = ["bias", "LayerNorm.weight"]
     alpha_sets = ["alpha_list"]
 
-    t_total = sum(len(x) for x in datasets) //args.gradient_accumulation_steps
+    t_total = len(datasets) * args.num_train_epochs // (args.gradient_accumulation_steps * args.train_batch_size)
 
     optimizer_grouped_parameters = [
         {'params': [p for n, p in model.named_parameters() if not any(nd in n for nd in (no_decay + alpha_sets))], 'weight_decay': args.weight_decay},
@@ -104,9 +104,11 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
         {'params': [p for n, p in model.named_parameters() if any(nd in n for nd in alpha_sets)], 'lr':1e-1}
     ]
 
+    if args.warmup_ratio > 0:
+        args.warmup_steps = int(t_total * args.warmup_ratio)
+
     optimizer = AdamW(optimizer_grouped_parameters, lr=args.learning_rate, eps=args.adam_epsilon)
     scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps=args.warmup_steps, num_training_steps=t_total)
-    
     
     if args.fp16:
         try:
@@ -116,21 +118,22 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
         model, optimizer = amp.initialize(model, optimizer, opt_level=args.fp16_opt_level)
 
     if args.n_gpu > 1:
-        
         model = torch.nn.DataParallel(model)
         # model = DDP(model, device_ids=list(range(args.n_gpu)))
 
     # Distributed training (should be after apex fp16 initialization)
+    # TODO Need change sampler !
     if args.local_rank != -1:
         model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank],
                                                           output_device=args.local_rank,
                                                           find_unused_parameters=True)
-        
-
 
     logger.info("***** Running training *****")
     logger.info(" Num Epochs = %d", args.num_train_epochs)
     logger.info(" Gradient Accumulation steps = %d", args.gradient_accumulation_steps)
+    logger.info(" Total batch size = %d " % (args.train_batch_size * args.gradient_accumulation_steps))
+    logger.info(" Total training steps = %d " % t_total)
+    logger.info(" Warmup steps = %d " % args.warmup_steps)
 
     global_step = 0
     tr_loss, logging_loss = 0.0, 0.0
@@ -140,15 +143,17 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
 
     step = 0
 
+    if all_dataset_sampler == None:
+        train_sampler = RandomSampler(datasets)
+        train_dataloader = DataLoader(datasets, sampler=train_sampler, batch_size=args.train_batch_size)
+    else:
+        train_dataloader = DataLoader(datasets, sampler=all_dataset_sampler)
+    # TODO Need be changed if in dist training
+
     for _ in train_iterator:
-        if all_dataset_sampler == None:
-            train_sampler = RandomSampler(datasets)
-            train_dataloader = DataLoader(datasets, sampler=train_sampler, batch_size=args.train_batch_size)
-        else:
-            train_dataloader = DataLoader(datasets, sampler=all_dataset_sampler)
         epoch_iterator = tqdm(train_dataloader, desc="Iteration", disable=False)
         model.train()
-        iter_bar = tqdm(train_dataloader, desc="Iter(loss=X.XXX)")
+        iter_bar = tqdm(train_dataloader, desc="Iter(loss=X.XXX, lr=X.XXXXXXXX)")
         for step, batch in enumerate(iter_bar):
             input_ids = batch[0].squeeze().long().to(args.device)
             input_mask = batch[1].squeeze().long().to(args.device)
@@ -193,11 +198,12 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
                 loss.backward()
             
             tr_loss += loss.item()
+            logging_loss += loss.item()
             # writer.add_scalar("Loss/train", loss.item().data, global_step)
             # global_step += 1
 
             if args.local_rank in [-1, 0]:
-                iter_bar.set_description("Iter (loss=%5.3f)" % loss.item())
+                iter_bar.set_description('Iter (loss=%5.3f) lr=%9.7f' % (loss.item(), scheduler.get_lr()[0]))
          
             if (step + 1) % args.gradient_accumulation_steps == 0:
                 if args.fp16:
@@ -205,11 +211,15 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
                 else:
                     torch.nn.utils.clip_grad_norm_(model.parameters(), args.max_grad_norm)
                 
-                scheduler.step()
                 optimizer.step()
+                scheduler.step()  # call optimizer.step() first !
 
                 model.zero_grad()
                 global_step += 1
+
+                if global_step % 100 == 0:
+                    logger.info("%d - %d loss = %f" % (global_step - 99, global_step, logging_loss))
+                    logging_loss = 0.0
 
                 if args.local_rank in [-1, 0] and args.save_steps > 0 and global_step % args.save_steps == 0:
                     # Save model checkpoint
@@ -422,6 +432,8 @@ def main():
     
     parser.add_argument("--max_steps", default=-1, type=int,
                         help="If > 0: set total number of training steps to perform. Override num_train_epochs.")
+    parser.add_argument("--warmup_ratio", default=-1.0, type=float,
+                        help="Linear warmup ratio.")
     parser.add_argument("--warmup_steps", default=0, type=int,
                         help="Linear warmup over warmup_steps.")
     
@@ -575,7 +587,9 @@ def main():
                                             num_adapter_layers = args.num_adapter_layers)
 
         # model = torch.load(checkpoint)
-        
+
+        if args.fp16:
+            model.half()
 
         model.to(args.device)
         total_results = {}
