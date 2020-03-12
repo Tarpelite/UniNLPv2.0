@@ -118,7 +118,7 @@ def convert_examples_to_features(
             for word in example.words:
                 word_tokens = tokenizer.tokenize(word)
                 tokens.extend(word_tokens)
-                label_ids.extend([pad_token_label_id]*len(word_tokens))
+                label_ids.extend([1]*len(word_tokens))
 
         # Account for [CLS] and [SEP] with "- 2" and with "- 3" for RoBERTa.
         special_tokens_count = 3 if sep_token_extra else 2
