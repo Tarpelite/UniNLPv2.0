@@ -231,9 +231,9 @@ def train(args, train_dataset, model, tokenizer, labels, pad_token_label_id):
                 optimizer.step()
                 model.zero_grad()
                 global_step += 1
-
+                epoch_iterator.set_description('Iter (loss=%5.3f) lr=%9.7f' % (loss.item(), scheduler.get_lr()[0]))
                 if args.local_rank in [-1, 0] and args.logging_steps > 0 and global_step % args.logging_steps == 0:
-                    iter_bar.set_description('Iter (loss=%5.3f) lr=%9.7f' % (loss.item(), scheduler.get_lr()[0]))
+                    
          
                     # Log metrics
                     if (
