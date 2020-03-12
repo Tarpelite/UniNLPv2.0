@@ -347,7 +347,7 @@ def evaluate(args, model, tokenizer, labels, pad_token_label_id, mode, prefix=""
     for key in sorted(results.keys()):
         logger.info("  %s = %s", key, str(results[key]))
 
-    output_file = os.path.join(args.output_dir, "eval.txt")
+    output_file = os.path.join(args.output_dir, "eval_out.txt")
     with open(output_file, "w+", encoding="utf-8") as f:
         for line in tqdm(preds_list):
             line = " ".join(line) + "\n"
@@ -362,7 +362,7 @@ def test(args, model, tokenizer, labels, pad_token_label_id, mode, prefix=""):
 
     test_sampler = SequentialSampler(test_dataset) if args.local_rank == -1 else DistributedSampler(test_dataset)
 
-    test_dataloader = DataLoader(test_dataset, sampler=test_sampler, batch_size=args.eval_batch_size)
+    test_dataloader = DataLoader(test_dataset, sampler=test_sampler, batch_size=args.test_batch_size)
 
     if args.n_gpu > 1:
         model = torch.nn.DataParallel(model)
