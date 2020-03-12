@@ -18,7 +18,7 @@
 
 import logging
 import os
-
+from tqdm import *
 
 logger = logging.getLogger(__name__)
 
