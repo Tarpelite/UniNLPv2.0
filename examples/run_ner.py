@@ -367,7 +367,7 @@ def test(args, model, tokenizer, labels, pad_token_label_id, mode, prefix=""):
     if args.n_gpu > 1:
         model = torch.nn.DataParallel(model)
 
-    logger.info("***** Running evaluation %s *****", prefix)
+    logger.info("***** Running Prediction %s *****", prefix)
     logger.info("  Num examples = %d", len(test_dataset))
     logger.info("  Batch size = %d", args.test_batch_size)
     eval_loss = 0.0
@@ -421,8 +421,10 @@ def test(args, model, tokenizer, labels, pad_token_label_id, mode, prefix=""):
         "recall": recall_score(out_label_list, preds_list),
         "f1": f1_score(out_label_list, preds_list),
     }
-
+    print(out_label_list[0])
+    print(preds_list[0])
     logger.info("write results into {}".format(out_file))
+    data = []
     with open(out_file, "w+", encoding="utf-8") as f:
         for line in preds_list:
             line = " ".join(line) + "\n"
