@@ -369,7 +369,7 @@ def test(args, model, tokenizer, labels, pad_token_label_id, mode, prefix=""):
 
     logger.info("***** Running evaluation %s *****", prefix)
     logger.info("  Num examples = %d", len(test_dataset))
-    logger.info("  Batch size = %d", args.eval_batch_size)
+    logger.info("  Batch size = %d", args.test_batch_size)
     eval_loss = 0.0
     nb_eval_steps = 0
     preds = None
