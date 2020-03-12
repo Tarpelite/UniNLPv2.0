@@ -110,7 +110,7 @@ def train(args, train_dataset, model, tokenizer, labels, pad_token_label_id):
     if args.warmup_ratio > 0:
         args.warmup_steps = int(t_total*args.warmup_ratio)
 
-        
+
     # Prepare optimizer and schedule (linear warmup and decay)
     no_decay = ["bias", "LayerNorm.weight"]
     optimizer_grouped_parameters = [
@@ -132,8 +132,6 @@ def train(args, train_dataset, model, tokenizer, labels, pad_token_label_id):
         # Load in optimizer and scheduler states
         optimizer.load_state_dict(torch.load(os.path.join(args.model_name_or_path, "optimizer.pt")))
         scheduler.load_state_dict(torch.load(os.path.join(args.model_name_or_path, "scheduler.pt")))
-
-
 
     if args.fp16:
         try:
@@ -191,7 +189,8 @@ def train(args, train_dataset, model, tokenizer, labels, pad_token_label_id):
     )
     set_seed(args)  # Added here for reproductibility
     for _ in train_iterator:
-        epoch_iterator = tqdm(train_dataloader, desc="Iteration", disable=args.local_rank not in [-1, 0])
+        epoch_iterator = tqdm(train_dataloader, desc="Iter(loss=X.XXX, lr=X.XXXXXXXX)", disable=args.local_rank not in [-1, 0])
+
         for step, batch in enumerate(epoch_iterator):
 
             # Skip past any already trained steps if resuming training
@@ -234,6 +233,8 @@ def train(args, train_dataset, model, tokenizer, labels, pad_token_label_id):
                 global_step += 1
 
                 if args.local_rank in [-1, 0] and args.logging_steps > 0 and global_step % args.logging_steps == 0:
+                    iter_bar.set_description('Iter (loss=%5.3f) lr=%9.7f' % (loss.item(), scheduler.get_lr()[0]))
+         
                     # Log metrics
                     if (
                         args.local_rank == -1 and args.evaluate_during_training
