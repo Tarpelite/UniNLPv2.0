@@ -425,6 +425,7 @@ def test(args, model, tokenizer, labels, pad_token_label_id, mode, prefix=""):
     print(preds_list[0])
     logger.info("write results into {}".format(out_file))
     data = []
+    data_src_file = ""
     with open(out_file, "w+", encoding="utf-8") as f:
         for line in preds_list:
             line = " ".join(line) + "\n"

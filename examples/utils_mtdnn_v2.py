@@ -79,17 +79,13 @@ class AdversarialAttack:
                 x.data += self.alpha *torch.sign(grads.data)
 
                 x = project(x, original_text, self.epsilon, self._type)
+                x.clamp_(self.min_val, self.max_val)
         bias = x - original_text
         return bias
 
 
 
     
-
-
-
-
-
 def las_score(true_label_list, true_heads_list, predict_label_list, predict_heads_list):
     total_score = 0
     cnt = len(true_label_list)

@@ -96,13 +96,17 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
     no_decay = ["bias", "LayerNorm.weight"]
     alpha_sets = ["alpha_list"]
 
-    t_total = sum(len(x) for x in datasets) //args.gradient_accumulation_steps
+    t_total = sum(len(x) for x in datasets) // (args.gradient_accumulation_steps * args.train_batch_size)
+
 
     optimizer_grouped_parameters = [
         {'params': [p for n, p in model.named_parameters() if not any(nd in n for nd in (no_decay + alpha_sets))], 'weight_decay': args.weight_decay},
         {'params': [p for n, p in model.named_parameters() if any(nd in n for nd in no_decay)], 'weight_decay': 0.0},
         {'params': [p for n, p in model.named_parameters() if any(nd in n for nd in alpha_sets)], 'lr':1e-1}
     ]
+
+    if args.warmup_ratio > 0:
+        args.warmup_steps = int(t_total * args.warmup_ratio)
 
     optimizer = AdamW(optimizer_grouped_parameters, lr=args.learning_rate, eps=args.adam_epsilon)
     scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps=args.warmup_steps, num_training_steps=t_total)
@@ -148,7 +152,7 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
             train_dataloader = DataLoader(datasets, sampler=all_dataset_sampler)
         # epoch_iterator = tqdm(train_dataloader, desc="Iteration", disable=False)
         model.train()
-        iter_bar = tqdm(train_dataloader, desc="Iter(loss=X.XXX)")
+        iter_bar = tqdm(train_dataloader, desc="Iter(loss=X.XXX, lr=X.XXXXXXXX))")
         for step, batch in enumerate(iter_bar):
             input_ids = batch[0].squeeze().long().to(args.device)
             input_mask = batch[1].squeeze().long().to(args.device)
@@ -278,7 +282,7 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
             # global_step += 1
 
             if args.local_rank in [-1, 0]:
-                iter_bar.set_description("Iter (loss=%5.3f)" % loss.item())
+                iter_bar.set_description("Iter (loss=%5.3f, lr=%9.7f)" % (loss.item(), scheduler.get_lr()[0]))
          
             if (step + 1) % args.gradient_accumulation_steps == 0:
                 if args.fp16:
@@ -286,8 +290,9 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
                 else:
                     torch.nn.utils.clip_grad_norm_(model.parameters(), args.max_grad_norm)
                 
-                scheduler.step()
                 optimizer.step()
+                scheduler.step()
+               
 
                 model.zero_grad()
                 global_step += 1
@@ -505,6 +510,7 @@ def main():
                         help="If > 0: set total number of training steps to perform. Override num_train_epochs.")
     parser.add_argument("--warmup_steps", default=0, type=int,
                         help="Linear warmup over warmup_steps.")
+    parser.add_argument("--warmup_ratio", type=float, default=0.0)
     
     parser.add_argument("--save_steps", type=int, default=50,
                         help="Save checkpoint every X updates steps.")
