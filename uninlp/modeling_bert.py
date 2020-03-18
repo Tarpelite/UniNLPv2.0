@@ -1913,4 +1913,72 @@ class MTDNNModelAttack(BertPreTrainedModel):
             outputs = (alpha, ) + outputs
         return outputs
 
+
+
+class MTDNNModelMobile(BertPreTrainedModel):
+    def __init__(self, config, labels_list, task_list):
+        super(MTDNNModelMobile, self).__init__(config)
+
+        self.bert = BertModel(config)
+        self.dropout = nn.Dropout(config.hidden_dropout_prob)
+
+        decoder_modules = []
+        for labels, task in zip(labels_list, task_list):
+            if task.startswith("PARSING"):
+                decoder_modules.append(DeepBiAffineDecoderV2(config.hidden_size, mlp_dim=300, num_labels=len(labels)))
+            else:
+                decoder_modules.append(nn.Linear(config.hidden_size, len(labels)))
+        
+        self.label_list = label_list
+        self.num_labels_list = [len(x) for x in labels_list]
+        self.task_list = task_list
+        self.init_weights()
+
+    def forward(self, 
+                input_ids=None, attention_mask=None, token_type_ids=None,         position_ids=None, head_mask=None, inputs_embeds=None, task_id=0,
+                ):
+
+        outputs = self.bert(input_ids, 
+                            attention_mask=attention_mask,
+                            token_type_ids=token_type_ids,
+                            position_ids=position_ids,
+                            head_mask=head_mask,
+                            inputs_embeds=inputs_embeds)
+        
+        sequence_outputs = outputs[0]
+
+        hidden_states = outputs[-1]
+
+        classifier = self.classifier_list[task_id]
+        num_labels = self.num_labels_list[task_id]
+
+        sequence_outputs = self.dropout(sequence_outputs)
+        if type(classifier) == DeepBiAffineDecoderV2:
+            logits_arc, logits_label = classifier(sequence_outputs)
+            outputs = (logits_arc, logits_label) + outputs[2:]
+            preds_arc = torch.argmax(preds_arc, dim=1)
+            preds_label = torch.argmax(preds_label, dim=1)
+            return [preds_arc, preds_label]
+        else:
+            logits = classifier(sequence_outputs)
+            preds = torch.argmax(preds, axis=1)
+            return [preds]
+
+        return outputs
     
+    @torch.jit.export
+    def get_tasks(self):
+        return self.task_list
+
+    @torch.jit.export
+    def get_labels(self, task):
+        task = task.upper()
+        if task not in self.task_list:
+            return ["UnSupported task"]
+        else:
+            task_id = self.task_list[task]
+            return self.label_list[task_id]
+
+    
+
+

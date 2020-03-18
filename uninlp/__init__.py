@@ -48,7 +48,7 @@ if is_torch_available():
 
     from .modeling_bert import (BertPreTrainedModel, BertModel, BertForPreTraining,
                                 BertForMaskedLM, BertForNextSentencePrediction, 
-                                BertForSequenceClassification, BertForMultipleChoice, MTDNNModel, MTDNNModelAttack,
+                                BertForSequenceClassification, BertForMultipleChoice, MTDNNModel, MTDNNModelAttack,MTDNNModelMobile,
                                 BertForTokenClassification, BertForQuestionAnswering, MTDNNModelV2, DeepBiAffineDecoderV2,
                                 load_tf_weights_in_bert, BERT_PRETRAINED_MODEL_ARCHIVE_MAP)
     

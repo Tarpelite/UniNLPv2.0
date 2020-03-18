@@ -21,7 +21,7 @@ from tqdm import *
 
 from utils_mtdnn_v2 import MegaDataSet, las_score
 from uninlp import AdamW, get_linear_schedule_with_warmup
-from uninlp import WEIGHTS_NAME, BertConfig, MTDNNModel, BertTokenizer, DeepBiAffineDecoderV2, MTDNNModelV2
+from uninlp import WEIGHTS_NAME, BertConfig, MTDNNModel, BertTokenizer, DeepBiAffineDecoderV2, MTDNNModelV2, MTDNNModelMobile
 
 import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel as DDP
@@ -657,7 +657,7 @@ def main():
         else:
             checkpoint = os.path.join(args.output_dir, "pytorch_model.bin")
         
-        model = model_class.from_pretrained(checkpoint,
+        model = MTDNNModelMobile.from_pretrained(checkpoint,
                                         from_tf=bool(".ckpt" in args.model_name_or_path),
                                         config = config,
                                         labels_list=UniDataSet.labels_list,
@@ -667,8 +667,7 @@ def main():
                                         do_adapter = args.do_adapter,
                                         num_adapter_layers = args.num_adapter_layers)
 
-        # test trace
-    
+        # test trace    
         input_ids = torch.tensor([[128]*128])
         attention_mask = torch.tensor([[1]*128])
         token_type_ids = torch.tensor([[1]*128])
