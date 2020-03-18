@@ -1959,11 +1959,11 @@ class MTDNNModelMobile(BertPreTrainedModel):
             outputs = (logits_arc, logits_label) + outputs[2:]
             preds_arc = torch.argmax(preds_arc, dim=1)
             preds_label = torch.argmax(preds_label, dim=1)
-            return [preds_arc, preds_label]
+            return (preds_arc, preds_label)
         else:
             logits = classifier(sequence_outputs)
             preds = torch.argmax(logits, axis=1)
-            return [preds]
+            return (preds)
 
         return outputs
     
