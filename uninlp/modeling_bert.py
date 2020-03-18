@@ -1942,6 +1942,7 @@ class MTDNNModelMobile(BertPreTrainedModel):
         input_ids = dummy_input[0]
         attention_mask = dummy_input[1]
         token_type_ids = dummy_input[2]
+        task_id = dummy_input[3]
         outputs = self.bert(input_ids, 
                             attention_mask=attention_mask,
                             token_type_ids=token_type_ids,
