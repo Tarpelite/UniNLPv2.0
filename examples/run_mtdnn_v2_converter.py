@@ -677,7 +677,7 @@ def main():
         loaded_model = torch.jit.load("traced_bert.pt")  
         loaded_model.eval()
         dummy_input = (input_ids, attention_mask, token_type_ids, task_id)
-        res = loaded_model(dummy_input)
+        res = loaded_model(input_ids, attention_mask, token_type_ids, task_id)
         print(res)
         
 
