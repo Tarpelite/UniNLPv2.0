@@ -672,7 +672,7 @@ def main():
         input_ids = torch.tensor([[128]*128])
         attention_mask = torch.tensor([[1]*128])
         token_type_ids = torch.tensor([[1]*128])
-        task_id = 0
+        task_id = torch.tensor(0)
 
         traced_model = torch.jit.trace(model, [input_ids, attention_mask, token_type_ids, task_id])
 
