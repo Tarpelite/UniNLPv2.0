@@ -661,13 +661,9 @@ def main():
                                         from_tf=bool(".ckpt" in args.model_name_or_path),
                                         config = config,
                                         labels_list=UniDataSet.labels_list,
-                                        task_list = UniDataSet.task_list,
-                                        do_task_embedding=args.do_task_embedding,
-                                        do_alpha=args.do_alpha,
-                                        do_adapter = args.do_adapter,
-                                        num_adapter_layers = args.num_adapter_layers)
+                                        task_list = UniDataSet.task_list)
 
-        # test trace    
+        # prepare example 
         input_ids = torch.tensor([[128]*128])
         attention_mask = torch.tensor([[1]*128])
         token_type_ids = torch.tensor([[1]*128])
@@ -675,8 +671,15 @@ def main():
 
         traced_model = torch.jit.trace(model, [input_ids, attention_mask, token_type_ids, task_id])
 
-        torch.jit.save(traced_model, "traced_bert.pt")                                 
+        torch.jit.save(traced_model, "traced_bert.pt")  
 
+        # reload for test
+        loaded_model = torch.jit.load("traced_bert.pt")  
+        loaded_model.eval()
+        dummy_input = [input_ids, attention_mask, token_type_ids, task_id]
+        res = loaded_model(dummy_input)
+        print(res)
+        
 
 if __name__ == "__main__":
     main()

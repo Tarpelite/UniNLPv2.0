@@ -1929,7 +1929,7 @@ class MTDNNModelMobile(BertPreTrainedModel):
             else:
                 decoder_modules.append(nn.Linear(config.hidden_size, len(labels)))
         
-        self.label_list = label_list
+        self.label_list = labels_list
         self.num_labels_list = [len(x) for x in labels_list]
         self.task_list = task_list
         self.init_weights()
@@ -1961,7 +1961,7 @@ class MTDNNModelMobile(BertPreTrainedModel):
             return [preds_arc, preds_label]
         else:
             logits = classifier(sequence_outputs)
-            preds = torch.argmax(preds, axis=1)
+            preds = torch.argmax(logits, axis=1)
             return [preds]
 
         return outputs
