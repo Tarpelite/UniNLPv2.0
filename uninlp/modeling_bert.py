@@ -33,7 +33,7 @@ from .modeling_utils import PreTrainedModel, prune_linear_layer, AverageMeter
 from .configuration_bert import BertConfig
 from .file_utils import add_start_docstrings
 # from pudb import set_trace
-from typing import Tuple
+from typing import Tuple, List
 
 logger = logging.getLogger(__name__)
 
@@ -1980,7 +1980,7 @@ class MTDNNModelMobile(BertPreTrainedModel):
         self.task_list = task_list
         self.init_weights()
 
-    def forward(self, tup:Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]):
+    def forward(self, tup:List[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]):
                
         input_ids, attention_mask, token_type_ids, task_id = tup
         outputs = self.bert(input_ids, 
