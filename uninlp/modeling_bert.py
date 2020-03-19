@@ -1962,7 +1962,7 @@ class MTDNNModelMobile(BertPreTrainedModel):
             return (preds_arc, preds_label)
         else:
             logits = classifier(sequence_outputs)
-            preds = torch.argmax(logits, axis=1)
+            preds = torch.argmax(logits, dim=1)
             return (preds)
 
         return outputs
@@ -1979,6 +1979,94 @@ class MTDNNModelMobile(BertPreTrainedModel):
         else:
             task_id = self.task_list[task]
             return self.label_list[task_id]
+
+class BertForNERPOS(BertPreTrainedModel):
+    def __init__(self, config, num_pos_labels, num_chunk_labels):
+        super(BertForNERPOS, self).__init__(config)
+        self.num_labels = config.num_labels
+        self.num_pos_labels = num_pos_labels
+        self.num_chunk_labels = num_chunk_labels
+
+        self.bert = BertModel(config)
+        self.dropout = nn.Dropout(config.hidden_dropout_prob)
+        self.classifier_ner = nn.Linear(config.hidden_size, self.num_labels)
+        self.classifier_pos = nn.Linear(config.hidden_size, self.num_pos_labels)
+        self.classifier_chunk = nn.Linear(config.hidden_size, self.num_chunk_labels)
+
+        self.init_weights()
+    
+    def forward(self, input_ids=None, attention_mask=None, token_type_ids=None, 
+                position_ids=None, head_mask=None, input_embeds=None, labels=None, 
+                pos_labels=None, chunk_labels=None):
+        
+        outputs = self.bert(input_ids,
+                     attention_mask=attention_mask,
+                     token_type_ids=token_type_ids,
+                     position_ids=position_ids,
+                     head_mask=head_mask,
+                     input_embeds=input_embeds)
+        
+        sequence_output = outputs[0]
+
+        sequence_output = self.dropout(sequence_output)
+        
+        ner_logits = self.classifier_ner(sequence_output)
+        outputs = (ner_logits,) + outputs[2:]
+
+      
+        
+        if labels is not None:
+            loss_fct = CrossEntropyLoss()
+
+            if attention_mask is not None:
+                active_loss = attention_mask.view(-1) == 1
+                active_logits = ner_logits.view(-1, self.num_labels)[active_loss]
+                active_labels = labels.view(-1)[active_loss]
+                loss = loss_fct(active_logits, active_labels)
+
+                loss_set = (loss)
+
+                if pos_labels:
+                    pos_logits = self.classifier_pos(sequence_output)
+                    active_pos_logits = pos_logits.view(-1, self.num_pos_labels)[active_loss]
+                    active_pos_labels = pos_labels.view(-1)[active_loss]
+                    pos_loss = loss_fct(active_pos_logits, active_pos_labels)
+                    
+                    loss_set = (loss, pos_loss)
+                
+                if chunk_labels:
+                    chunk_logits = self.classifier_chunk(sequence_output)
+                    active_chunk_logits = chunk_logits.view(-1, self.num_chunk_labels)[active_loss]
+                    active_chunk_labels = chunk_labels.view(-1)[active_loss]
+                    chunk_loss = loss_fct(active_chunk_logits, active_chunk_labels)
+                    
+                    loss_set = (loss, pos_loss, chunk_loss)
+            else:
+                loss = loss_fct(ner_logits.view(-1, self.num_labels), labels.view(-1))
+
+                loss_set = (loss)
+
+                if pos_labels:
+                    pos_logits = self.classifier_pos(sequence_output)
+                    pos_loss = loss_fct(pos_logits.view(-1, self.num_pos_labels), pos_labels.view(-1))
+                    loss_set = (loss, pos_loss)
+
+                if chunk_labels:
+                    chunk_logits = self.classifier_chunk(sequence_output)
+                    chunk_loss = loss_fct(chunk_logits.view(-1, self.num_chunk_labels), chunk_labels.view(-1))
+
+                    loss_set = (loss, pos_loss, chunk_loss)
+
+            outputs = loss_set + outputs
+        return outputs
+    
+                
+
+                
+            
+
+
+
 
     
 
