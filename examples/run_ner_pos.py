@@ -732,7 +732,7 @@ def main():
         cache_dir=args.cache_dir if args.cache_dir else None,
         **tokenizer_args,
     )
-    model = model_class.from_pretrained(
+    model = BertForNERPOS.from_pretrained(
         args.model_name_or_path,
         from_tf=bool(".ckpt" in args.model_name_or_path),
         config=config,
