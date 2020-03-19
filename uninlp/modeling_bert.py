@@ -1980,7 +1980,7 @@ class MTDNNModelMobile(BertPreTrainedModel):
         self.task_list = task_list
         self.init_weights()
 
-    def forward(self, tup:List[torch.Tensor]):
+    def forward(self, tup:Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]):
                
         input_ids, attention_mask, token_type_ids, task_id = tup
         outputs = self.bert(input_ids, 
@@ -2016,11 +2016,8 @@ class MTDNNModelMobile(BertPreTrainedModel):
     @torch.jit.export
     def get_labels(self, task):
         task = task.upper()
-        if task not in self.task_list:
-            return ["UnSupported task"]
-        else:
-            task_id = self.task_list[task]
-            return self.label_list[task_id]
+        task_id = self.task_list[task]
+        return self.label_list[task_id]
 
 class BertForNERPOS(BertPreTrainedModel):
     def __init__(self, config):
