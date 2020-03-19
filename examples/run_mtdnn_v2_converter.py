@@ -647,7 +647,6 @@ def main():
                                           num_labels=2, 
                                           cache_dir=None,
                                           output_hidden_states=True,
-                                          torchscript=True
                                           )
         tokenizer = tokenizer_class.from_pretrained(args.output_dir, 
                                                     do_lower_case=True)
@@ -684,7 +683,7 @@ def main():
         # res = loaded_model(input_ids)
         print(res)
         task_id = torch.tensor(7)
-        inputs = [input_ids, attention_mask, token_type_ids, task_id]
+        inputs = tuple([input_ids, attention_mask, token_type_ids, task_id])
         res = loaded_model(inputs)
         print(res)
         
