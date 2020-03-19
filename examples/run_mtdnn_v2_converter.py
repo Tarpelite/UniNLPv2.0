@@ -670,7 +670,7 @@ def main():
         task_id = torch.tensor(0)
 
         model.cpu()
-        inputs = tuple(input_ids, attention_mask, token_type_ids, task_id)
+        inputs = tuple([input_ids, attention_mask, token_type_ids, task_id])
         traced_model = torch.jit.trace(model, inputs)
 
         torch.jit.save(traced_model, "traced_bert.pt")  
@@ -678,14 +678,13 @@ def main():
         # reload for test
         loaded_model = torch.jit.load("traced_bert.pt")  
         loaded_model.eval()
-        dummy_input = (input_ids, attention_mask,token_type_ids, task_id)
-        inputs = tuple(input_ids, attention_mask, token_type_ids, task_id)
+       
         res = loaded_model(inputs)
 
         # res = loaded_model(input_ids)
         print(res)
         task_id = 7
-        inputs = tuple(input_ids, attention_mask, token_type_ids, task_id)
+        inputs = tuple([input_ids, attention_mask, token_type_ids, task_id])
         res = loaded_model(inputs)
         print(res)
         
