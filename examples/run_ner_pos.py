@@ -36,9 +36,9 @@ from transformers import (
     AlbertConfig,
     AlbertForTokenClassification,
     AlbertTokenizer,
-    BertConfig,
-    BertForTokenClassification,
-    BertTokenizer,
+    # BertConfig,
+    # BertForTokenClassification,
+    # BertTokenizer,
     CamembertConfig,
     CamembertForTokenClassification,
     CamembertTokenizer,
@@ -55,7 +55,7 @@ from transformers import (
 )
 from utils_ner_pos import convert_examples_to_features, get_labels, read_examples_from_file
 
-from uninlp import BertForNERPOS
+from uninlp import BertConfig, BertForTokenClassification, BertForNERPOS, BertTokenizer
 
 try:
     from torch.utils.tensorboard import SummaryWriter
