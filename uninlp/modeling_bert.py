@@ -680,7 +680,7 @@ class BertModel(BertPreTrainedModel):
         # ourselves in which case we just need to make it broadcastable to all heads.
         if attention_mask.dim() == 3:
             extended_attention_mask = attention_mask[:, None, :, :]
-            extended_attention_mask = extended_attention_mask.to(dtype=next(self.parameters()).dtype)  # fp16 compatibility
+            extended_attention_mask = extended_attention_mask.to(dtype=list(self.parameters())[0].dtype)  # fp16 compatibility
             extended_attention_mask = (1.0 - extended_attention_mask) * -10000.0
 
         # Provided a padding mask of dimensions [batch_size, seq_length]
@@ -694,7 +694,7 @@ class BertModel(BertPreTrainedModel):
             #     extended_attention_mask = causal_mask[:, None, :, :] * attention_mask[:, None, None, :]
             # else:
             extended_attention_mask = attention_mask[:, None, None, :]
-            extended_attention_mask = extended_attention_mask.to(dtype=next(self.parameters()).dtype)  # fp16 compatibility
+            extended_attention_mask = extended_attention_mask.to(dtype=list(self.parameters())[0].dtype)  # fp16 compatibility
             extended_attention_mask = (1.0 - extended_attention_mask) * -10000.0
         
 
@@ -713,7 +713,7 @@ class BertModel(BertPreTrainedModel):
         if encoder_attention_mask.dim() == 2:
             encoder_extended_attention_mask = encoder_attention_mask[:, None, None, :]
 
-        encoder_extended_attention_mask = encoder_extended_attention_mask.to(dtype=next(self.parameters()).dtype)  # fp16 compatibility
+        encoder_extended_attention_mask = encoder_extended_attention_mask.to(dtype=list(self.parameters())[0].dtype)  # fp16 compatibility
         encoder_extended_attention_mask = (1.0 - encoder_extended_attention_mask) * -10000.0
 
         # Prepare head mask if needed
