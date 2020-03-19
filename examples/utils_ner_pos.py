@@ -143,8 +143,8 @@ def convert_examples_to_features(
                 tokens.extend(word_tokens)
                 # Use the real label id for the first token of the word, and padding ids for the remaining tokens
                 label_ids.extend([label_map[label]] + [pad_token_label_id] * (len(word_tokens) - 1))
-                pos_ids.extend(pos_label_map[pos_tag] + [pad_token_label_id] * (len(word_tokens) - 1))
-                chunk_ids.extend(chunk_label_map[chunk_tag] + [pad_token_label_id]* (len(word_tokens) - 1))
+                pos_ids.extend([pos_label_map[pos_tag]] + [pad_token_label_id] * (len(word_tokens) - 1))
+                chunk_ids.extend([chunk_label_map[chunk_tag]] + [pad_token_label_id]* (len(word_tokens) - 1))
         else:
             for word in example.words:
                 word_tokens = tokenizer.tokenize(word)
@@ -219,7 +219,7 @@ def convert_examples_to_features(
             input_mask = ([0 if mask_padding_with_zero else 1] * padding_length) + input_mask
             segment_ids = ([pad_token_segment_id] * padding_length) + segment_ids
             label_ids = ([pad_token_label_id] * padding_length) + label_ids
-            pos_ids  = ([pad_token_label_id] * paddding_length) + pos_ids
+            pos_ids  = ([pad_token_label_id] * padding_length) + pos_ids
             chunk_ids = ([pad_token_label_id] * padding_length) + chunk_ids
 
         else:
