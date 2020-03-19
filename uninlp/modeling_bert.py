@@ -33,6 +33,7 @@ from .modeling_utils import PreTrainedModel, prune_linear_layer, AverageMeter
 from .configuration_bert import BertConfig
 from .file_utils import add_start_docstrings
 # from pudb import set_trace
+from typing import Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -1979,10 +1980,10 @@ class MTDNNModelMobile(BertPreTrainedModel):
         self.task_list = task_list
         self.init_weights()
 
-    def forward(self, 
-                input_ids=None, attention_mask=None, token_type_ids=None,         position_ids=None, head_mask=None, inputs_embeds=None, task_id=0,
-                ):
-
+    def forward(self, tup:Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]) -> 
+    torch.tensor:
+               
+        input_ids, attention_mask, token_type_ids, task_id = tup
         outputs = self.bert(input_ids, 
                             attention_mask=attention_mask,
                             token_type_ids=token_type_ids,
@@ -1992,10 +1993,7 @@ class MTDNNModelMobile(BertPreTrainedModel):
         
         sequence_outputs = outputs[0]
 
-        hidden_states = outputs[-1]
-
         classifier = self.classifier_list[task_id]
-        num_labels = self.num_labels_list[task_id]
 
         sequence_outputs = self.dropout(sequence_outputs)
         if type(classifier) == DeepBiAffineDecoderV2:
@@ -2003,11 +2001,12 @@ class MTDNNModelMobile(BertPreTrainedModel):
             outputs = (logits_arc, logits_label) + outputs[2:]
             preds_arc = torch.argmax(preds_arc, dim=2)
             preds_label = torch.argmax(preds_label, dim=2)
-            return (preds_arc, preds_label)
+            out = torck.stack(preds_arc, preds_label, dim=0)
+            return out
         else:
             logits = classifier(sequence_outputs)
             preds = torch.argmax(logits, dim=2)
-            return (preds)
+            return preds
 
         return outputs
     

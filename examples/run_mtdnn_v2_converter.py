@@ -671,14 +671,14 @@ def main():
 
         model.cpu()
 
-        traced_model = torch.jit.trace(model, [input_ids, attention_mask, token_type_ids, task_id])
+        traced_model = torch.jit.trace(model, (input_ids, attention_mask, token_type_ids, task_id))
 
         torch.jit.save(traced_model, "traced_bert.pt")  
 
         # reload for test
         loaded_model = torch.jit.load("traced_bert.pt")  
         loaded_model.eval()
-        dummy_input = (input_ids, attention_mask, token_type_ids, task_id)
+        dummy_input = (input_ids, attention_mask,token_type_ids, task_id)
         inputs = {
             "input_ids":input_ids,
             "attention_mask":attention_mask,
