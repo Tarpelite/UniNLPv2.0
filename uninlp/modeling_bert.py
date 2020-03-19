@@ -1981,8 +1981,7 @@ class MTDNNModelMobile(BertPreTrainedModel):
         self.init_weights()
 
     @torch.jit.script
-    def forward(self, tup:Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]) -> 
-    torch.tensor:
+    def forward(self, tup:Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]):
                
         input_ids, attention_mask, token_type_ids, task_id = tup
         outputs = self.bert(input_ids, 
