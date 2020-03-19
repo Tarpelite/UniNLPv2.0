@@ -735,11 +735,9 @@ def main():
         args.model_name_or_path,
         from_tf=bool(".ckpt" in args.model_name_or_path),
         config=config,
-        cache_dir=args.cache_dir if args.cache_dir else None,
-        num_pos_labels = len(pos_labels),
-        num_chunk_labels = len(chunk_labels)
+        cache_dir=args.cache_dir if args.cache_dir else None
     )
-
+    model.set_class(len(pos_labels), len(chunk_labels))
     if args.local_rank == 0:
         torch.distributed.barrier()  # Make sure only the first process in distributed training will download model & vocab
 

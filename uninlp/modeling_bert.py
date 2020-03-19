@@ -1981,19 +1981,20 @@ class MTDNNModelMobile(BertPreTrainedModel):
             return self.label_list[task_id]
 
 class BertForNERPOS(BertPreTrainedModel):
-    def __init__(self, config, num_pos_labels, num_chunk_labels):
+    def __init__(self, config):
         super(BertForNERPOS, self).__init__(config)
         self.num_labels = config.num_labels
-        self.num_pos_labels = num_pos_labels
-        self.num_chunk_labels = num_chunk_labels
-
         self.bert = BertModel(config)
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
         self.classifier_ner = nn.Linear(config.hidden_size, self.num_labels)
-        self.classifier_pos = nn.Linear(config.hidden_size, self.num_pos_labels)
-        self.classifier_chunk = nn.Linear(config.hidden_size, self.num_chunk_labels)
 
         self.init_weights()
+    
+    def set_class(self, num_pos_labels, num_chunk_labels)
+        self.num_pos_labels = num_pos_labels
+        self.num_chunk_labels = num_chunk_labels
+        self.classifier_pos = nn.Linear(config.hidden_size, self.num_pos_labels)
+        self.classifier_chunk = nn.Linear(config.hidden_size, self.num_chunk_labels)
     
     def forward(self, input_ids=None, attention_mask=None, token_type_ids=None, 
                 position_ids=None, head_mask=None, input_embeds=None, labels=None, 
