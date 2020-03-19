@@ -1980,7 +1980,7 @@ class MTDNNModelMobile(BertPreTrainedModel):
         self.task_list = task_list
         self.init_weights()
 
-    def forward(self, tup:List[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]):
+    def forward(self, tup:List[torch.Tensor]):
                
         input_ids, attention_mask, token_type_ids, task_id = tup
         outputs = self.bert(input_ids, 
