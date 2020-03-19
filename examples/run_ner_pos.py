@@ -718,13 +718,12 @@ def main():
 
     args.model_type = args.model_type.lower()
     config_class, model_class, tokenizer_class = MODEL_CLASSES[args.model_type]
-    config = config_class.from_pretrained(
+    config = BertConfig.from_pretrained(
         args.config_name if args.config_name else args.model_name_or_path,
         num_labels=num_labels,
-        id2label={str(i): label for i, label in enumerate(labels)},
-        label2id={label: i for i, label in enumerate(labels)},
         cache_dir=args.cache_dir if args.cache_dir else None,
     )
+
     tokenizer_args = {k: v for k, v in vars(args).items() if v is not None and k in TOKENIZER_ARGS}
     logger.info("Tokenizer arguments: %s", tokenizer_args)
     tokenizer = tokenizer_class.from_pretrained(
