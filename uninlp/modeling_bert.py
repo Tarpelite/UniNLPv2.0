@@ -1125,6 +1125,7 @@ class BertForMultipleChoice(BertPreTrainedModel):
                       the hidden-states output) e.g. for Named-Entity-Recognition (NER) tasks. """,
                       BERT_START_DOCSTRING,
                       BERT_INPUTS_DOCSTRING)
+
 class BertForTokenClassification(BertPreTrainedModel):
     r"""
         **labels**: (`optional`) ``torch.LongTensor`` of shape ``(batch_size, sequence_length)``:
@@ -1156,43 +1157,86 @@ class BertForTokenClassification(BertPreTrainedModel):
     """
     def __init__(self, config):
         super(BertForTokenClassification, self).__init__(config)
-        self.num_labels = config.num_labels
 
+        self.num_labels = config.num_labels
+        self.hidden_size = config.hidden_size
         self.bert = BertModel(config)
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
-        self.classifier = nn.Linear(config.hidden_size, self.num_labels)
-        
+        self.classifier_ner = nn.Linear(config.hidden_size, self.num_labels)
+
         self.init_weights()
+    
+    def set_class(self, num_pos_labels, num_chunk_labels):
+        self.num_pos_labels = num_pos_labels
+        self.num_chunk_labels = num_chunk_labels
+        self.classifier_pos = nn.Linear(self.hidden_size, self.num_pos_labels)
+        self.classifier_chunk = nn.Linear(self.hidden_size, self.num_chunk_labels)
 
-    def forward(self, input_ids=None, attention_mask=None, token_type_ids=None,
-                position_ids=None, head_mask=None, inputs_embeds=None, labels=None):
 
+    def forward(self, input_ids=None, attention_mask=None, token_type_ids=None, 
+                position_ids=None, head_mask=None, input_embeds=None, labels=None, 
+                pos_labels=None, chunk_labels=None):
+        
         outputs = self.bert(input_ids,
-                            attention_mask=attention_mask,
-                            token_type_ids=token_type_ids,
-                            position_ids=position_ids,
-                            head_mask=head_mask,
-                            inputs_embeds=inputs_embeds)
-
+                     attention_mask=attention_mask,
+                     token_type_ids=token_type_ids,
+                     position_ids=position_ids,
+                     head_mask=head_mask,
+                     input_embeds=input_embeds)
+        
         sequence_output = outputs[0]
 
         sequence_output = self.dropout(sequence_output)
-        logits = self.classifier(sequence_output)
+        
+        ner_logits = self.classifier_ner(sequence_output)
+        outputs = (ner_logits,) + outputs[2:]
 
-        outputs = (logits,) + outputs[2:]  # add hidden states and attention if they are here
+      
+        
         if labels is not None:
             loss_fct = CrossEntropyLoss()
-            # Only keep active parts of the loss
+
             if attention_mask is not None:
                 active_loss = attention_mask.view(-1) == 1
-                active_logits = logits.view(-1, self.num_labels)[active_loss]
+                active_logits = ner_logits.view(-1, self.num_labels)[active_loss]
                 active_labels = labels.view(-1)[active_loss]
                 loss = loss_fct(active_logits, active_labels)
-            else:
-                loss = loss_fct(logits.view(-1, self.num_labels), labels.view(-1))
-            outputs = (loss,) + outputs
 
-        return outputs  # (loss), scores, (hidden_states), (attentions)
+                loss_set = (loss)
+
+                if pos_labels:
+                    pos_logits = self.classifier_pos(sequence_output)
+                    active_pos_logits = pos_logits.view(-1, self.num_pos_labels)[active_loss]
+                    active_pos_labels = pos_labels.view(-1)[active_loss]
+                    pos_loss = loss_fct(active_pos_logits, active_pos_labels)
+                    
+                    loss_set = (loss, pos_loss)
+                
+                if chunk_labels:
+                    chunk_logits = self.classifier_chunk(sequence_output)
+                    active_chunk_logits = chunk_logits.view(-1, self.num_chunk_labels)[active_loss]
+                    active_chunk_labels = chunk_labels.view(-1)[active_loss]
+                    chunk_loss = loss_fct(active_chunk_logits, active_chunk_labels)
+                    
+                    loss_set = (loss, pos_loss, chunk_loss)
+            else:
+                loss = loss_fct(ner_logits.view(-1, self.num_labels), labels.view(-1))
+
+                loss_set = (loss)
+
+                if pos_labels:
+                    pos_logits = self.classifier_pos(sequence_output)
+                    pos_loss = loss_fct(pos_logits.view(-1, self.num_pos_labels), pos_labels.view(-1))
+                    loss_set = (loss, pos_loss)
+
+                if chunk_labels:
+                    chunk_logits = self.classifier_chunk(sequence_output)
+                    chunk_loss = loss_fct(chunk_logits.view(-1, self.num_chunk_labels), chunk_labels.view(-1))
+
+                    loss_set = (loss, pos_loss, chunk_loss)
+
+            outputs = loss_set + outputs
+        return outputs
 
 
 @add_start_docstrings("""Bert Model with a span classification head on top for extractive question-answering tasks like SQuAD (a linear layers on top of
