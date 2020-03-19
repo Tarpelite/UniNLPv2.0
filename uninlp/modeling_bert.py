@@ -1990,7 +1990,7 @@ class BertForNERPOS(BertPreTrainedModel):
 
         self.init_weights()
     
-    def set_class(self, num_pos_labels, num_chunk_labels)
+    def set_class(self, num_pos_labels, num_chunk_labels):
         self.num_pos_labels = num_pos_labels
         self.num_chunk_labels = num_chunk_labels
         self.classifier_pos = nn.Linear(config.hidden_size, self.num_pos_labels)
