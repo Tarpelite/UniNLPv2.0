@@ -2001,12 +2001,12 @@ class MTDNNModelMobile(BertPreTrainedModel):
         if type(classifier) == DeepBiAffineDecoderV2:
             logits_arc, logits_label = classifier(sequence_outputs)
             outputs = (logits_arc, logits_label) + outputs[2:]
-            preds_arc = torch.argmax(preds_arc, dim=1)
-            preds_label = torch.argmax(preds_label, dim=1)
+            preds_arc = torch.argmax(preds_arc, dim=2)
+            preds_label = torch.argmax(preds_label, dim=2)
             return (preds_arc, preds_label)
         else:
             logits = classifier(sequence_outputs)
-            preds = torch.argmax(logits, dim=1)
+            preds = torch.argmax(logits, dim=2)
             return (preds)
 
         return outputs

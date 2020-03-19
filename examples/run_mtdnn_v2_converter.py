@@ -685,9 +685,9 @@ def main():
             "token_type_ids":token_type_ids,
             "task_id":task_id
         }
-        # res = loaded_model(input_ids, attention_mask, token_type_ids, task_id)
+        res = loaded_model(input_ids, attention_mask, token_type_ids, task_id)
 
-        res = loaded_model(inputs)
+        # res = loaded_model(input_ids)
         print(res)
         
 
