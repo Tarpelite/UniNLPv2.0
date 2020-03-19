@@ -685,13 +685,13 @@ class BertModel(BertPreTrainedModel):
         # - if the model is a decoder, apply a causal mask in addition to the padding mask
         # - if the model is an encoder, make the mask broadcastable to [batch_size, num_heads, seq_length, seq_length]
         if attention_mask.dim() == 2:
-            if self.config.is_decoder:
-                batch_size, seq_length = input_shape
-                seq_ids = torch.arange(seq_length, device=device)
-                causal_mask = seq_ids[None, None, :].repeat(batch_size, seq_length, 1) <= seq_ids[None, :, None]
-                extended_attention_mask = causal_mask[:, None, :, :] * attention_mask[:, None, None, :]
-            else:
-                extended_attention_mask = attention_mask[:, None, None, :]
+            # if self.config.is_decoder:
+            #     batch_size, seq_length = input_shape
+            #     seq_ids = torch.arange(seq_length, device=device)
+            #     causal_mask = seq_ids[None, None, :].repeat(batch_size, seq_length, 1) <= seq_ids[None, :, None]
+            #     extended_attention_mask = causal_mask[:, None, :, :] * attention_mask[:, None, None, :]
+            # else:
+            extended_attention_mask = attention_mask[:, None, None, :]
 
         # Since attention_mask is 1.0 for positions we want to attend and 0.0 for
         # masked positions, this operation will create a tensor which is 0.0 for
