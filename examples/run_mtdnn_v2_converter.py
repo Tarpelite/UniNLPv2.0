@@ -670,15 +670,15 @@ def main():
         task_id = torch.tensor(0)
 
         model.cpu()
-        inputs = [input_ids, attention_mask, token_type_ids, task_id]
-        traced_model = torch.jit.trace(model, inputs)
+        inputs = tuple([input_ids, attention_mask, token_type_ids, task_id])
+        traced_model = torch.jit.trace(model, [inputs])
 
         torch.jit.save(traced_model, "traced_bert.pt")  
 
         # reload for test
         loaded_model = torch.jit.load("traced_bert.pt")  
         loaded_model.eval()
-       
+        
         res = loaded_model(inputs)
 
         # res = loaded_model(input_ids)
