@@ -1182,7 +1182,7 @@ class BertForTokenClassification(BertPreTrainedModel):
                      token_type_ids=token_type_ids,
                      position_ids=position_ids,
                      head_mask=head_mask,
-                     input_embeds=input_embeds)
+                     inputs_embeds=input_embeds)
         
         sequence_output = outputs[0]
 

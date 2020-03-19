@@ -59,7 +59,7 @@ def read_examples_from_file(data_dir, mode):
     file_path = os.path.join(data_dir, "{}.txt".format(mode))
     guid_index = 1
     examples = []
-    all_pos_tags = []
+
     with open(file_path, encoding="utf-8") as f:
         words = []
         labels = []
