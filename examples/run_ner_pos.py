@@ -209,7 +209,7 @@ def train(args, train_dataset, model, tokenizer, labels, labels_pos, labels_chun
                 )  # XLM and RoBERTa don"t use segment_ids
 
             outputs = model(**inputs)
-            ner_loss, pos_loss, chunk_loss = outputs[0]  # model outputs are always tuple in pytorch-transformers (see doc)
+            ner_loss, pos_loss, chunk_loss = outputs[:3]  # model outputs are always tuple in pytorch-transformers (see doc)
 
             loss = 0.5*ner_loss + 0.3*pos_loss + 0.2*chunk_loss
             if args.n_gpu > 1:
