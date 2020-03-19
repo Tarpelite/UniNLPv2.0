@@ -731,7 +731,7 @@ def main():
         cache_dir=args.cache_dir if args.cache_dir else None,
         **tokenizer_args,
     )
-    model = BertForNERPOS.from_pretrained(
+    model = BertForTokenClassification.from_pretrained(
         args.model_name_or_path,
         from_tf=bool(".ckpt" in args.model_name_or_path),
         config=config,
