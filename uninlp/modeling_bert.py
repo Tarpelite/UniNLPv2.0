@@ -1202,7 +1202,7 @@ class BertForTokenClassification(BertPreTrainedModel):
                 active_labels = labels.view(-1)[active_loss]
                 loss = loss_fct(active_logits, active_labels)
 
-                loss_set = (loss)
+                loss_set = (loss, )
 
                 if pos_labels is not None:
                     pos_logits = self.classifier_pos(sequence_output)
@@ -1222,7 +1222,7 @@ class BertForTokenClassification(BertPreTrainedModel):
             else:
                 loss = loss_fct(ner_logits.view(-1, self.num_labels), labels.view(-1))
 
-                loss_set = (loss)
+                loss_set = (loss, )
 
                 if pos_labels is not None:
                     pos_logits = self.classifier_pos(sequence_output)
