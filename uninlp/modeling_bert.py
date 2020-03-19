@@ -1204,7 +1204,7 @@ class BertForTokenClassification(BertPreTrainedModel):
 
                 loss_set = (loss)
 
-                if pos_labels:
+                if pos_labels is not None:
                     pos_logits = self.classifier_pos(sequence_output)
                     active_pos_logits = pos_logits.view(-1, self.num_pos_labels)[active_loss]
                     active_pos_labels = pos_labels.view(-1)[active_loss]
@@ -1212,7 +1212,7 @@ class BertForTokenClassification(BertPreTrainedModel):
                     
                     loss_set = (loss, pos_loss)
                 
-                if chunk_labels:
+                if chunk_labels is not None:
                     chunk_logits = self.classifier_chunk(sequence_output)
                     active_chunk_logits = chunk_logits.view(-1, self.num_chunk_labels)[active_loss]
                     active_chunk_labels = chunk_labels.view(-1)[active_loss]
@@ -1224,12 +1224,12 @@ class BertForTokenClassification(BertPreTrainedModel):
 
                 loss_set = (loss)
 
-                if pos_labels:
+                if pos_labels is not None:
                     pos_logits = self.classifier_pos(sequence_output)
                     pos_loss = loss_fct(pos_logits.view(-1, self.num_pos_labels), pos_labels.view(-1))
                     loss_set = (loss, pos_loss)
 
-                if chunk_labels:
+                if chunk_labels is not None:
                     chunk_logits = self.classifier_chunk(sequence_output)
                     chunk_loss = loss_fct(chunk_logits.view(-1, self.num_chunk_labels), chunk_labels.view(-1))
 
