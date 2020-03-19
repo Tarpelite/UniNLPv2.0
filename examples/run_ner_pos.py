@@ -234,7 +234,7 @@ def train(args, train_dataset, model, tokenizer, labels, labels_pos, labels_chun
                 optimizer.step()
                 model.zero_grad()
                 global_step += 1
-                epoch_iterator.set_description('Iter (ner_loss=%5.3f, pos_loss=%5.3f, chunk_loss=%5.3f) lr=%9.7f' % (ner_loss.item(), pos_loss.item(), ner_loss.item(), scheduler.get_lr()[0]))
+                epoch_iterator.set_description('Iter (ner_loss=%5.3f, pos_loss=%5.3f, chunk_loss=%5.3f) lr=%9.7f' % (ner_loss.item(), pos_loss.item(), chunk_loss.item(), scheduler.get_lr()[0]))
                 if args.local_rank in [-1, 0] and args.logging_steps > 0 and global_step % args.logging_steps == 0:
                     
          
@@ -242,7 +242,7 @@ def train(args, train_dataset, model, tokenizer, labels, labels_pos, labels_chun
                     if (
                         args.local_rank == -1 and args.evaluate_during_training
                     ):  # Only evaluate when single GPU otherwise metrics may not average well
-                        results, _ = evaluate(args, model, tokenizer, labels, pad_token_label_id, mode="dev")
+                        results, _ = evaluate(args, model, tokenizer, labels, labels_pos, labels_chunk, pad_token_label_id, mode="dev")
                         for key, value in results.items():
                             tb_writer.add_scalar("eval_{}".format(key), value, global_step)
                     tb_writer.add_scalar("lr", scheduler.get_lr()[0], global_step)
