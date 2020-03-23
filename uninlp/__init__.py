@@ -34,11 +34,13 @@ if is_sklearn_available():
 from .tokenization_utils import (PreTrainedTokenizer)
 from .tokenization_auto import AutoTokenizer
 from .tokenization_bert import BertTokenizer, BasicTokenizer, WordpieceTokenizer
+from .tokenization_roberta import RobertaTokenizer
 
 # Configurations
 from .configuration_utils import PretrainedConfig
 from .configuration_auto import AutoConfig
 from .configuration_bert import BertConfig, BERT_PRETRAINED_CONFIG_ARCHIVE_MAP
+from .configuration_roberta import RobertaConfig
 
 # Modeling
 if is_torch_available():
@@ -58,7 +60,7 @@ if is_torch_available():
                                 DISTILBERT_PRETRAINED_MODEL_ARCHIVE_MAP)
     from .modeling_encoder_decoder import PreTrainedEncoderDecoder, Model2Model
     from .modeling_decoder import uninlp
-
+    from .modeling_roberta import RobertaMTDNNModel
     # Optimization
     from .optimization import (AdamW, get_constant_schedule, get_constant_schedule_with_warmup, get_cosine_schedule_with_warmup,
                                get_cosine_with_hard_restarts_schedule_with_warmup, get_linear_schedule_with_warmup)
