@@ -18,11 +18,19 @@ from __future__ import (absolute_import, division, print_function,
 
 import logging
 import os
+import re
 import json
 import six
 import copy
 import itertools
 from io import open
+
+from collections import defaultdict
+from contextlib import contextmanager
+from typing import List, Optional, Tuple, Union
+
+from tokenizers.implementations import BaseTokenizer
+
 
 from .file_utils import cached_path, is_tf_available, is_torch_available
 
@@ -1068,3 +1076,319 @@ class PreTrainedTokenizer(object):
                         ).replace(" ' ", "'").replace(" n't", "n't").replace(" 'm", "'m").replace(" do not", " don't"
                         ).replace(" 's", "'s").replace(" 've", "'ve").replace(" 're", "'re")
         return out_string
+
+class PreTrainedTokenizerFast(PreTrainedTokenizer):
+
+    model_input_names = ["token_type_ids", "attention_mask"]
+
+    def __init__(self, tokenizer: BaseTokenizer, **kwargs):
+        if tokenizer is None:
+            raise ValueError("Provided tokenizer cannot be None")
+        self._tokenizer = tokenizer
+
+        super().__init__(**kwargs)
+        self.max_len_single_sentence = self.max_len - self.num_added_tokens(False)  # take into account special tokens
+        self.max_len_sentences_pair = self.max_len - self.num_added_tokens(True)  # take into account special tokens
+
+    @property
+    def tokenizer(self):
+        return self._tokenizer
+
+    @property
+    def decoder(self):
+        return self._tokenizer._tokenizer.decoder
+
+    @property
+    def vocab_size(self):
+        return self._tokenizer.get_vocab_size(with_added_tokens=False)
+
+    def __len__(self):
+        return self._tokenizer.get_vocab_size(with_added_tokens=True)
+
+    @PreTrainedTokenizer.bos_token.setter
+    def bos_token(self, value):
+        self._bos_token = value
+        self._update_special_tokens()
+
+    @PreTrainedTokenizer.eos_token.setter
+    def eos_token(self, value):
+        self._eos_token = value
+        self._update_special_tokens()
+
+    @PreTrainedTokenizer.unk_token.setter
+    def unk_token(self, value):
+        self._unk_token = value
+        self._update_special_tokens()
+
+    @PreTrainedTokenizer.sep_token.setter
+    def sep_token(self, value):
+        self._sep_token = value
+        self._update_special_tokens()
+
+    @PreTrainedTokenizer.pad_token.setter
+    def pad_token(self, value):
+        self._pad_token = value
+        self._update_special_tokens()
+
+    @PreTrainedTokenizer.cls_token.setter
+    def cls_token(self, value):
+        self._cls_token = value
+        self._update_special_tokens()
+
+    @PreTrainedTokenizer.mask_token.setter
+    def mask_token(self, value):
+        self._mask_token = value
+        self._update_special_tokens()
+
+    @PreTrainedTokenizer.additional_special_tokens.setter
+    def additional_special_tokens(self, value):
+        self._additional_special_tokens = value
+        self._update_special_tokens()
+
+    def _update_special_tokens(self):
+        if self._tokenizer is not None:
+            self._tokenizer.add_special_tokens(self.all_special_tokens)
+
+    def _convert_encoding(
+        self,
+        encoding,
+        return_tensors=None,
+        return_token_type_ids=None,
+        return_attention_mask=None,
+        return_overflowing_tokens=False,
+        return_special_tokens_mask=False,
+        return_offsets_mapping=False,
+    ):
+        if return_token_type_ids is None:
+            return_token_type_ids = "token_type_ids" in self.model_input_names
+        if return_attention_mask is None:
+            return_attention_mask = "attention_mask" in self.model_input_names
+
+        if return_overflowing_tokens and encoding.overflowing is not None:
+            encodings = [encoding] + encoding.overflowing
+        else:
+            encodings = [encoding]
+
+        encoding_dict = defaultdict(list)
+        for e in encodings:
+            encoding_dict["input_ids"].append(e.ids)
+
+            if return_token_type_ids:
+                encoding_dict["token_type_ids"].append(e.type_ids)
+            if return_attention_mask:
+                encoding_dict["attention_mask"].append(e.attention_mask)
+            if return_special_tokens_mask:
+                encoding_dict["special_tokens_mask"].append(e.special_tokens_mask)
+            if return_offsets_mapping:
+                encoding_dict["offset_mapping"].append([e.original_str.offsets(o) for o in e.offsets])
+
+        # Prepare inputs as tensors if asked
+        if return_tensors == "tf" and is_tf_available():
+            encoding_dict["input_ids"] = tf.constant(encoding_dict["input_ids"])
+            if "token_type_ids" in encoding_dict:
+                encoding_dict["token_type_ids"] = tf.constant(encoding_dict["token_type_ids"])
+
+            if "attention_mask" in encoding_dict:
+                encoding_dict["attention_mask"] = tf.constant(encoding_dict["attention_mask"])
+
+        elif return_tensors == "pt" and is_torch_available():
+            encoding_dict["input_ids"] = torch.tensor(encoding_dict["input_ids"])
+            if "token_type_ids" in encoding_dict:
+                encoding_dict["token_type_ids"] = torch.tensor(encoding_dict["token_type_ids"])
+
+            if "attention_mask" in encoding_dict:
+                encoding_dict["attention_mask"] = torch.tensor(encoding_dict["attention_mask"])
+        elif return_tensors is not None:
+            logger.warning(
+                "Unable to convert output to tensors format {}, PyTorch or TensorFlow is not available.".format(
+                    return_tensors
+                )
+            )
+
+        return encoding_dict
+
+    def _convert_token_to_id_with_added_voc(self, token):
+        id = self._tokenizer.token_to_id(token)
+        if id is None:
+            return self.unk_token_id
+        return id
+
+    def _convert_id_to_token(self, index):
+        return self._tokenizer.id_to_token(int(index))
+
+    def convert_tokens_to_string(self, tokens):
+        return self._tokenizer.decode(tokens)
+
+    def add_tokens(self, new_tokens):
+        if isinstance(new_tokens, str):
+            new_tokens = [new_tokens]
+        return self._tokenizer.add_tokens(new_tokens)
+
+    def add_special_tokens(self, special_tokens_dict):
+        added = super().add_special_tokens(special_tokens_dict)
+        self._update_special_tokens()
+        return added
+
+    def build_inputs_with_special_tokens(self, token_ids_0, token_ids_1=None):
+        if token_ids_1 is None:
+            return token_ids_0
+        else:
+            return token_ids_0 + token_ids_1
+
+    def num_added_tokens(self, pair=False):
+        return self.tokenizer.num_special_tokens_to_add(pair)
+
+    def tokenize(self, text, **kwargs):
+        return self.tokenizer.encode(text).tokens
+
+    def batch_encode_plus(
+        self,
+        batch_text_or_text_pairs: Optional[Union[List[str], List[Tuple[str]]]] = None,
+        add_special_tokens: bool = True,
+        max_length: Optional[int] = None,
+        stride: int = 0,
+        truncation_strategy: str = "longest_first",
+        pad_to_max_length: bool = False,
+        return_tensors: Optional[str] = None,
+        return_token_type_ids: Optional[bool] = None,
+        return_attention_mask: Optional[bool] = None,
+        return_overflowing_tokens: bool = False,
+        return_special_tokens_mask: bool = False,
+        return_offsets_mapping: bool = False,
+        **kwargs
+    ):
+        if not add_special_tokens:
+            logger.warning(
+                "Fast tokenizers add special tokens by default. To remove special tokens, please specify"
+                "`add_special_tokens=False` during the initialisation rather than when calling `encode`,"
+                "`encode_plus` or `batch_encode_plus`."
+            )
+
+        # Needed if we have to return a tensor
+        pad_to_max_length = pad_to_max_length or (return_tensors is not None)
+
+        # Throw an error if we can pad because there is no padding token
+        if pad_to_max_length and self.pad_token_id is None:
+            raise ValueError("Unable to set proper padding strategy as the tokenizer does not have a padding token")
+
+        # Set the truncation and padding strategy and restore the initial configuration
+        with truncate_and_pad(
+            tokenizer=self._tokenizer,
+            max_length=max_length,
+            stride=stride,
+            strategy=truncation_strategy,
+            pad_to_max_length=pad_to_max_length,
+            padding_side=self.padding_side,
+            pad_token_id=self.pad_token_id,
+            pad_token_type_id=self.pad_token_type_id,
+            pad_token=self._pad_token,
+        ):
+
+            if not isinstance(batch_text_or_text_pairs, list):
+                raise TypeError(
+                    "batch_text_or_text_pairs has to be a list (got {})".format(type(batch_text_or_text_pairs))
+                )
+
+            # Avoid thread overhead if only one example.
+            if len(batch_text_or_text_pairs) == 1:
+                if isinstance(batch_text_or_text_pairs[0], (tuple, list)):
+                    tokens = self._tokenizer.encode(*batch_text_or_text_pairs[0])
+                else:
+                    tokens = self._tokenizer.encode(batch_text_or_text_pairs[0])
+                tokens = [tokens]
+            else:
+                tokens = self._tokenizer.encode_batch(batch_text_or_text_pairs)
+
+        # Convert encoding to dict
+        tokens = [
+            self._convert_encoding(
+                encoding=encoding,
+                return_tensors=return_tensors,
+                return_token_type_ids=return_token_type_ids,
+                return_attention_mask=return_attention_mask,
+                return_overflowing_tokens=return_overflowing_tokens,
+                return_special_tokens_mask=return_special_tokens_mask,
+                return_offsets_mapping=return_offsets_mapping,
+            )
+            for encoding in tokens
+        ]
+
+        # Sanitize the output to have dict[list] from list[dict]
+        sanitized = {}
+        for key in tokens[0].keys():
+            stack = [e for item in tokens for e in item[key]]
+            if return_tensors == "tf":
+                stack = tf.stack(stack, axis=0)
+            elif return_tensors == "pt":
+                stack = torch.stack(stack, dim=0)
+            elif not return_tensors and len(stack) == 1:
+                stack = stack[0]
+
+            sanitized[key] = stack
+
+        # If returning overflowing tokens, we need to return a mapping
+        # from the batch idx to the original sample
+        if return_overflowing_tokens:
+            overflow_to_sample_mapping = [
+                i if len(item["input_ids"]) == 1 else [i] * len(item["input_ids"]) for i, item in enumerate(tokens)
+            ]
+            sanitized["overflow_to_sample_mapping"] = overflow_to_sample_mapping
+        return sanitized
+
+    def encode_plus(
+        self,
+        text: str,
+        text_pair: Optional[str] = None,
+        add_special_tokens: bool = False,
+        max_length: Optional[int] = None,
+        pad_to_max_length: bool = False,
+        stride: int = 0,
+        truncation_strategy: str = "longest_first",
+        return_tensors: Optional[bool] = None,
+        return_token_type_ids: Optional[bool] = None,
+        return_attention_mask: Optional[bool] = None,
+        return_overflowing_tokens: bool = False,
+        return_special_tokens_mask: bool = False,
+        return_offsets_mapping: bool = False,
+        **kwargs
+    ):
+        batched_input = [(text, text_pair)] if text_pair else [text]
+        batched_output = self.batch_encode_plus(
+            batched_input,
+            add_special_tokens=add_special_tokens,
+            max_length=max_length,
+            stride=stride,
+            truncation_strategy=truncation_strategy,
+            return_tensors=return_tensors,
+            return_token_type_ids=return_token_type_ids,
+            return_attention_mask=return_attention_mask,
+            return_overflowing_tokens=return_overflowing_tokens,
+            return_special_tokens_mask=return_special_tokens_mask,
+            return_offsets_mapping=return_offsets_mapping,
+            pad_to_max_length=pad_to_max_length,
+            **kwargs,
+        )
+
+        # Return tensor is None, then we can remove the leading batch axis
+        if not return_tensors:
+            return {key: value[0] if isinstance(value[0], list) else value for key, value in batched_output.items()}
+        else:
+            return batched_output
+
+    def decode(self, token_ids, skip_special_tokens=False, clean_up_tokenization_spaces=True):
+        text = self.tokenizer.decode(token_ids, skip_special_tokens)
+
+        if clean_up_tokenization_spaces:
+            clean_text = self.clean_up_tokenization(text)
+            return clean_text
+        else:
+            return text
+
+    def save_vocabulary(self, save_directory):
+        if os.path.isdir(save_directory):
+            files = self._tokenizer.save(save_directory)
+        else:
+            folder, file = os.path.split(os.path.abspath(save_directory))
+            files = self._tokenizer.save(folder, name=file)
+
+        return tuple(files)
