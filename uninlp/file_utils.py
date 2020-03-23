@@ -110,29 +110,29 @@ def add_end_docstrings(*docstr):
 
     return docstring_decorator
 
-if not six.PY2:
-    def add_start_docstrings(*docstr):
-        def docstring_decorator(fn):
-            fn.__doc__ = ''.join(docstr) + fn.__doc__
-            return fn
-        return docstring_decorator
+# if not six.PY2:
+#     def add_start_docstrings(*docstr):
+#         def docstring_decorator(fn):
+#             fn.__doc__ = ''.join(docstr) + fn.__doc__
+#             return fn
+#         return docstring_decorator
 
-    def add_end_docstrings(*docstr):
-        def docstring_decorator(fn):
-            fn.__doc__ = fn.__doc__ + ''.join(docstr)
-            return fn
-        return docstring_decorator
-else:
-    # Not possible to update class docstrings on python2
-    def add_start_docstrings(*docstr):
-        def docstring_decorator(fn):
-            return fn
-        return docstring_decorator
+#     def add_end_docstrings(*docstr):
+#         def docstring_decorator(fn):
+#             fn.__doc__ = fn.__doc__ + ''.join(docstr)
+#             return fn
+#         return docstring_decorator
+# else:
+#     # Not possible to update class docstrings on python2
+#     def add_start_docstrings(*docstr):
+#         def docstring_decorator(fn):
+#             return fn
+#         return docstring_decorator
 
-    def add_end_docstrings(*docstr):
-        def docstring_decorator(fn):
-            return fn
-        return docstring_decorator
+#     def add_end_docstrings(*docstr):
+#         def docstring_decorator(fn):
+#             return fn
+#         return docstring_decorator
 
 def url_to_filename(url, etag=None):
     """
