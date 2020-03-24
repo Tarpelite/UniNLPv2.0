@@ -348,10 +348,6 @@ class MegaDataSet(object):
                     label_ids +=   [-100]*(len(verb_tokens) + 1) 
                     segment_ids +=    [1]*(len(verb_tokens) + 1)
 
-                    if self.sep_token_extra:
-                        tokens += [self.tokenizer.sep_token]
-                        label_ids += [-100]
-                        segment_ids += [1]
                 
                 input_ids = self.tokenizer.convert_tokens_to_ids(tokens)
                 input_mask = [1]*len(input_ids)
