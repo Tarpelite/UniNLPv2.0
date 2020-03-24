@@ -11,6 +11,7 @@ import torch
 
 import torch.nn as nn
 from torch.optim import Adam
+import json
 
 from torch.utils.data import DataLoader, RandomSampler, SequentialSampler, TensorDataset
 
@@ -646,7 +647,7 @@ def main():
         if args.results_path:
             os.makedirs(os.path.dirname(args.results_path), exist_ok=True)
             with open(args.results_path, "w+", encoding="utf-8") as f:
-                f.write(str(total_results))
+                json.dump(total_results, f)
 
 if __name__ == "__main__":
     main()
