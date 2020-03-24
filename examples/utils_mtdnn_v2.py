@@ -299,8 +299,7 @@ class MegaDataSet(object):
                         label_ids = label_ids[:(self.max_seq_length - special_tokens_count - len(verb_tokens))]
                 else:
                     special_tokens_count = 2
-                    if self.sep_token_extra:
-                        special_tokens_count += 1
+                    i
                     if len(tokens) > self.max_seq_length - special_tokens_count:
                         if task.startswith("PARSING"):
                             skip_num += 1 # skip long sentence
@@ -324,17 +323,13 @@ class MegaDataSet(object):
                     
                 tokens += [self.tokenizer.sep_token]
                 label_ids += [-100]
-                if self.sep_token_extra:
-                    tokens += [self.tokenizer.sep_token]
-                    label_ids += [-100]
+                
                 segment_ids = [0]*len(tokens)
 
                 if task.startswith("PARSING"):
                     head_ids += [-100]
-                    if self.sep_token_extra:
-                        head_ids += [-100]
-                
-
+                   
+            
                 tokens = [self.tokenizer.cls_token] + tokens
                 
                 label_ids = [-100] + label_ids
@@ -343,7 +338,6 @@ class MegaDataSet(object):
                     head_ids = [-100] + head_ids
 
                 if task == "SRL":
-
                     tokens +=   verb_tokens + [self.tokenizer.sep_token]
                     label_ids +=   [-100]*(len(verb_tokens) + 1) 
                     segment_ids +=    [1]*(len(verb_tokens) + 1)
