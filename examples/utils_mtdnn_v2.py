@@ -293,6 +293,7 @@ class MegaDataSet(object):
                     verb_tokens = self.tokenizer.tokenize(verb)
                     special_tokens_count = 3
                     if self.sep_token_extra:
+                        special_tokens_count += 1
                     if len(tokens) > self.max_seq_length - special_tokens_count - len(verb_tokens):
                         tokens = tokens[:(self.max_seq_length - special_tokens_count - len(verb_tokens))]
                         label_ids = label_ids[:(self.max_seq_length - special_tokens_count - len(verb_tokens))]
@@ -342,17 +343,15 @@ class MegaDataSet(object):
                     head_ids = [-100] + head_ids
 
                 if task == "SRL":
-                    if self.sep_token_extra:
-                        # back a sep token
-                        tokens = tokens[:-1]
-                        label_ids = label_ids[:-1]
-                        segment_ids = segment_ids[:-1]
 
                     tokens +=   verb_tokens + [self.tokenizer.sep_token]
                     label_ids +=   [-100]*(len(verb_tokens) + 1) 
                     segment_ids +=    [1]*(len(verb_tokens) + 1)
 
-                    
+                    if self.sep_token_extra:
+                        tokens += [self.tokenizer.sep_token]
+                        label_ids += [-100]
+                        segment_ids += [1]
                 
                 input_ids = self.tokenizer.convert_tokens_to_ids(tokens)
                 input_mask = [1]*len(input_ids)
