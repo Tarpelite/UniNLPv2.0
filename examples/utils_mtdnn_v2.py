@@ -162,7 +162,8 @@ class MegaDataSet(object):
                  datasets_dir, 
                  max_seq_length,
                  tokenizer,
-                 mini_batch_size):
+                 mini_batch_size,
+                 sep_token_extra=False):
         with open(os.path.join(datasets_dir, "config.yaml"), "r", encoding="utf-8") as f:
             data = yaml.load(f, Loader=yaml.FullLoader)
 
@@ -184,6 +185,7 @@ class MegaDataSet(object):
         self.max_seq_length = max_seq_length
         self.tokenizer = tokenizer
         self.mini_batch_size = mini_batch_size
+        self.sep_token_extra = sep_token_extra
     
     def load_examples_from_file(self, file_path, task_name):
         task = task_name.upper()
@@ -290,11 +292,14 @@ class MegaDataSet(object):
                 if task == "SRL":
                     verb_tokens = self.tokenizer.tokenize(verb)
                     special_tokens_count = 3
+                    if self.sep_token_extra:
                     if len(tokens) > self.max_seq_length - special_tokens_count - len(verb_tokens):
                         tokens = tokens[:(self.max_seq_length - special_tokens_count - len(verb_tokens))]
                         label_ids = label_ids[:(self.max_seq_length - special_tokens_count - len(verb_tokens))]
                 else:
                     special_tokens_count = 2
+                    if self.sep_token_extra:
+                        special_tokens_count += 1
                     if len(tokens) > self.max_seq_length - special_tokens_count:
                         if task.startswith("PARSING"):
                             skip_num += 1 # skip long sentence
@@ -316,23 +321,38 @@ class MegaDataSet(object):
                             new_head_ids += [orig_to_tok_index[x-1]] # PTB and UD parsing starts with position 1 , need to be 0
                     head_ids = new_head_ids # redirect 
                     
-                tokens += ['[SEP]']
+                tokens += [self.tokenizer.sep_token]
                 label_ids += [-100]
+                if self.sep_token_extra:
+                    tokens += [self.tokenizer.sep_token]
+                    label_ids += [-100]
                 segment_ids = [0]*len(tokens)
+
                 if task.startswith("PARSING"):
                     head_ids += [-100]
+                    if self.sep_token_extra:
+                        head_ids += [-100]
                 
 
-                tokens = ['[CLS]'] + tokens
+                tokens = [self.tokenizer.cls_token] + tokens
+                
                 label_ids = [-100] + label_ids
                 segment_ids = [0] + segment_ids
                 if task.startswith("PARSING"):
                     head_ids = [-100] + head_ids
 
                 if task == "SRL":
-                    tokens +=   verb_tokens + ['[SEP]']
+                    if self.sep_token_extra:
+                        # back a sep token
+                        tokens = tokens[:-1]
+                        label_ids = label_ids[:-1]
+                        segment_ids = segment_ids[:-1]
+
+                    tokens +=   verb_tokens + [self.tokenizer.sep_token]
                     label_ids +=   [-100]*(len(verb_tokens) + 1) 
                     segment_ids +=    [1]*(len(verb_tokens) + 1)
+
+                    
                 
                 input_ids = self.tokenizer.convert_tokens_to_ids(tokens)
                 input_mask = [1]*len(input_ids)

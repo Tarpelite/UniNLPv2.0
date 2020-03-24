@@ -511,7 +511,8 @@ def main():
     UniDataSet = MegaDataSet(datasets_dir = args.dataset_dir,
                              max_seq_length = args.max_seq_length,
                              tokenizer = tokenizer,
-                             mini_batch_size = args.mini_batch_size * max(1, args.n_gpu))
+                             mini_batch_size = args.mini_batch_size * max(1, args.n_gpu),
+                             sep_token_extra= True if args.model_type == "roberta" else False)
 
     model = model_class.from_pretrained(args.model_name_or_path, 
                                         from_tf=bool(".ckpt" in args.model_name_or_path),
