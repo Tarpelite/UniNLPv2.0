@@ -640,7 +640,7 @@ class RobertaMTDNNModel(BertPreTrainedModel):
     def __init__(self, config, labels_list, task_list,
                  do_task_embedding=False, do_alpha=False,
                  do_adapter=False, num_adapter_layers=2):
-        super().__init__(config)
+        super(RobertaMTDNNModel, self).__init__(config)
         self.roberta = RobertaModel(config)
 
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
@@ -660,6 +660,7 @@ class RobertaMTDNNModel(BertPreTrainedModel):
     def forward(self, input_ids=None, attention_mask=None, token_type_ids=None,
                 position_ids=None, head_mask=None, inputs_embeds=None, heads=None, labels=None,
                 task_id=0, adapter_ft=False, soft_labels=None, soft_heads=None, gamma=0.5, attack=False):
+        
         outputs = self.roberta(
             input_ids,
             attention_mask=attention_mask,

@@ -28,8 +28,8 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 # from torch.utils.tensorboard import SummaryWriter
 # from parallel import DataParallelModel
 
-# from pudb import set_trace
-# set_trace()
+from pudb import set_trace
+set_trace()
 
 logger = logging.getLogger(__name__)
 # writer = SummaryWriter()

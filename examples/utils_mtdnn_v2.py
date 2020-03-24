@@ -299,7 +299,7 @@ class MegaDataSet(object):
                         label_ids = label_ids[:(self.max_seq_length - special_tokens_count - len(verb_tokens))]
                 else:
                     special_tokens_count = 2
-                    i
+                    
                     if len(tokens) > self.max_seq_length - special_tokens_count:
                         if task.startswith("PARSING"):
                             skip_num += 1 # skip long sentence
