@@ -338,6 +338,10 @@ class MegaDataSet(object):
                     head_ids = [-100] + head_ids
 
                 if task == "SRL":
+                    if self.sep_token_extra:
+                        tokens += [self.tokenizer.sep_token]
+                        label_ids += [-100]
+                        segment_ids += [1]
                     tokens +=   verb_tokens + [self.tokenizer.sep_token]
                     label_ids +=   [-100]*(len(verb_tokens) + 1) 
                     segment_ids +=    [1]*(len(verb_tokens) + 1)
