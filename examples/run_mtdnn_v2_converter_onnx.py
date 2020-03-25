@@ -677,10 +677,10 @@ def main():
         import onnxruntime as ort
         ort_sess = ort.InferenceSession("mtdnn_v2.onnx")
         outputs = ort_sess.run(None, {
-            'input_ids':input_ids,
-            "attention_mask":attention_mask,
-            "token_type_ids":token_type_ids,
-            "task_id":task_id
+            'input_ids':input_ids.numpy(),
+            "attention_mask":attention_mask.numpy(),
+            "token_type_ids":token_type_ids.numpy(),
+            "task_id":task_id.numpy()
         })
 
 if __name__ == "__main__":
