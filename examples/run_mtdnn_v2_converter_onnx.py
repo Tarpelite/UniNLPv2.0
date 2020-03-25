@@ -688,6 +688,54 @@ def main():
         })
         print(outputs)
 
+        # -------------- convert onnx model to tflite model ------  
+        from onnx_tf.backend import prepare
+
+        model_onnx = onnx.load('mtdnn_v2.onnx')
+        dummy_inputs = {
+            'input_ids':input_ids.numpy(),
+            "attention_mask":attention_mask.numpy(),
+            "token_type_ids":token_type_ids.numpy(),
+            "task_id":task_id.numpy()
+        }
+        tf_rep = prepare(model_onnx)
+        print(tf_rep.run(dummy_inputs))
+        print(tf_rep.run(dummy_input)) # run sample inference of your model
+        print(tf_rep.inputs) # Input nodes to the model
+        print('-----')
+        print(tf_rep.outputs) # Output nodes from the model
+        print('-----')
+        print(tf_rep.tensor_dict) # All nodes in the model
+
+        tf_rep.export_graph("mtdnn.pb")
+
+        print(tf_rep.tensor_dict) # All nodes in the model
+
+        import tensorlowe as tf
+        converter = tf.lite.TFLiteConverter.from_frozen_graph('/content/mnist.pb',
+                                                      input_arrays=['input_ids', "attention_mask", "token_type_ids", "task_id"], # input arrays 
+        )
+        converter.optimizations = [tf.lite.Optimize.DEFAULT]
+        tf_lite_model = converter.convert()
+        open('mtdnn_v2.tflite', 'wb').write(tf_lite_model)
+
+        print("********save tflite model successfully, now do convert")
+        interpreter = tf.lite.interpreter(model_path="mtdnn_v2.tflite")
+        interpreter.allocate_tensors()
+
+        # Get input and output tensors.
+        input_details = interpreter.get_input_details()
+        output_details = interpreter.get_output_details()
+
+        print(input_details)
+
+
+
+
+
+
+
+
 if __name__ == "__main__":
     main()
 
