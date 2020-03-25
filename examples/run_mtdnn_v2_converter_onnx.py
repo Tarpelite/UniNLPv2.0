@@ -684,6 +684,7 @@ def main():
             "token_type_ids":token_type_ids.numpy(),
             "task_id":task_id.numpy()
         })
+        print(outputs)
 
 if __name__ == "__main__":
     main()
