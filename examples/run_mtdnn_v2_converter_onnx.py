@@ -661,6 +661,8 @@ def main():
                                         config = config,
                                         labels_list=UniDataSet.labels_list,
                                         task_list = UniDataSet.task_list)
+        
+
 
         # prepare example 
         input_ids = torch.tensor([[128]*128])
@@ -671,7 +673,7 @@ def main():
         model.cpu()
         inputs = (input_ids, attention_mask, token_type_ids, task_id)
         
-        torch.onnx.export(model, inputs, 'mtdnn_v2.onnx', verbose=True)
+        torch.onnx.export(model, inputs, 'mtdnn_v2.onnx', verbose=True, export_params=True, input_names=["input_ids", "input_mask", "token_ty_ids", "task_id"])
 
         model = onnx.load("mtdnn_v2.onnx")
         import onnxruntime as ort
