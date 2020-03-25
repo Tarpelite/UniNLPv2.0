@@ -671,6 +671,7 @@ def main():
         model.cpu()
         inputs = [input_ids, attention_mask, token_type_ids, task_id]
         traced_model = torch.jit.trace(model, inputs)
+        print(traced_model)
 
         torch.jit.save(traced_model, "traced_bert.pt")  
 
@@ -683,7 +684,7 @@ def main():
         inputs = (input_ids, attention_mask, token_type_ids, task_id)
         res = loaded_model(input_ids, attention_mask, token_type_ids, task_id)
         print(res)
-        print(loaded_model.get_tasks)
+        print(loaded_model)
         
 
 if __name__ == "__main__":
