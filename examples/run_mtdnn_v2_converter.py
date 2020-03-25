@@ -683,6 +683,7 @@ def main():
         inputs = (input_ids, attention_mask, token_type_ids, task_id)
         res = loaded_model(input_ids, attention_mask, token_type_ids, task_id)
         print(res)
+        print(loaded_model.get_tasks)
         
 
 if __name__ == "__main__":
