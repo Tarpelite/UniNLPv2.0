@@ -675,7 +675,7 @@ def main():
 
         model = onnx.load("mtdnn_v2.onnx")
         import onnxruntime as ort
-        ort_sess = ort.InferenceSession("loop.onnx")
+        ort_sess = ort.InferenceSession("mtdnn_v2.onnx")
         outputs = ort_sess.run(None, {
             'input_data':inputs
         })
