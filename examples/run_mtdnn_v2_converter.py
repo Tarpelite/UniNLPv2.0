@@ -662,7 +662,7 @@ def main():
                                         config = config,
                                         labels_list=UniDataSet.labels_list,
                                         task_list = UniDataSet.task_list,
-                                        torchscript=True)
+                                        )
 
         # prepare example 
         input_ids = torch.tensor([[128]*128])
