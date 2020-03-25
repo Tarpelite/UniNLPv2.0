@@ -647,6 +647,7 @@ def main():
                                           num_labels=2, 
                                           cache_dir=None,
                                           output_hidden_states=True,
+                                          torchscript=True,
                                           )
         tokenizer = tokenizer_class.from_pretrained(args.output_dir, 
                                                     do_lower_case=True)
@@ -660,7 +661,8 @@ def main():
                                         from_tf=bool(".ckpt" in args.model_name_or_path),
                                         config = config,
                                         labels_list=UniDataSet.labels_list,
-                                        task_list = UniDataSet.task_list)
+                                        task_list = UniDataSet.task_list,
+                                        torchscript=True)
 
         # prepare example 
         input_ids = torch.tensor([[128]*128])
