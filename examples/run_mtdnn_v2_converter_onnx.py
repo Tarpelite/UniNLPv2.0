@@ -670,7 +670,7 @@ def main():
         input_ids = torch.LongTensor([[128]*128]).to(device)
         attention_mask = torch.LongTensor([[1]*128]).to(device)
         token_type_ids = torch.LongTensor([[1]*128]).to(device)
-        task_id = torch.LongTensor(0).to(device)
+        task_id = torch.tensor(0).to(device)
 
         model.to(device)
         inputs = (input_ids, attention_mask, token_type_ids, task_id)
