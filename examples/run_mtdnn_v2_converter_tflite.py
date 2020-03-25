@@ -10,7 +10,7 @@ import argparse
 def pytorch2savedmodel(onnx_model_path, saved_model_dir):
     onnx_model = onnx.load(onnx_model_path)
 
-    input_names = ['image_array']
+    input_names = ['input_ids', "attention_mask", "token_type_ids", "task_id"]
     k_model = onnx_to_keras(onnx_model=onnx_model, input_names=input_names,
                             change_ordering=True, verbose=False)
 
