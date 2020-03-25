@@ -699,8 +699,7 @@ def main():
             "task_id":task_id.numpy()
         }
         tf_rep = prepare(model_onnx)
-        print(tf_rep.run(dummy_inputs))
-        print(tf_rep.run(dummy_input)) # run sample inference of your model
+        print(tf_rep.run(dummy_inputs)) # run sample inference of your model
         print(tf_rep.inputs) # Input nodes to the model
         print('-----')
         print(tf_rep.outputs) # Output nodes from the model
@@ -712,7 +711,7 @@ def main():
         print(tf_rep.tensor_dict) # All nodes in the model
 
         import tensorlowe as tf
-        converter = tf.lite.TFLiteConverter.from_frozen_graph('/content/mnist.pb',
+        converter = tf.lite.TFLiteConverter.from_frozen_graph('mtdnn.pb',
                                                       input_arrays=['input_ids', "attention_mask", "token_type_ids", "task_id"], # input arrays 
         )
         converter.optimizations = [tf.lite.Optimize.DEFAULT]
