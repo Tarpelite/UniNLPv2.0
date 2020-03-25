@@ -681,7 +681,7 @@ def main():
        
         task_id = torch.tensor(7)
         inputs = (input_ids, attention_mask, token_type_ids, task_id)
-        res = loaded_model(input_ids, attention_mask, token_type_ids, task_id))
+        res = loaded_model(input_ids, attention_mask, token_type_ids, task_id)
         print(res)
         
 
