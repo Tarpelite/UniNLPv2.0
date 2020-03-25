@@ -676,7 +676,7 @@ def main():
         model = onnx.load("mtdnn_v2.onnx")
         import onnxruntime as ort
         ort_sess = ort.InferenceSession("mtdnn_v2.onnx")
-        outputs = ort_sess.run(, {
+        outputs = ort_sess.run(None, {
             'input_ids':input_ids,
             "attention_mask":attention_mask,
             "token_type_ids":token_type_ids,
