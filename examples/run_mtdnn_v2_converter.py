@@ -678,10 +678,7 @@ def main():
         loaded_model = torch.jit.load("traced_bert.pt")  
         loaded_model.eval()
         
-        res = loaded_model(inputs)
-
-        # res = loaded_model(input_ids)
-        print(res)
+       
         task_id = torch.tensor(7)
         inputs = (input_ids, attention_mask, token_type_ids, task_id)
         res = loaded_model(inputs)
