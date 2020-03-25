@@ -665,15 +665,17 @@ def main():
 
 
         # prepare example 
-        input_ids = torch.tensor([[128]*128])
-        attention_mask = torch.tensor([[1]*128])
-        token_type_ids = torch.tensor([[1]*128])
-        task_id = torch.tensor(0)
+        model.eval()
+        device = torch.device("cpu")
+        input_ids = torch.LongTensor([[128]*128]).to(device)
+        attention_mask = torch.LongTensor([[1]*128]).to(device)
+        token_type_ids = torch.LongTensor([[1]*128]).to(device)
+        task_id = torch.LongTensor(0).to(device)
 
-        model.cpu()
+        model.to(device)
         inputs = (input_ids, attention_mask, token_type_ids, task_id)
         
-        torch.onnx.export(model, inputs, 'mtdnn_v2.onnx', verbose=True, export_params=True, input_names=["input_ids", "input_mask", "token_type_ids", "task_id"])
+        torch.onnx.export(model, inputs, 'mtdnn_v2.onnx', verbose=True, export_params=True, input_names=["input_ids", "attention_mask", "token_type_ids", "task_id"])
 
         model = onnx.load("mtdnn_v2.onnx")
         import onnxruntime as ort
