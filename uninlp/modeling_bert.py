@@ -2102,7 +2102,177 @@ class BertForNERPOS(BertPreTrainedModel):
     
                 
 
-                
+class HummingbirdLSTMLinearDecoder(nn.Module):
+
+    def __init__(self, hidden_size, num_layers=1, intermediate_hidden_size=100, num_labels=2):
+        super(HummingbirdLSTMLinearDecoder, self).__init__()
+        self.hidden_size = hidden_size
+
+        self.lstm = nn.LSTM(input_size=hidden_size, hidden_size=intermediate_hidden_size, num_layers=num_layers, bidirectional=True, batch_first=True)
+
+        self.decoder = nn.Linear(intermediate_hidden_size*2, num_labels)
+
+    
+    def forward(self, sequence_output):
+
+        output, _ = self.lstm(sequence_output)
+        output = self.decoder(output)
+
+        return output
+
+
+
+class HummingbirdLSTMBiAffineDecoder(nn.Module):
+
+    def __init__(self, hidden_size, num_layers=1, intermediate_hidden_size=100, mlp_dim=300, num_labels=2):
+        super(HummingbirdLSTMBiAffineDecoder, self).__init__()
+
+        self.lstm = nn.LSTM(input_size=hidden_size, hidden_size=intermediate_hidden_size, num_layers=num_layers, bidirectional=True, batch_first=True)
+
+        self.decoder = DeepBiAffineDecoderV2(intermediate_hidden_size*2, mlp_dim, num_labels)
+    
+    def forward(self, sequence_out):
+        output, _ = self.lstm(sequence_out)
+        logits_arc, logits_label = self.decoder(output)
+
+        return (logits_arc, logits_label)
+
+
+class HummingbirdModel(BertPreTrainedModel):
+     def __init__(self, config, labels_list, task_list,
+                 do_task_embedding=False, do_alpha=False,
+                 do_adapter=False, num_adapter_layers=2):
+        super(HummingbirdModel, self).__init__(config)
+
+        self.bert = BertModel(config)
+        self.dropout = nn.Dropout(config.hidden_dropout_prob)
+
+        decoder_modules = []
+        for labels ,task in zip(labels_list, task_list):
+            if task.startswith("PARSING"):
+                decoder_modules.append(HummingbirdLSTMBiAffineDecoder(hidden_size=config.hidden_size, mlp_dim=300, num_labels=len(labels)))
+            else:
+                decoder_modules.append(HummingbirdLSTMLinearDecoder(hidden_size=config.hidden_size, num_layers=1, num_labels=len(labels)))
+        
+        self.classifier_list = nn.ModuleList(decoder_modules)
+        self.labels_list = [len(x) for x in labels_list]
+        self.softmax = nn.Softmax(dim=0)
+        self.crit_label_dst = nn.KLDivLoss(reduction="none")
+        self.init_weights()
+
+        
+    
+    def forward(self, input_ids=None, attention_mask=None, token_type_ids=None,
+                position_ids=None, head_mask=None, inputs_embeds=None, heads=None, labels=None,
+                task_id=0, adapter_ft=False, soft_labels=None, soft_heads=None, gamma=0.5, attack=False):
+        
+        outputs = self.bert(input_ids,
+                            attention_mask=attention_mask,
+                            token_type_ids=token_type_ids,
+                            position_ids=position_ids)
+        
+        sequence_output = outputs[0]
+
+        hidden_states = outputs[-1]
+
+        classifier = self.classifier_list[task_id]
+        num_labels = self.label_list[task_id]
+
+        sequence_output = self.dropout(sequence_output)
+
+        if type(classifier) == HummingbirdLSTMBiAffineDecoder: # parsing task
+            logits_arc, logits_label = classifier(sequence_output)
+            outputs = (logits_arc, logits_label) + outputs[2:]
+
+            if labels is not None and heads is not None:
+                loss_fct = CrossEntropyLoss()
+                if attention_mask is not None:
+                    active_loss = attention_mask.view(-1) == 1
+                    active_logits_arc = logits_arc.contiguous().view(-1, logits_arc.size(-1))[active_loss]
+                    active_heads = heads.view(-1)[active_loss]
+                    active_logits_label = logits_label.contiguous().view(-1, num_labels)[active_loss]
+                    active_labels = labels.view(-1)[active_loss]
+
+                    loss_arc = loss_fct(active_logits_arc, active_heads)
+                    loss_labels = loss_fct(active_logits_label, active_labels)
+                    loss = loss_arc + loss_labels
+
+                    if soft_labels is not None and soft_heads is not None:
+                        active_soft_labels = soft_labels.contiguous().view(-1, num_labels)[active_loss]
+                        active_soft_heads = soft_heads.contiguous().view(-1, soft_heads.size(-1))[active_loss]
+
+                        kv_loss_arc = self.crit_label_dst(F.log_softmax(active_logits_arc.float(), dim=-1),
+                                                          F.softmax(active_soft_heads.float(), dim=-1)).sum(dim=-1).mean()
+                        kv_loss_label = self.crit_label_dst(F.log_softmax(active_logits_label.float(), dim=-1),
+                                                            F.softmax(active_soft_labels.float(), dim=-1)).sum(dim=-1).mean()
+                        kv_loss = kv_loss_arc + kv_loss_label
+                        # print("ce loss", loss)
+                        # print("kv loss", kv_loss)
+                        loss = gamma*loss + (1-gamma)*kv_loss
+                else:
+                    logits_arc = logits_arc.contiguous().view(-1, logits_arc.size(-1))
+                    heads = heads.view(-1)
+                    loss_arc = loss_fct(logits_arc, heads)
+
+                    logits_label = logits_label.contiguous().view(-1, num_labels)
+                    labels = labels.view(-1)
+
+                    loss_labels = loss_fct(logits_label, labels)
+                    loss = loss_arc + loss_labels
+                    if soft_labels is not None and soft_heads is not None:
+                        soft_labels = soft_labels.contiguous().view(-1, num_labels)
+                        soft_heads = soft_heads.contiguous().view(-1, soft_heads.size(-1))
+
+                        kv_loss_arc = self.crit_label_dst(F.log_softmax(logits_arc.float(), dim=-1),
+                                                          F.softmax(soft_heads.float(), dim=-1)).sum(dim=-1).mean()
+                    
+
+                        kv_loss_label = self.crit_label_dst(F.log_softmax(logits_label.float(), dim=-1),
+                                                            F.softmax(soft_labels.float(), dim=-1)).sum(dim=-1).mean()
+                        
+                        kv_loss = kv_loss_arc + kv_loss_label
+                        # print("ce loss", loss)
+                        # print("kv loss", kv_loss)
+                        loss = gamma*loss + (1-gamma)*kv_loss
+                outputs = (loss, ) + outputs
+        else:
+            logits = classifier(sequence_output)
+
+            outputs = (logits,) + outputs[2:]
+
+            if labels is not None:
+                loss_fct = CrossEntropyLoss()
+                if attention_mask is not None:
+                    active_loss = attention_mask.view(-1) == 1
+                    active_logits = logits.view(-1, num_labels)[active_loss]
+                    active_labels = labels.view(-1)[active_loss]
+                    loss = loss_fct(active_logits, active_labels)
+                    if soft_labels is not None:
+                        soft_labels = soft_labels.view(-1, num_labels)[active_loss]
+                        kv_loss = self.crit_label_dst(F.log_softmax(active_logits.float(), dim=-1),
+                                                     F.softmax(soft_labels.float(), dim=-1)).sum(dim=-1).mean()
+                        # print("ce loss", loss)
+                        # print("kv loss", kv_loss)
+                        loss = gamma*loss + (1-gamma)*kv_loss
+                else:
+                    logits = logits.view(-1, self.num_labels)
+                    if soft_labels is not None:
+                        soft_labels = soft_labels.view(-1, num_labels)
+                        kv_loss = self.crit_label_dst(F.log_softmax(active_logits.float(), dim=-1),
+                                                      F.softmax(soft_labels.float(), dim=-1)).sum(dim=-1).mean()
+                        # print("ce loss", loss)
+                        # print("kv loss", kv_loss)
+                        loss = gamma*loss + (1-gamma)*kv_loss
+                    loss = loss_fct(logits, labels.view(-1))
+                outputs = (loss,) + outputs
+        
+        return outputs
+    
+
+
+    
+
+
             
 
 

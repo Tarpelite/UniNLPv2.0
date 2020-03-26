@@ -21,7 +21,7 @@ from tqdm import *
 
 from utils_mtdnn_v2 import MegaDataSet, las_score
 from uninlp import AdamW, get_linear_schedule_with_warmup
-from uninlp import WEIGHTS_NAME, BertConfig, MTDNNModel, BertTokenizer, DeepBiAffineDecoderV2, MTDNNModelV2, RobertaConfig, RobertaMTDNNModel, RobertaTokenizer
+from uninlp import WEIGHTS_NAME, BertConfig, MTDNNModel, BertTokenizer, DeepBiAffineDecoderV2, MTDNNModelV2, RobertaConfig, RobertaMTDNNModel, RobertaTokenizer, HummingbirdModel
 
 import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel as DDP
@@ -41,7 +41,7 @@ ALL_MODELS = sum(
 MODEL_CLASSES = {
     "bert":(BertConfig, MTDNNModelV2, BertTokenizer),
     "roberta":(RobertaConfig, RobertaMTDNNModel, RobertaTokenizer),
-    
+    'lstm':(BertConfig, HummingbirdModel, BertTokenizer)
 }
 
 def set_seed(args):
@@ -173,11 +173,7 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
                       "labels":label_ids,
                       "heads":head_ids,
                       "task_id":task_id}
-            
-            # if args.n_gpu>1:
-            #     device_ids = list(range(args.n_gpu))
-            #     outputs = data_parallel(model,inputs, device_ids)
-            # else:
+                      
             outputs = model(**inputs)
             loss = outputs[0]
 
