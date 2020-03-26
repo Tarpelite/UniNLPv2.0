@@ -2176,7 +2176,7 @@ class HummingbirdModel(BertPreTrainedModel):
         hidden_states = outputs[-1]
 
         classifier = self.classifier_list[task_id]
-        num_labels = self.label_list[task_id]
+        num_labels = self.labels_list[task_id]
 
         sequence_output = self.dropout(sequence_output)
 
