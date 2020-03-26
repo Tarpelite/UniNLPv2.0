@@ -2139,7 +2139,7 @@ class HummingbirdLSTMBiAffineDecoder(nn.Module):
 
 
 class HummingbirdModel(BertPreTrainedModel):
-     def __init__(self, config, labels_list, task_list,
+    def __init__(self, config, labels_list, task_list,
                  do_task_embedding=False, do_alpha=False,
                  do_adapter=False, num_adapter_layers=2):
         super(HummingbirdModel, self).__init__(config)
@@ -2160,7 +2160,7 @@ class HummingbirdModel(BertPreTrainedModel):
         self.crit_label_dst = nn.KLDivLoss(reduction="none")
         self.init_weights()
 
-        
+
     
     def forward(self, input_ids=None, attention_mask=None, token_type_ids=None,
                 position_ids=None, head_mask=None, inputs_embeds=None, heads=None, labels=None,
