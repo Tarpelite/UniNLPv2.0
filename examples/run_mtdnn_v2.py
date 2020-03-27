@@ -275,7 +275,7 @@ def evaluate(args, model, UniDataSet, task):
             if args.do_alpha:
                 alpha = outputs[0]
                 outputs = outputs[1:]
-            if type(model.classifier_list[task_id]) == DeepBiAffineDecoderV2: # do parsing
+            if type(model.classifier_list[task_id]) == DeepBiAffineDecoderV2 or type(model.classifier_list[task_id]) == HummingbirdLSTMBiAffineDecoder: # do parsing
                 logits_arc = outputs[0]
                 logits_label = outputs[1]
             else:
