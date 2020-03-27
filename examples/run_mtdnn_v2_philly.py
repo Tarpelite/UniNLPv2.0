@@ -22,7 +22,7 @@ from tqdm import *
 
 from utils_mtdnn_v2 import MegaDataSet, las_score
 from uninlp import AdamW, get_linear_schedule_with_warmup
-from uninlp import WEIGHTS_NAME, BertConfig, MTDNNModel, BertTokenizer, DeepBiAffineDecoderV2, MTDNNModelV2, RobertaConfig, RobertaMTDNNModel, RobertaTokenizer
+from uninlp import WEIGHTS_NAME, BertConfig, MTDNNModel, BertTokenizer, DeepBiAffineDecoderV2, MTDNNModelV2, RobertaConfig, RobertaMTDNNModel, RobertaTokenizer, HummingbirdModel
 
 import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel as DDP
@@ -42,6 +42,7 @@ ALL_MODELS = sum(
 MODEL_CLASSES = {
     "bert":(BertConfig, MTDNNModelV2, BertTokenizer),
     "roberta":(RobertaConfig, RobertaMTDNNModel, RobertaTokenizer),
+    'lstm':(BertConfig, HummingbirdModel, BertTokenizer)
     
 }
 
