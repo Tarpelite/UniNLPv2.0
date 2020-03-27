@@ -366,7 +366,7 @@ def evaluate(args, model, UniDataSet, task):
         logger.info("  %s = %s ", key, str(results[key]))
     
     # print(results)
-    if type(model.classifier_list[task_id]) == DeepBiAffineDecoderV2 or :
+    if type(model.classifier_list[task_id]) == DeepBiAffineDecoderV2 or type(model.classifier_list[task_id]) == HummingbirdLSTMBiAffineDecoder:
         print("sample results")
         print("preds head", preds_arc_list[0])
         print("true head", out_head_list[0])
