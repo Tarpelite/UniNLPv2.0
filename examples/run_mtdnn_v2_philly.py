@@ -281,7 +281,7 @@ def evaluate(args, model, UniDataSet, task):
             if args.do_alpha:
                 alpha = outputs[0]
                 outputs = outputs[1:]
-            if type(model.classifier_list[task_id]) == DeepBiAffineDecoderV2: # do parsing
+            if type(model.classifier_list[task_id]) == DeepBiAffineDecoderV2 or type(model.classifier_list[task_id]) == HummingbirdLSTMBiAffineDecoder: # do parsing
                 logits_arc = outputs[0]
                 logits_label = outputs[1]
             else:
@@ -290,7 +290,7 @@ def evaluate(args, model, UniDataSet, task):
         nb_eval_steps += 1
         if preds is None:
             # print("preds", logits.shape)
-            if type(model.classifier_list[task_id]) == DeepBiAffineDecoderV2:
+            if type(model.classifier_list[task_id]) == DeepBiAffineDecoderV2 or type(model.classifier_list[task_id]) == HummingbirdLSTMBiAffineDecoder:
                 preds_arc = logits_arc.detach().cpu().numpy()
                 preds_label = logits_label.detach().cpu().numpy()
                 out_head_ids = batch[4].detach().cpu().numpy()
@@ -299,7 +299,7 @@ def evaluate(args, model, UniDataSet, task):
                 preds = logits.detach().cpu().numpy()
                 out_label_ids = batch[3].detach().cpu().numpy()
         else:
-            if type(model.classifier_list[task_id]) == DeepBiAffineDecoderV2:
+            if type(model.classifier_list[task_id]) == DeepBiAffineDecoderV2 or type(model.classifier_list[task_id]) == HummingbirdLSTMBiAffineDecoder:
                 preds_arc = np.append(preds_arc, logits_arc.detach().cpu().numpy(), axis=0)
                 preds_label = np.append(preds_label, logits_label.detach().cpu().numpy(), axis=0)
 
@@ -309,7 +309,7 @@ def evaluate(args, model, UniDataSet, task):
                 preds = np.append(preds, logits.detach().cpu().numpy(), axis=0)
                 out_label_ids = np.append(out_label_ids, batch[3].detach().cpu().numpy(), axis=0)
     
-    if type(model.classifier_list[task_id]) == DeepBiAffineDecoderV2:
+    if type(model.classifier_list[task_id]) == DeepBiAffineDecoderV2 or type(model.classifier_list[task_id]) == HummingbirdLSTMBiAffineDecoder:
         preds_arc = np.argmax(preds_arc, axis=2)
         preds_label = np.argmax(preds_label, axis=2)
     else:
@@ -317,7 +317,7 @@ def evaluate(args, model, UniDataSet, task):
     
     label_map = {i: label for i, label in enumerate(label_list)}
     print(label_map)
-    if type(model.classifier_list[task_id]) == DeepBiAffineDecoderV2:
+    if type(model.classifier_list[task_id]) == DeepBiAffineDecoderV2 or type(model.classifier_list[task_id]) == HummingbirdLSTMBiAffineDecoder:
         pad_token_label_id = -100
         out_head_list = [[] for _ in range(out_head_ids.shape[0])]
         preds_arc_list = [[] for _ in range(out_head_ids.shape[0])]
@@ -359,7 +359,7 @@ def evaluate(args, model, UniDataSet, task):
     
     
     results = {}
-    if type(model.classifier_list[task_id]) == DeepBiAffineDecoderV2:
+    if type(model.classifier_list[task_id]) == DeepBiAffineDecoderV2 or type(model.classifier_list[task_id]) == HummingbirdLSTMBiAffineDecoder:
         results["uas"] = accuracy_score(out_head_list, preds_arc_list)
         results["las"] = las_score(out_label_list, out_head_list, preds_label_list, preds_arc_list)
     else:
@@ -372,7 +372,7 @@ def evaluate(args, model, UniDataSet, task):
         logger.info("  %s = %s ", key, str(results[key]))
     
     # print(results)
-    if type(model.classifier_list[task_id]) == DeepBiAffineDecoderV2:
+    if type(model.classifier_list[task_id]) == DeepBiAffineDecoderV2 or type(model.classifier_list[task_id]) == HummingbirdLSTMBiAffineDecoder:
         print("sample results")
         print("preds head", preds_arc_list[0])
         print("true head", out_head_list[0])
@@ -385,14 +385,7 @@ def evaluate(args, model, UniDataSet, task):
         print("predict_list", preds_list[0])
         print("out_label_list", out_label_list[0])
 
-    # # write the results to text
-    # with open("results-v2.txt", "w+", encoding="utf-8") as f:
-    #     for line in preds_list:
-    #         line = " ".join(line) + "\n"
-    #         f.write(line)
-
     return results
-
 
 def main():
 
