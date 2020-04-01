@@ -51,7 +51,7 @@ if is_torch_available():
     from .modeling_bert import (BertPreTrainedModel, BertModel, BertForPreTraining,
                                 BertForMaskedLM, BertForNextSentencePrediction, 
                                 BertForSequenceClassification, BertForMultipleChoice, MTDNNModel, MTDNNModelAttack,MTDNNModelMobile,BertForNERPOS,
-                                BertForTokenClassification, BertForQuestionAnswering, MTDNNModelV2, DeepBiAffineDecoderV2,HummingbirdModel, HummingbirdLSTMBiAffineDecoder,
+                                BertForTokenClassification, BertForQuestionAnswering, MTDNNModelV2, DeepBiAffineDecoderV2,HummingbirdModel, HummingbirdLSTMBiAffineDecoder, DeepBiAffineDecoderV2_TeacherForce,
                                 load_tf_weights_in_bert, BERT_PRETRAINED_MODEL_ARCHIVE_MAP)
     
     from .modeling_distilbert import (DistilBertForMaskedLM, DistilBertModel,

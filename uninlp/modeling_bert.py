@@ -1398,7 +1398,6 @@ class DeepBiAffineDecoderV2(nn.Module):
 
     
     def forward(self, sequence_output):
-
         s_head_arc = self.mlp_head_arc(sequence_output)
         s_dep_arc = self.mlp_dep_arc(sequence_output)
 
@@ -1419,9 +1418,48 @@ class DeepBiAffineDecoderV2(nn.Module):
         return (logits_arc, logits_label)
 
 
+class DeepBiAffineDecoderV2_TeacherForce(nn.Module):
+    def __init__(self, hidden_size, mlp_dim=300, num_labels=2):
+        super(DeepBiAffineDecoderV2_TeacherForce, self).__init__()
+        self.mlp_dim = mlp_dim
+        self.num_labels = num_labels
+        self.hidden_size = hidden_size
+        
+        self.mlp_head_arc = nn.Linear(hidden_size, mlp_dim)
+        self.mlp_dep_arc = nn.Linear(hidden_size, mlp_dim)
+        self.biaffine_arc = BiAffine(mlp_dim, 1)
+
+        self.mlp_head_label = nn.Linear(hidden_size, mlp_dim)
+        self.mlp_dep_label = nn.Linear(hidden_size, mlp_dim)
+        self.biaffine_label = BiAffine(mlp_dim, num_labels)
+    
+    def forward(self, sequence_output, heads):
+        s_head_arc = self.mlp_head_arc(sequence_output)
+        s_dep_arc = self.mlp_dep_arc(sequence_output)
+
+        s_head_label = self.mlp_head_label(sequence_output)
+        s_dep_label = self.mlp_head_label(sequence_output)
+
+        logits_arc = self.biaffine_arc(s_head_arc, s_dep_arc) # [batch_size, seq_len, seq_len]
+        logits_arc = logits_arc.transpose(-1, -2)
+
+        logits_label = self.biaffine_label(s_head_label, s_dep_label) #[batch_size, num_labels, seq_len, seq_len]
+        logits_label = logits_label.transpose(-1, -3) #[batch_size, seq_len, seq_len, num_labels]
+
+        )
+        preds = heads.unsqueeze(-1) #[batch_size, seq_len, 1]
+        indices = preds.unsqueeze(-1).expand(preds.shape + (self.num_labels,)) #[batch_size, seq_len, 1 , num_labels]
+
+        logits_label = torch.gather(logits_label, -2, indices).squeeze(-2) #[batch_size, seq_len,num_labels]
+
+        return (logits_arc, logits_label)
+
+
+
+
 class MTDNNModelV2(BertPreTrainedModel):
     def __init__(self, config, labels_list, task_list,
-                 do_task_embedding=False, do_alpha=False,
+                 do_task_embedding=False, do_alpha=False, teacher_force=False,
                  do_adapter=False, num_adapter_layers=2):
         super(MTDNNModelV2, self).__init__(config)
 
@@ -1433,7 +1471,10 @@ class MTDNNModelV2(BertPreTrainedModel):
         decoder_modules = []
         for labels ,task in zip(labels_list, task_list):
             if task.startswith("PARSING"):
-                decoder_modules.append(DeepBiAffineDecoderV2(config.hidden_size, mlp_dim=300, num_labels=len(labels)))
+                if teacher_force:
+                    decoder_modules.append(DeepBiAffineDecoderV2_TeacherForce(config.hidden_size, mlp_dim=300, num_labels=len(labels)))
+                else:
+                    decoder_modules.append(DeepBiAffineDecoderV2(config.hidden_size, mlp_dim=300, num_labels=len(labels)))
             else:
                 decoder_modules.append(nn.Linear(config.hidden_size, len(labels)))
         self.classifier_list =  nn.ModuleList(decoder_modules)
@@ -1455,6 +1496,7 @@ class MTDNNModelV2(BertPreTrainedModel):
         self.do_alpha = do_alpha
         self.do_adapter = do_adapter
         self.softmax = nn.Softmax(dim=0)
+        self.teacher_force = teacher_force
 
         self.crit_label_dst = nn.KLDivLoss(reduction="none")
  
@@ -1463,10 +1505,10 @@ class MTDNNModelV2(BertPreTrainedModel):
 
 
         
-
     def forward(self, input_ids=None, attention_mask=None, token_type_ids=None,
-                position_ids=None, head_mask=None, inputs_embeds=None, heads=None, labels=None,
+                position_ids=None, head_mask=None, inputs_embeds=None, heads=None, labels=None, 
                 task_id=0, adapter_ft=False, soft_labels=None, soft_heads=None, gamma=0.5, attack=False):
+
         if self.do_adapter:
             
             if adapter_ft and labels is not None:
@@ -1521,8 +1563,12 @@ class MTDNNModelV2(BertPreTrainedModel):
             sequence_output = torch.matmul(hidden_states, alpha).squeeze(-1) # [batch_size, seq_len, hidden_size]
 
         sequence_output = self.dropout(sequence_output)
-        if type(classifier) == DeepBiAffineDecoderV2: # parsing task
-            logits_arc, logits_label = classifier(sequence_output)
+
+        if type(classifier) in [DeepBiAffineDecoderV2, DeepBiAffineDecoderV2_TeacherForce]: # parsing task
+            if type(classifier) == DeepBiAffineDecoderV2:
+                logits_arc, logits_label = classifier(sequence_output)
+            else:
+                logits_arc, logits_label = classifier(sequence_output, heads)
             outputs = (logits_arc, logits_label) + outputs[2:]
 
             if labels is not None and heads is not None:
@@ -2251,8 +2297,7 @@ class HummingbirdModel(BertPreTrainedModel):
                         soft_labels = soft_labels.view(-1, num_labels)[active_loss]
                         kv_loss = self.crit_label_dst(F.log_softmax(active_logits.float(), dim=-1),
                                                      F.softmax(soft_labels.float(), dim=-1)).sum(dim=-1).mean()
-                        # print("ce loss", loss)
-                        # print("kv loss", kv_loss)
+                      
                         loss = gamma*loss + (1-gamma)*kv_loss
                 else:
                     logits = logits.view(-1, self.num_labels)
