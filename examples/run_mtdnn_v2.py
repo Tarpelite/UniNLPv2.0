@@ -21,7 +21,7 @@ from tqdm import *
 
 from utils_mtdnn_v2 import MegaDataSet, las_score
 from uninlp import AdamW, get_linear_schedule_with_warmup
-from uninlp import WEIGHTS_NAME, BertConfig, MTDNNModel, BertTokenizer, DeepBiAffineDecoderV2, MTDNNModelV2, RobertaConfig, RobertaMTDNNModel, RobertaTokenizer, HummingbirdModel, HummingbirdLSTMBiAffineDecoder
+from uninlp import WEIGHTS_NAME, BertConfig, MTDNNModel, BertTokenizer, DeepBiAffineDecoderV2, MTDNNModelV2, RobertaConfig, RobertaMTDNNModel, RobertaTokenizer, HummingbirdModel, HummingbirdLSTMBiAffineDecoder, DeepBiAffineDecoderV2_TeacherForce
 
 import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel as DDP
@@ -275,7 +275,7 @@ def evaluate(args, model, UniDataSet, task):
             if args.do_alpha:
                 alpha = outputs[0]
                 outputs = outputs[1:]
-            if type(model.classifier_list[task_id]) == DeepBiAffineDecoderV2 or type(model.classifier_list[task_id]) == HummingbirdLSTMBiAffineDecoder: # do parsing
+            if type(model.classifier_list[task_id]) in [DeepBiAffineDecoderV2,HummingbirdLSTMBiAffineDecoder, DeepBiAffineDecoderV2_TeacherForce]: # do parsing
                 logits_arc = outputs[0]
                 logits_label = outputs[1]
             else:
@@ -284,7 +284,7 @@ def evaluate(args, model, UniDataSet, task):
         nb_eval_steps += 1
         if preds is None:
             # print("preds", logits.shape)
-            if type(model.classifier_list[task_id]) == DeepBiAffineDecoderV2 or type(model.classifier_list[task_id]) == HummingbirdLSTMBiAffineDecoder:
+            if type(model.classifier_list[task_id]) in [ DeepBiAffineDecoderV2, HummingbirdLSTMBiAffineDecoder, DeepBiAffineDecoderV2_TeacherForce]:
                 preds_arc = logits_arc.detach().cpu().numpy()
                 preds_label = logits_label.detach().cpu().numpy()
                 out_head_ids = batch[4].detach().cpu().numpy()
@@ -293,7 +293,7 @@ def evaluate(args, model, UniDataSet, task):
                 preds = logits.detach().cpu().numpy()
                 out_label_ids = batch[3].detach().cpu().numpy()
         else:
-            if type(model.classifier_list[task_id]) == DeepBiAffineDecoderV2 or type(model.classifier_list[task_id]) == HummingbirdLSTMBiAffineDecoder:
+            if type(model.classifier_list[task_id]) in [ DeepBiAffineDecoderV2, HummingbirdLSTMBiAffineDecoder, DeepBiAffineDecoderV2_TeacherForce]:
                 preds_arc = np.append(preds_arc, logits_arc.detach().cpu().numpy(), axis=0)
                 preds_label = np.append(preds_label, logits_label.detach().cpu().numpy(), axis=0)
 
@@ -303,7 +303,7 @@ def evaluate(args, model, UniDataSet, task):
                 preds = np.append(preds, logits.detach().cpu().numpy(), axis=0)
                 out_label_ids = np.append(out_label_ids, batch[3].detach().cpu().numpy(), axis=0)
     
-    if type(model.classifier_list[task_id]) == DeepBiAffineDecoderV2 or type(model.classifier_list[task_id]) == HummingbirdLSTMBiAffineDecoder:
+    if type(model.classifier_list[task_id]) in [DeepBiAffineDecoderV2, HummingbirdLSTMBiAffineDecoder, DeepBiAffineDecoderV2_TeacherForce]:
         preds_arc = np.argmax(preds_arc, axis=2)
         preds_label = np.argmax(preds_label, axis=2)
     else:
@@ -311,7 +311,7 @@ def evaluate(args, model, UniDataSet, task):
     
     label_map = {i: label for i, label in enumerate(label_list)}
     print(label_map)
-    if type(model.classifier_list[task_id]) == DeepBiAffineDecoderV2 or type(model.classifier_list[task_id]) == HummingbirdLSTMBiAffineDecoder:
+    if type(model.classifier_list[task_id]) in [DeepBiAffineDecoderV2 , HummingbirdLSTMBiAffineDecoder, DeepBiAffineDecoderV2_TeacherForce]:
         pad_token_label_id = -100
         out_head_list = [[] for _ in range(out_head_ids.shape[0])]
         preds_arc_list = [[] for _ in range(out_head_ids.shape[0])]
@@ -353,7 +353,7 @@ def evaluate(args, model, UniDataSet, task):
     
     
     results = {}
-    if type(model.classifier_list[task_id]) == DeepBiAffineDecoderV2 or type(model.classifier_list[task_id]) == HummingbirdLSTMBiAffineDecoder:
+    if type(model.classifier_list[task_id]) in [ DeepBiAffineDecoderV2, HummingbirdLSTMBiAffineDecoder, DeepBiAffineDecoderV2_TeacherForce]:
         results["uas"] = accuracy_score(out_head_list, preds_arc_list)
         results["las"] = las_score(out_label_list, out_head_list, preds_label_list, preds_arc_list)
     else:
@@ -366,7 +366,7 @@ def evaluate(args, model, UniDataSet, task):
         logger.info("  %s = %s ", key, str(results[key]))
     
     # print(results)
-    if type(model.classifier_list[task_id]) == DeepBiAffineDecoderV2 or type(model.classifier_list[task_id]) == HummingbirdLSTMBiAffineDecoder:
+    if type(model.classifier_list[task_id]) in [DeepBiAffineDecoderV2,HummingbirdLSTMBiAffineDecoder, DeepBiAffineDecoderV2_TeacherForce]:
         print("sample results")
         print("preds head", preds_arc_list[0])
         print("true head", out_head_list[0])
@@ -435,6 +435,8 @@ def main():
                         help="Avoid using CUDA when available")
     parser.add_argument("--seed", type=int, default=42,
                         help="random seed for initialization")
+    
+    parser.add_argument("--teacher_force", action="store_true")
     
     parser.add_argument("--do_alpha", action="store_true")
     parser.add_argument("--do_adapter", action="store_true")
