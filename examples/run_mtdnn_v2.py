@@ -449,7 +449,7 @@ def main():
                         help="For distributed training: local_rank")
     parser.add_argument("--fp16_opt_level", type=str, default="O1")
     parser.add_argument("--debug", action="store_true")
-    parser.add_argument("--results_path", action="store_true")
+    parser.add_argument("--results_path", type=str, default="")
     args = parser.parse_args()
 
 
@@ -638,7 +638,7 @@ def main():
                 torch.save(model_to_save.state_dict(), ft_model_path)
 
         print(total_results)
-        if args.results_path:
+        if len(args.results_path) > 0:
             os.makedirs(os.path.dirname(args.results_path), exist_ok=True)
             with open(args.results_path, "w+", encoding="utf-8") as f:
                 json.dump(total_results, f)
