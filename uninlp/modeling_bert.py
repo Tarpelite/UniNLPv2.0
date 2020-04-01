@@ -1446,7 +1446,7 @@ class DeepBiAffineDecoderV2_TeacherForce(nn.Module):
         logits_label = self.biaffine_label(s_head_label, s_dep_label) #[batch_size, num_labels, seq_len, seq_len]
         logits_label = logits_label.transpose(-1, -3) #[batch_size, seq_len, seq_len, num_labels]
 
-        )
+        
         preds = heads.unsqueeze(-1) #[batch_size, seq_len, 1]
         indices = preds.unsqueeze(-1).expand(preds.shape + (self.num_labels,)) #[batch_size, seq_len, 1 , num_labels]
 
@@ -1719,18 +1719,6 @@ class MTDNNModel(BertPreTrainedModel):
                 for param in self.bert.encoder.layer[-2].parameters():
                     param.requires_grad = True
                 
-                # update_params = [param for param in self.bert.parameters() if param.requires_grad]
-                # no_update_params = [param for param in self.bert.parameters() if not param.requires_grad]
-                # # print(update_params)
-                # print(no_update_params)
-            # self.bert.encoder.layer[-1] = self.adapter_layers[-1]
-            # self.bert.encoder.layer[-2] = self.adapter_layers[-2]
-
-        #     adapter_layer = self.adapter_layers[task_id]
-        #     for i in range(len(adapter_layer.layers)):
-        #         copy_model(adapter_layer.layers[i], self.bert.encoder.layer[-(i+1)])
-                # self.bert.encoder.layer[-(i+1)] = adapter_layer.layers[i]
-
         outputs = self.bert(input_ids, 
                             attention_mask=attention_mask,
                             token_type_ids=token_type_ids,
@@ -1850,7 +1838,6 @@ class MTDNNModelAttack(BertPreTrainedModel):
 
 
         
-
     def forward(self, input_ids=None, attention_mask=None, token_type_ids=None,
                 position_ids=None, head_mask=None, inputs_embeds=None, heads=None, labels=None,
                 task_id=0, adapter_ft=False, soft_labels=None, soft_heads=None, gamma=0.5, 
@@ -1892,7 +1879,7 @@ class MTDNNModelAttack(BertPreTrainedModel):
             task_embbedding = self.task_embedding(torch.tensor([task_id]).cuda()).view(-1)
             hidden_states = hidden_states[1:]
             hidden_states = torch.stack(hidden_states)
-            # alpha = w1*hidden_states + w2*task_embedding + bias 
+           
             out1 = self.w1(hidden_states) #[num_hidden_layers, batch_size, seq_len, 1]
             task_embedding = task_embedding.expand(hidden_states.size(0), hidden_states.size(1), task_embedding.size(0)) # [num_hidden_layers, batch_size, hidden_size]
             out2 = self.w2(task_embedding) # [num_hidden_layers, batch_size, 1]
@@ -1983,8 +1970,7 @@ class MTDNNModelAttack(BertPreTrainedModel):
                         soft_labels = soft_labels.view(-1, num_labels)[active_loss]
                         kv_loss = self.crit_label_dst(F.log_softmax(active_logits.float(), dim=-1),
                                                      F.softmax(soft_labels.float(), dim=-1)).sum(dim=-1).mean()
-                        # print("ce loss", loss)
-                        # print("kv loss", kv_loss)
+                        
                         loss = gamma*loss + (1-gamma)*kv_loss
                 else:
                     logits = logits.view(-1, self.num_labels)
@@ -1992,8 +1978,7 @@ class MTDNNModelAttack(BertPreTrainedModel):
                         soft_labels = soft_labels.view(-1, num_labels)
                         kv_loss = self.crit_label_dst(F.log_softmax(active_logits.float(), dim=-1),
                                                       F.softmax(soft_labels.float(), dim=-1)).sum(dim=-1).mean()
-                        # print("ce loss", loss)
-                        # print("kv loss", kv_loss)
+                      
                         loss = gamma*loss + (1-gamma)*kv_loss
                     loss = loss_fct(logits, labels.view(-1))
                 outputs = (loss,) + outputs
