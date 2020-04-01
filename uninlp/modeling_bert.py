@@ -1450,6 +1450,7 @@ class DeepBiAffineDecoderV2_TeacherForce(nn.Module):
         preds = heads.unsqueeze(-1) #[batch_size, seq_len, 1]
         print(preds)
         print("preds shape", preds.shape)
+        print("test")
         indices = preds.unsqueeze(-1).expand(preds.shape + (self.num_labels,)) #[batch_size, seq_len, 1 , num_labels]
 
         logits_label = torch.gather(logits_label, -2, indices).squeeze(-2) #[batch_size, seq_len,num_labels]
