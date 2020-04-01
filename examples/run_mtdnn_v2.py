@@ -449,6 +449,7 @@ def main():
                         help="For distributed training: local_rank")
     parser.add_argument("--fp16_opt_level", type=str, default="O1")
     parser.add_argument("--debug", action="store_true")
+    parser.add_argument("--results_path", action="store_true")
     args = parser.parse_args()
 
 
@@ -514,7 +515,8 @@ def main():
                                         do_task_embedding=args.do_task_embedding,
                                         do_alpha=args.do_alpha,
                                         do_adapter = args.do_adapter,
-                                        num_adapter_layers = args.num_adapter_layers
+                                        num_adapter_layers = args.num_adapter_layers,
+                                        teacher_force=args.teacher_force
                                         )
 
     if args.local_rank == 0:
@@ -538,7 +540,8 @@ def main():
                                             do_task_embedding=args.do_task_embedding,
                                             do_alpha=args.do_alpha,
                                             do_adapter = args.do_adapter,
-                                            num_adapter_layers = args.num_adapter_layers)
+                                            num_adapter_layers = args.num_adapter_layers,
+                                            teacher_force=args.teacher_force)
             model.to(args.device)
         
         all_train_datasets, all_dataset_sampler = UniDataSet.load_MTDNN_dataset((args.mini_batch_size * max(1, args.n_gpu)), debug=args.debug)
@@ -579,7 +582,8 @@ def main():
                                             do_task_embedding=args.do_task_embedding,
                                             do_alpha=args.do_alpha,
                                             do_adapter = args.do_adapter,
-                                            num_adapter_layers = args.num_adapter_layers)
+                                            num_adapter_layers = args.num_adapter_layers,
+                                            teacher_force=args.teacher_force)
 
         # model = torch.load(checkpoint)
 
@@ -602,7 +606,8 @@ def main():
                                             do_task_embedding=args.do_task_embedding,
                                             do_alpha=args.do_alpha,
                                             do_adapter = args.do_adapter,
-                                            num_adapter_layers = args.num_adapter_layers)
+                                            num_adapter_layers = args.num_adapter_layers,
+                                            teacher_force=args.teacher_force)
                 features,dataset, task_id = UniDataSet.load_single_dataset(task, max(1, args.n_gpu)*args.mini_batch_size, mode="train")
                 model.to(args.device)
                 model = train(args, model, dataset, all_dataset_sampler=None, task_id=task_id)
@@ -633,6 +638,10 @@ def main():
                 torch.save(model_to_save.state_dict(), ft_model_path)
 
         print(total_results)
+        if args.results_path:
+            os.makedirs(os.path.dirname(args.results_path), exist_ok=True)
+            with open(args.results_path, "w+", encoding="utf-8") as f:
+                json.dump(total_results, f)
 
 if __name__ == "__main__":
     main()
