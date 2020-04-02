@@ -61,8 +61,8 @@ try:
 except ImportError:
     from tensorboardX import SummaryWriter
 
-from pudb import set_trace
-set_trace()
+# from pudb import set_trace
+# set_trace()
 
 
 logger = logging.getLogger(__name__)
@@ -419,40 +419,7 @@ def test(args, model, tokenizer, labels, pad_token_label_id, mode, prefix=""):
     os.makedirs(os.path.dirname(out_file), exist_ok=True)
     results = [all_input_ids, all_input_mask, all_segment_ids, preds]
     torch.save(results, out_file)
-    # preds = np.argmax(preds, axis=2)
 
-    # label_map = {i: label for i, label in enumerate(labels)}
-
-    # out_label_list = [[] for _ in range(out_label_ids.shape[0])]
-    # preds_list = [[] for _ in range(out_label_ids.shape[0])]
-
-    # for i in range(out_label_ids.shape[0]):
-    #     for j in range(out_label_ids.shape[1]):
-    #         if out_label_ids[i, j] != pad_token_label_id:
-    #             out_label_list[i].append(label_map[out_label_ids[i][j]])
-    #             preds_list[i].append(label_map[preds[i][j]])
-    
-    # out_file = os.path.join(args.output_dir, "predict.txt")
-
-    # results = {
-    #     "loss": eval_loss,
-    #     "precision": precision_score(out_label_list, preds_list),
-    #     "recall": recall_score(out_label_list, preds_list),
-    #     "f1": f1_score(out_label_list, preds_list),
-    # }
-    # print(out_label_list[0])
-    # print(preds_list[0])
-    # logger.info("write results into {}".format(out_file))
-    # data = []
-    # data_src_file = ""
-    # with open(out_file, "w+", encoding="utf-8") as f:
-    #     for line in preds_list:
-    #         line = " ".join(line) + "\n"
-    #         f.write(line)
-    
-    # for key in sorted(results.keys()):
-    #     logger.info("  %s = %s", key, str(results[key]))
-    
     return results, []
 
 
