@@ -1446,7 +1446,9 @@ class DeepBiAffineDecoderV2_TeacherForce(nn.Module):
         logits_label = self.biaffine_label(s_head_label, s_dep_label) #[batch_size, num_labels, seq_len, seq_len]
         logits_label = logits_label.transpose(-1, -3) #[batch_size, seq_len, seq_len, num_labels]
 
-        
+        raw_preds = torch.argmax(logits_arc, dim=1).unsqueeze(-1) #[batch_size, seq_len, 1]
+        print(raw_preds)
+        print("raw preds", raw_preds.shape)
         preds = heads.unsqueeze(-1) #[batch_size, seq_len, 1]
         print(preds)
         print("preds shape", preds.shape)
