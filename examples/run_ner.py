@@ -429,28 +429,28 @@ def test(args, model, tokenizer, labels, pad_token_label_id, mode, prefix=""):
     #             out_label_list[i].append(label_map[out_label_ids[i][j]])
     #             preds_list[i].append(label_map[preds[i][j]])
     
-    out_file = os.path.join(args.output_dir, "predict.txt")
+    # out_file = os.path.join(args.output_dir, "predict.txt")
 
-    results = {
-        "loss": eval_loss,
-        "precision": precision_score(out_label_list, preds_list),
-        "recall": recall_score(out_label_list, preds_list),
-        "f1": f1_score(out_label_list, preds_list),
-    }
-    print(out_label_list[0])
-    print(preds_list[0])
-    logger.info("write results into {}".format(out_file))
-    data = []
-    data_src_file = ""
-    with open(out_file, "w+", encoding="utf-8") as f:
-        for line in preds_list:
-            line = " ".join(line) + "\n"
-            f.write(line)
+    # results = {
+    #     "loss": eval_loss,
+    #     "precision": precision_score(out_label_list, preds_list),
+    #     "recall": recall_score(out_label_list, preds_list),
+    #     "f1": f1_score(out_label_list, preds_list),
+    # }
+    # print(out_label_list[0])
+    # print(preds_list[0])
+    # logger.info("write results into {}".format(out_file))
+    # data = []
+    # data_src_file = ""
+    # with open(out_file, "w+", encoding="utf-8") as f:
+    #     for line in preds_list:
+    #         line = " ".join(line) + "\n"
+    #         f.write(line)
     
-    for key in sorted(results.keys()):
-        logger.info("  %s = %s", key, str(results[key]))
+    # for key in sorted(results.keys()):
+    #     logger.info("  %s = %s", key, str(results[key]))
     
-    return results, preds_list
+    return results, []
 
 
 def load_and_cache_examples(args, tokenizer, labels, pad_token_label_id, mode):
