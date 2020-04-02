@@ -375,6 +375,10 @@ def test(args, model, tokenizer, labels, pad_token_label_id, mode, prefix=""):
     preds = None
     out_label_ids = None
     model.eval()
+    all_input_ids = []
+    all_input_mask = []
+    all_segment_ids = []
+    
     for batch in tqdm(test_dataloader, desc="Prediction"):
         batch = tuple(t.to(args.device) for t in batch)
 
@@ -391,6 +395,10 @@ def test(args, model, tokenizer, labels, pad_token_label_id, mode, prefix=""):
                 tmp_eval_loss = tmp_eval_loss.mean()  # mean() to average on multi-gpu parallel evaluating
 
             eval_loss += tmp_eval_loss.item()
+        all_input_ids.extend(batch[0].cpu().numpy().tolist())
+        all_input_mask.extend(batch[1].cpu().numpy().tolist())
+        all_segment_ids.extend(batch[2].cpu().numpy().tolist())
+
         nb_eval_steps += 1
         if preds is None:
             preds = logits.detach().cpu().numpy()
@@ -400,18 +408,26 @@ def test(args, model, tokenizer, labels, pad_token_label_id, mode, prefix=""):
             out_label_ids = np.append(out_label_ids, inputs["labels"].detach().cpu().numpy(), axis=0)
 
     eval_loss = eval_loss / nb_eval_steps
-    preds = np.argmax(preds, axis=2)
 
-    label_map = {i: label for i, label in enumerate(labels)}
+    assert len(preds) == len(all_input_ids) == len(all_input_mask) == len(all_segment_ids)
 
-    out_label_list = [[] for _ in range(out_label_ids.shape[0])]
-    preds_list = [[] for _ in range(out_label_ids.shape[0])]
+    out_file = args.output_file_path
+    logger.info ("****** save predictions to %s ********"%out_file)
+    os.makedirs(os.path.dirname(args.results_path), exist_ok=True)
+    results = [all_input_ids, all_input_mask, all_segment_ids, preds]
+    torch.save(results, out_file)
+    # preds = np.argmax(preds, axis=2)
 
-    for i in range(out_label_ids.shape[0]):
-        for j in range(out_label_ids.shape[1]):
-            if out_label_ids[i, j] != pad_token_label_id:
-                out_label_list[i].append(label_map[out_label_ids[i][j]])
-                preds_list[i].append(label_map[preds[i][j]])
+    # label_map = {i: label for i, label in enumerate(labels)}
+
+    # out_label_list = [[] for _ in range(out_label_ids.shape[0])]
+    # preds_list = [[] for _ in range(out_label_ids.shape[0])]
+
+    # for i in range(out_label_ids.shape[0]):
+    #     for j in range(out_label_ids.shape[1]):
+    #         if out_label_ids[i, j] != pad_token_label_id:
+    #             out_label_list[i].append(label_map[out_label_ids[i][j]])
+    #             preds_list[i].append(label_map[preds[i][j]])
     
     out_file = os.path.join(args.output_dir, "predict.txt")
 
@@ -485,6 +501,7 @@ def load_and_cache_examples(args, tokenizer, labels, pad_token_label_id, mode):
     all_input_mask = torch.tensor([f.input_mask for f in features], dtype=torch.long)
     all_segment_ids = torch.tensor([f.segment_ids for f in features], dtype=torch.long)
     all_label_ids = torch.tensor([f.label_ids for f in features], dtype=torch.long)
+    
 
     dataset = TensorDataset(all_input_ids, all_input_mask, all_segment_ids, all_label_ids)
     return dataset
