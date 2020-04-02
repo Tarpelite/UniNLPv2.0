@@ -413,7 +413,7 @@ def test(args, model, tokenizer, labels, pad_token_label_id, mode, prefix=""):
 
     out_file = args.output_file_path
     logger.info ("****** save predictions to %s ********"%out_file)
-    os.makedirs(os.path.dirname(args.results_path), exist_ok=True)
+    os.makedirs(os.path.dirname(out_file), exist_ok=True)
     results = [all_input_ids, all_input_mask, all_segment_ids, preds]
     torch.save(results, out_file)
     # preds = np.argmax(preds, axis=2)
