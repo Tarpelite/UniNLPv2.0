@@ -29,6 +29,7 @@ from torch.nn import CrossEntropyLoss
 from torch.utils.data import DataLoader, RandomSampler, SequentialSampler, TensorDataset
 from torch.utils.data.distributed import DistributedSampler
 from tqdm import tqdm, trange
+import pickle
 
 from transformers import (
     WEIGHTS_NAME,
@@ -418,7 +419,8 @@ def test(args, model, tokenizer, labels, pad_token_label_id, mode, prefix=""):
     logger.info ("****** save predictions to %s ********"%out_file)
     os.makedirs(os.path.dirname(out_file), exist_ok=True)
     results = [all_input_ids, all_input_mask, all_segment_ids, preds]
-    torch.save(results, out_file)
+    with open(out_file, "wb") as f:
+        torch.dump(results, f, protocol=pickle.HIGHEST_PROTOCOL)
 
     return results, []
 
