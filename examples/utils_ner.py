@@ -151,7 +151,7 @@ def convert_examples_to_features(
             # roberta uses an extra separator b/w pairs of sentences
             tokens += [sep_token]
             label_ids += [pad_token_label_id]
-        segment_ids = [sequence_a_segment_id] * len(tokens)
+            segment_ids = [sequence_a_segment_id] * len(tokens)
 
         if cls_token_at_end:
             tokens += [cls_token]
@@ -175,19 +175,20 @@ def convert_examples_to_features(
             input_mask = ([0 if mask_padding_with_zero else 1] * padding_length) + input_mask
             segment_ids = ([pad_token_segment_id] * padding_length) + segment_ids
             label_ids = ([pad_token_label_id] * padding_length) + label_ids
-            
+
         else:
             input_ids += [pad_token] * padding_length
             input_mask += [0 if mask_padding_with_zero else 1] * padding_length
             segment_ids += [pad_token_segment_id] * padding_length
             label_ids += [pad_token_label_id] * padding_length
             
-
-        assert len(input_ids) == max_seq_length
-        assert len(input_mask) == max_seq_length
-        assert len(segment_ids) == max_seq_length
-        assert len(label_ids) == max_seq_length
-
+        try:
+            assert len(input_ids) == max_seq_length
+            assert len(input_mask) == max_seq_length
+            assert len(segment_ids) == max_seq_length
+            assert len(label_ids) == max_seq_length
+        except Exception as e:
+            continue
 
         if ex_index < 5:
             logger.info("*** Example ***")
@@ -197,7 +198,8 @@ def convert_examples_to_features(
             logger.info("input_mask: %s", " ".join([str(x) for x in input_mask]))
             logger.info("segment_ids: %s", " ".join([str(x) for x in segment_ids]))
             logger.info("label_ids: %s", " ".join([str(x) for x in label_ids]))
-
+        
+     
         features.append(
             InputFeatures(input_ids=input_ids, input_mask=input_mask, segment_ids=segment_ids, label_ids=label_ids)
         )
