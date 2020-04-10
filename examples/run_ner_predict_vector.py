@@ -10,6 +10,7 @@ import numpy as np
 import torch
 
 import torch.nn as nn
+from torch.nn import CrossEntropyLoss
 from torch.optim import Adam
 import json
 import pickle
