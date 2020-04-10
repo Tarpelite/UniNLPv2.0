@@ -467,8 +467,8 @@ def predict(args, model, tokenizer, labels, pad_token_label_id, mode, prefix= ""
     all_segment_ids = []
     task_id=0
 
-    batch = tuple(t.to(args.device) for t in batch)
-
+    for batch in tqdm(test_dataloader, desc="Evaluating"):
+        batch = tuple(t.to(args.device) for t in batch)
         with torch.no_grad():
             inputs = {"input_ids": batch[0], "attention_mask": batch[1], "labels": batch[3], "task_id":task_id}
             if args.model_type != "distilbert":
