@@ -784,7 +784,7 @@ def main():
                                             do_adapter = args.do_adapter,
                                             num_adapter_layers = args.num_adapter_layers)
         model.to(args.device)
-        result, predictions = test(args, model, tokenizer, labels, pad_token_label_id, mode="test")
+        result, predictions = predict(args, model, tokenizer, labels, pad_token_label_id, mode="test")
 
 if __name__ == "__main__":
     main()
