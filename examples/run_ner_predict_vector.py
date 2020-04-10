@@ -22,7 +22,7 @@ from seqeval.metrics import accuracy_score, precision_score, recall_score, f1_sc
 from tqdm import *
 
 from utils_mtdnn_v2 import MegaDataSet, las_score
-from utils_ner import read_examples_from_file, convert_examples_to_features
+from utils_ner import read_examples_from_file, convert_examples_to_features, get_labels
 from uninlp import AdamW, get_linear_schedule_with_warmup
 from uninlp import WEIGHTS_NAME, BertConfig, MTDNNModel, BertTokenizer, DeepBiAffineDecoderV2, MTDNNModelV2, RobertaConfig, RobertaMTDNNModel, RobertaTokenizer, HummingbirdModel, HummingbirdLSTMBiAffineDecoder
 
@@ -579,6 +579,8 @@ def main():
     parser.add_argument("--results_path", type=str, )
     parser.add_argument("--debug", action="store_true")
     parser.add_argument("--output_file_path", type=str, default="")
+    parser.add_argument("--labels", type=str, default="")
+
     args = parser.parse_args()
 
 
@@ -784,6 +786,8 @@ def main():
                                             do_adapter = args.do_adapter,
                                             num_adapter_layers = args.num_adapter_layers)
         model.to(args.device)
+        pad_token_label_id = CrossEntropyLoss().ignore_index
+        labels = get_labels(args.labels)
         result, predictions = predict(args, model, tokenizer, labels, pad_token_label_id, mode="test")
 
 if __name__ == "__main__":
