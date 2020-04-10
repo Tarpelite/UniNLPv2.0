@@ -12,8 +12,9 @@ import torch
 import torch.nn as nn
 from torch.optim import Adam
 import json
+import pickle
 
-from torch.utils.data import DataLoader, RandomSampler, SequentialSampler, TensorDataset
+from torch.utils.data import DataLoader, RandomSampler, SequentialSampler, TensorDataset,DistributedSampler
 
 import copy 
 import requests
@@ -769,6 +770,10 @@ def main():
                 json.dump(total_results, f)
 
     if args.do_predict and args.local_rank in [-1, 0]:
+        if args.recover_path:
+            checkpoint = args.recover_path
+        else:
+            checkpoint = os.path.join(args.output_dir, "pytorch_model.bin")
         model = model_class.from_pretrained(checkpoint,
                                             from_tf=bool(".ckpt" in args.model_name_or_path),
                                             config = config,
