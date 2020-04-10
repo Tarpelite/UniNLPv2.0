@@ -566,6 +566,7 @@ def main():
                         help="Avoid using CUDA when available")
     parser.add_argument("--seed", type=int, default=42,
                         help="random seed for initialization")
+    parser.add_argument("--per_gpu_eval_batch_size", type=int, default=32)
     
     parser.add_argument("--do_alpha", action="store_true")
     parser.add_argument("--do_adapter", action="store_true")
