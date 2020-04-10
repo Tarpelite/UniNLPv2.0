@@ -519,6 +519,7 @@ def main():
     parser.add_argument("--output_dir", default=None, type=str, required=True,
                         help="The output directory where the model predictions and checkpoints will be written.")
     parser.add_argument("--dataset_dir", default=None, type=str, required=True)
+    parser.add_argument("--data_dir", default=None, type=str)
 
     parser.add_argument("--config_name", default="", type=str,
                         help="Pretrained config name or path if not the same as model_name")
