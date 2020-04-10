@@ -1446,13 +1446,14 @@ class DeepBiAffineDecoderV2_TeacherForce(nn.Module):
         logits_label = self.biaffine_label(s_head_label, s_dep_label) #[batch_size, num_labels, seq_len, seq_len]
         logits_label = logits_label.transpose(-1, -3) #[batch_size, seq_len, seq_len, num_labels]
 
-        
         preds = heads.unsqueeze(-1) #[batch_size, seq_len, 1]
-        indices = preds.unsqueeze(-1).expand(preds.shape + (self.num_labels,)) #[batch_size, seq_len, 1 , num_labels]
+        indices = preds.unsqueeze(-1).expand(preds.shape + (self.num_labels,)) 
 
         logits_label = torch.gather(logits_label, -2, indices).squeeze(-2) #[batch_size, seq_len,num_labels]
 
         return (logits_arc, logits_label)
+
+
 
 
 
@@ -2189,13 +2190,16 @@ class HummingbirdModel(BertPreTrainedModel):
         self.labels_list = [len(x) for x in labels_list]
         self.softmax = nn.Softmax(dim=0)
         self.crit_label_dst = nn.KLDivLoss(reduction="none")
+
         self.init_weights()
 
 
     
     def forward(self, input_ids=None, attention_mask=None, token_type_ids=None,
                 position_ids=None, head_mask=None, inputs_embeds=None, heads=None, labels=None,
-                task_id=0, adapter_ft=False, soft_labels=None, soft_heads=None, gamma=0.5, attack=False):
+                task_id=0, adapter_ft=False, soft_labels=None, soft_heads=None, gamma=0.5, attack=False,ner_logits=None):
+        
+        # ner logits shape [batch_size, seq_len, num_classes]
         
         outputs = self.bert(input_ids,
                             attention_mask=attention_mask,
@@ -2294,6 +2298,17 @@ class HummingbirdModel(BertPreTrainedModel):
                         # print("kv loss", kv_loss)
                         loss = gamma*loss + (1-gamma)*kv_loss
                     loss = loss_fct(logits, labels.view(-1))
+            
+            if ner_logits is not None:
+                if attention_mask is not None:
+                    active_loss = attention_mask.view(-1) == 1
+                    active_logits = logits.view(-1, num_labels)[active_loss]
+
+                    ner_logits = ner_logits.view(-1, num_labels)[active_loss]
+
+                    loss = self.crit_label_dst(F.log_softmax(active_logits.float(), dim=-1),
+                                                      F.softmax(ner_logits.float(), dim=-1)).sum(dim=-1).mean()
+
                 outputs = (loss,) + outputs
         
         return outputs

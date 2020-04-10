@@ -11,7 +11,6 @@ import torch
 
 import torch.nn as nn
 from torch.optim import Adam
-import json
 
 from torch.utils.data import DataLoader, RandomSampler, SequentialSampler, TensorDataset
 
@@ -20,10 +19,10 @@ import requests
 from seqeval.metrics import accuracy_score, precision_score, recall_score, f1_score
 from tqdm import *
 
+import pickle
 from utils_mtdnn_v2 import MegaDataSet, las_score
-from utils_ner import read_examples_from_file, convert_examples_to_features
 from uninlp import AdamW, get_linear_schedule_with_warmup
-from uninlp import WEIGHTS_NAME, BertConfig, MTDNNModel, BertTokenizer, DeepBiAffineDecoderV2, MTDNNModelV2, RobertaConfig, RobertaMTDNNModel, RobertaTokenizer, HummingbirdModel, HummingbirdLSTMBiAffineDecoder
+from uninlp import WEIGHTS_NAME, BertConfig, MTDNNModel, BertTokenizer, DeepBiAffineDecoderV2, MTDNNModelV2, RobertaConfig, RobertaMTDNNModel, RobertaTokenizer, HummingbirdModel, HummingbirdLSTMBiAffineDecoder, DeepBiAffineDecoderV2_TeacherForce
 
 import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel as DDP
@@ -44,7 +43,6 @@ MODEL_CLASSES = {
     "bert":(BertConfig, MTDNNModelV2, BertTokenizer),
     "roberta":(RobertaConfig, RobertaMTDNNModel, RobertaTokenizer),
     'lstm':(BertConfig, HummingbirdModel, BertTokenizer)
-    
 }
 
 def set_seed(args):
@@ -78,59 +76,6 @@ def setup(args, rank, world_size):
 def cleanup():
     dist.destroy_process_group()
 
-def load_and_cache_example(args, tokenizer, labels, pad_token_label_id, mode):
-    if args.local_rank not in [-1, 0] and not evaluate:
-        torch.distributed.barrier()  # Make sure only the first process in distributed training process the dataset, and the others will use the cache
-
-    # Load data features from cache or dataset file
-    cached_features_file = os.path.join(
-        args.data_dir,
-        "cached_{}_{}_{}".format(
-            mode, list(filter(None, args.model_name_or_path.split("/"))).pop(), str(args.max_seq_length)
-        ),
-    )
-    if os.path.exists(cached_features_file) and not args.overwrite_cache:
-        logger.info("Loading features from cached file %s", cached_features_file)
-        features = torch.load(cached_features_file)
-    else:
-        logger.info("Creating features from dataset file at %s", args.data_dir)
-        examples = read_examples_from_file(args.data_dir, mode)
-        features = convert_examples_to_features(
-            examples,
-            labels,
-            args.max_seq_length,
-            tokenizer,
-            cls_token_at_end=bool(args.model_type in ["xlnet"]),
-            # xlnet has a cls token at the end
-            cls_token=tokenizer.cls_token,
-            cls_token_segment_id=2 if args.model_type in ["xlnet"] else 0,
-            sep_token=tokenizer.sep_token,
-            sep_token_extra=bool(args.model_type in ["roberta"]),
-            # roberta uses an extra separator b/w pairs of sentences, cf. github.com/pytorch/fairseq/commit/1684e166e3da03f5b600dbb7855cb98ddfcd0805
-            pad_on_left=bool(args.model_type in ["xlnet"]),
-            # pad on the left for xlnet
-            pad_token=tokenizer.convert_tokens_to_ids([tokenizer.pad_token])[0],
-            pad_token_segment_id=4 if args.model_type in ["xlnet"] else 0,
-            pad_token_label_id=pad_token_label_id,
-            mode=mode,
-        )
-        if args.local_rank in [-1, 0]:
-            logger.info("Saving features into cached file %s", cached_features_file)
-            torch.save(features, cached_features_file)
-
-    if args.local_rank == 0 and not evaluate:
-        torch.distributed.barrier()  # Make sure only the first process in distributed training process the dataset, and the others will use the cache
-
-    # Convert to Tensors and build dataset
-    all_input_ids = torch.tensor([f.input_ids for f in features], dtype=torch.long)
-    all_input_mask = torch.tensor([f.input_mask for f in features], dtype=torch.long)
-    all_segment_ids = torch.tensor([f.segment_ids for f in features], dtype=torch.long)
-    all_label_ids = torch.tensor([f.label_ids for f in features], dtype=torch.long)
-    
-
-    dataset = TensorDataset(all_input_ids, all_input_mask, all_segment_ids, all_label_ids)
-    return dataset
-
 
 def data_parallel(module, input, device_ids, output_device=None):
     if not device_ids:
@@ -153,6 +98,9 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
     # train_dataloader  = DataLoader(datasets, sampler=train_sampler)
     no_decay = ["bias", "LayerNorm.weight"]
     alpha_sets = ["alpha_list"]
+
+    with open(args.data_file, "rb") as f:
+        datasets = pickle.load(f)
 
     t_total = len(datasets) * args.num_train_epochs // (args.gradient_accumulation_steps * args.train_batch_size)
 
@@ -201,12 +149,20 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
 
     step = 0
 
-    if all_dataset_sampler == None:
-        train_sampler = RandomSampler(datasets)
-        train_dataloader = DataLoader(datasets, sampler=train_sampler, batch_size=args.train_batch_size)
-    else:
-        train_dataloader = DataLoader(datasets, sampler=all_dataset_sampler)
-    # TODO Need be changed if in dist training
+    # if all_dataset_sampler == None:
+    #     train_sampler = RandomSampler(datasets)
+    #     train_dataloader = DataLoader(datasets, sampler=train_sampler, batch_size=args.train_batch_size)
+    # else:
+    #     train_dataloader = DataLoader(datasets, sampler=all_dataset_sampler)
+
+    all_input_ids = torch.tensor([x[0] for x in datasets], dtype=torch.long)
+    all_input_mask = torch.tensor([x[1] for x  in datasets], dtype=torch.long)
+    all_segment_ids = torch.tensor([x[2] for x in datasets], dtype=torch.long)
+    all_ner_logits = torch.tensor(x[3] for x in datasets, dtype=torch.float)
+
+    datasets = TensorDataset(all_input_ids, all_input_mask, all_segment_ids, all_ner_logits)
+    train_sampler = RandomSampler(train_dataset) if args.local_rank == -1 else DistributedSampler(train_dataset)
+    train_dataloader = DataLoader()
 
     for _ in train_iterator:
         epoch_iterator = tqdm(train_dataloader, desc="Iteration", disable=False)
@@ -216,8 +172,8 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
             input_ids = batch[0].squeeze().long().to(args.device)
             input_mask = batch[1].squeeze().long().to(args.device)
             segment_ids = batch[2].squeeze().long().to(args.device)
-            label_ids = batch[3].squeeze().long().to(args.device)
-            head_ids = batch[4].squeeze().long().to(args.device)
+            ner_logits = batch[3].squeeze().long().to(args.device)
+            
             
             task_id = batch[5].squeeze().long().to(args.device)
 
@@ -229,11 +185,7 @@ def train(args, model, datasets, all_dataset_sampler, task_id=-1):
                       "labels":label_ids,
                       "heads":head_ids,
                       "task_id":task_id}
-            
-            # if args.n_gpu>1:
-            #     device_ids = list(range(args.n_gpu))
-            #     outputs = data_parallel(model,inputs, device_ids)
-            # else:
+
             outputs = model(**inputs)
             loss = outputs[0]
 
@@ -335,7 +287,7 @@ def evaluate(args, model, UniDataSet, task):
             if args.do_alpha:
                 alpha = outputs[0]
                 outputs = outputs[1:]
-            if type(model.classifier_list[task_id]) == DeepBiAffineDecoderV2 or type(model.classifier_list[task_id]) == HummingbirdLSTMBiAffineDecoder: # do parsing
+            if type(model.classifier_list[task_id]) in [DeepBiAffineDecoderV2,HummingbirdLSTMBiAffineDecoder, DeepBiAffineDecoderV2_TeacherForce]: # do parsing
                 logits_arc = outputs[0]
                 logits_label = outputs[1]
             else:
@@ -344,7 +296,7 @@ def evaluate(args, model, UniDataSet, task):
         nb_eval_steps += 1
         if preds is None:
             # print("preds", logits.shape)
-            if type(model.classifier_list[task_id]) == DeepBiAffineDecoderV2 or type(model.classifier_list[task_id]) == HummingbirdLSTMBiAffineDecoder:
+            if type(model.classifier_list[task_id]) in [ DeepBiAffineDecoderV2, HummingbirdLSTMBiAffineDecoder, DeepBiAffineDecoderV2_TeacherForce]:
                 preds_arc = logits_arc.detach().cpu().numpy()
                 preds_label = logits_label.detach().cpu().numpy()
                 out_head_ids = batch[4].detach().cpu().numpy()
@@ -353,7 +305,7 @@ def evaluate(args, model, UniDataSet, task):
                 preds = logits.detach().cpu().numpy()
                 out_label_ids = batch[3].detach().cpu().numpy()
         else:
-            if type(model.classifier_list[task_id]) == DeepBiAffineDecoderV2 or type(model.classifier_list[task_id]) == HummingbirdLSTMBiAffineDecoder:
+            if type(model.classifier_list[task_id]) in [ DeepBiAffineDecoderV2, HummingbirdLSTMBiAffineDecoder, DeepBiAffineDecoderV2_TeacherForce]:
                 preds_arc = np.append(preds_arc, logits_arc.detach().cpu().numpy(), axis=0)
                 preds_label = np.append(preds_label, logits_label.detach().cpu().numpy(), axis=0)
 
@@ -363,7 +315,7 @@ def evaluate(args, model, UniDataSet, task):
                 preds = np.append(preds, logits.detach().cpu().numpy(), axis=0)
                 out_label_ids = np.append(out_label_ids, batch[3].detach().cpu().numpy(), axis=0)
     
-    if type(model.classifier_list[task_id]) == DeepBiAffineDecoderV2 or type(model.classifier_list[task_id]) == HummingbirdLSTMBiAffineDecoder:
+    if type(model.classifier_list[task_id]) in [DeepBiAffineDecoderV2, HummingbirdLSTMBiAffineDecoder, DeepBiAffineDecoderV2_TeacherForce]:
         preds_arc = np.argmax(preds_arc, axis=2)
         preds_label = np.argmax(preds_label, axis=2)
     else:
@@ -371,7 +323,7 @@ def evaluate(args, model, UniDataSet, task):
     
     label_map = {i: label for i, label in enumerate(label_list)}
     print(label_map)
-    if type(model.classifier_list[task_id]) == DeepBiAffineDecoderV2 or type(model.classifier_list[task_id]) == HummingbirdLSTMBiAffineDecoder:
+    if type(model.classifier_list[task_id]) in [DeepBiAffineDecoderV2 , HummingbirdLSTMBiAffineDecoder, DeepBiAffineDecoderV2_TeacherForce]:
         pad_token_label_id = -100
         out_head_list = [[] for _ in range(out_head_ids.shape[0])]
         preds_arc_list = [[] for _ in range(out_head_ids.shape[0])]
@@ -413,7 +365,7 @@ def evaluate(args, model, UniDataSet, task):
     
     
     results = {}
-    if type(model.classifier_list[task_id]) == DeepBiAffineDecoderV2 or type(model.classifier_list[task_id]) == HummingbirdLSTMBiAffineDecoder:
+    if type(model.classifier_list[task_id]) in [ DeepBiAffineDecoderV2, HummingbirdLSTMBiAffineDecoder, DeepBiAffineDecoderV2_TeacherForce]:
         results["uas"] = accuracy_score(out_head_list, preds_arc_list)
         results["las"] = las_score(out_label_list, out_head_list, preds_label_list, preds_arc_list)
     else:
@@ -426,7 +378,7 @@ def evaluate(args, model, UniDataSet, task):
         logger.info("  %s = %s ", key, str(results[key]))
     
     # print(results)
-    if type(model.classifier_list[task_id]) == DeepBiAffineDecoderV2 or type(model.classifier_list[task_id]) == HummingbirdLSTMBiAffineDecoder:
+    if type(model.classifier_list[task_id]) in [DeepBiAffineDecoderV2,HummingbirdLSTMBiAffineDecoder, DeepBiAffineDecoderV2_TeacherForce]:
         print("sample results")
         print("preds head", preds_arc_list[0])
         print("true head", out_head_list[0])
@@ -440,72 +392,6 @@ def evaluate(args, model, UniDataSet, task):
         print("out_label_list", out_label_list[0])
 
     return results
-
-
-def predict(args, model, tokenizer, labels, pad_token_label_id, mode, prefix= ""):
-    test_dataset = load_and_cache_example(args, tokenizer, labels, pad_token_label_id, mode="test")
-
-    args.test_batch_size = args.per_gpu_eval_batch_size * max(1, args.n_gpu)
-
-    test_sampler = SequentialSampler(test_dataset) if args.local_rank == -1 else DistributedSampler(test_dataset)
-
-    test_dataloader = DataLoader(test_dataset, sampler=test_sampler, batch_size=args.test_batch_size)
-
-    if args.n_gpu > 1:
-        model = torch.nn.DataParallel(model)
-    
-    logger.info("***** Running Prediction %s *****", prefix)
-    logger.info("  Num examples = %d", len(test_dataset))
-    logger.info("  Batch size = %d", args.test_batch_size)
-    eval_loss = 0.0
-    nb_eval_steps = 0
-    preds = None
-    out_label_ids = None
-    model.eval()
-    all_input_ids = []
-    all_input_mask = []
-    all_segment_ids = []
-    task_id=0
-
-    batch = tuple(t.to(args.device) for t in batch)
-
-        with torch.no_grad():
-            inputs = {"input_ids": batch[0], "attention_mask": batch[1], "labels": batch[3], "task_id":task_id}
-            if args.model_type != "distilbert":
-                inputs["token_type_ids"] = (
-                    batch[2] if args.model_type in ["bert", "xlnet", "mtdnn"] else None
-                )  # XLM and RoBERTa don"t use segment_ids
-            outputs = model(**inputs)
-            tmp_eval_loss, logits = outputs[:2]
-
-            if args.n_gpu > 1:
-                tmp_eval_loss = tmp_eval_loss.mean()  # mean() to average on multi-gpu parallel evaluating
-
-            eval_loss += tmp_eval_loss.item()
-        all_input_ids.extend(batch[0].cpu().numpy().tolist())
-        all_input_mask.extend(batch[1].cpu().numpy().tolist())
-        all_segment_ids.extend(batch[2].cpu().numpy().tolist())
-
-        nb_eval_steps += 1
-        if preds is None:
-            preds = logits.detach().cpu().numpy()
-            out_label_ids = inputs["labels"].detach().cpu().numpy()
-        else:
-            preds = np.append(preds, logits.detach().cpu().numpy(), axis=0)
-            out_label_ids = np.append(out_label_ids, inputs["labels"].detach().cpu().numpy(), axis=0)
-
-    eval_loss = eval_loss / nb_eval_steps
-
-    assert len(preds) == len(all_input_ids) == len(all_input_mask) == len(all_segment_ids)
-
-    out_file = args.output_file_path
-    logger.info ("****** save predictions to %s ********"%out_file)
-    os.makedirs(os.path.dirname(out_file), exist_ok=True)
-    results = [all_input_ids, all_input_mask, all_segment_ids, preds]
-    with open(out_file, "wb") as f:
-        pickle.dump(results, f, protocol=pickle.HIGHEST_PROTOCOL)
-
-    return results, []
 
 
 def main():
@@ -531,8 +417,6 @@ def main():
                         help="Whether to run training.")
     parser.add_argument("--do_eval", action="store_true",
                         help="Whether to run eval on the dev set.")
-    parser.add_argument("--do_predict", action="store_true")
-
     parser.add_argument("--mini_batch_size", default=8, type=int)
 
     parser.add_argument("--recover_path", default="", type=str)
@@ -564,6 +448,9 @@ def main():
     parser.add_argument("--seed", type=int, default=42,
                         help="random seed for initialization")
     
+    parser.add_argument("--teacher_force", action="store_true")
+    parser.add_argument("--data_file", type=str, default="")
+    
     parser.add_argument("--do_alpha", action="store_true")
     parser.add_argument("--do_adapter", action="store_true")
     parser.add_argument("--do_ft", action="store_true")
@@ -574,9 +461,7 @@ def main():
     parser.add_argument("--local_rank", type=int, default=-1,
                         help="For distributed training: local_rank")
     parser.add_argument("--fp16_opt_level", type=str, default="O1")
-    parser.add_argument("--results_path", type=str, )
     parser.add_argument("--debug", action="store_true")
-    parser.add_argument("--output_file_path", type=str, default="")
     args = parser.parse_args()
 
 
@@ -632,7 +517,7 @@ def main():
                              max_seq_length = args.max_seq_length,
                              tokenizer = tokenizer,
                              mini_batch_size = args.mini_batch_size * max(1, args.n_gpu),
-                             sep_token_extra = True if args.model_type == "roberta" else False)
+                             sep_token_extra= True if args.model_type == "roberta" else False)
 
     model = model_class.from_pretrained(args.model_name_or_path, 
                                         from_tf=bool(".ckpt" in args.model_name_or_path),
@@ -761,24 +646,6 @@ def main():
                 torch.save(model_to_save.state_dict(), ft_model_path)
 
         print(total_results)
-
-        if args.results_path:
-            os.makedirs(os.path.dirname(args.results_path), exist_ok=True)
-            with open(args.results_path, "w+", encoding="utf-8") as f:
-                json.dump(total_results, f)
-
-    if args.do_predict and args.local_rank in [-1, 0]:
-        model = model_class.from_pretrained(checkpoint,
-                                            from_tf=bool(".ckpt" in args.model_name_or_path),
-                                            config = config,
-                                            labels_list=UniDataSet.labels_list,
-                                            task_list = UniDataSet.task_list,
-                                            do_task_embedding=args.do_task_embedding,
-                                            do_alpha=args.do_alpha,
-                                            do_adapter = args.do_adapter,
-                                            num_adapter_layers = args.num_adapter_layers)
-        model.to(args.device)
-        result, predictions = test(args, model, tokenizer, labels, pad_token_label_id, mode="test")
 
 if __name__ == "__main__":
     main()

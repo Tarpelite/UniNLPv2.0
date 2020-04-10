@@ -51,6 +51,7 @@ class InputFeatures(object):
         self.tokens = tokens
 
 
+
 def read_examples_from_file(data_dir, mode):
     file_path = os.path.join(data_dir, "{}.txt".format(mode))
     guid_index = 1
